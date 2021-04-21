@@ -2406,54 +2406,6 @@
             return aa.shortcut.format(s);
         };
     })();
-    aa.fade_X_X                 = (function () {
-
-        // Attributes:
-        const delay = 10; // ms
-        const delta = 0.1; // opacity (0~1)
-        const timers = {};
-
-        const fade = function (isFadeIn) {
-            return function (node /*, resolve, reject */) {
-                if (!isNode(node)) { throw new TypeError("First argument must be a Node."); }
-                const resolve = (arguments && arguments.length > 1 && isFunction(arguments[1]) ? arguments[1] : undefined);
-                const reject = (arguments && arguments.length > 2 && isFunction(arguments[2]) ? arguments[2] : undefined);
-
-                const id = node.dataset.aafadeid || node.id || aa.uid();
-                node.dataset.aafadeid = id;
-                
-                let opacity = (isFadeIn ? 0 : 1);
-                if (timers.hasOwnProperty(id) && timers[id]) {
-                    window.clearInterval(timers[id]);
-                }
-                timers[id] = window.setInterval(()=>{
-                    if ((isFadeIn && opacity <= 1) || (!isFadeIn && opacity >= 0)) {
-                        aa.browser.setOpacity(node, opacity);
-                    } else {
-                        opacity = (isFadeIn ? 1 : 0);
-                        aa.browser.setOpacity(node, opacity);
-                        if (isFadeIn) {
-                            aa.browser.setOpacity(node, 1);
-                            delete node.style.opacity;
-                        }
-                        window.clearInterval(timers[id]);
-                        timers[id] = null;
-
-                        if (resolve) {
-                            resolve();
-                        }
-                    }
-                    opacity += (delta*(isFadeIn ? 1 : -1));
-                }, delay);
-            }
-        };
-
-        // Methods:
-        return Object.freeze({
-            in: fade(true),
-            out: fade(false),
-        });
-    })();
     aa.file                     = Object.freeze(new (function () {
         const verifier = {
             content:        p => (isObject(p) || isString(p)),
@@ -2944,7 +2896,7 @@
 
                 return list.forEach(function (a) {
                     return this.addAction(a);
-                },this);
+                }, this);
             };
             Menu.prototype.addAction    = function (p) {
                 if (nonEmptyString(p)) {

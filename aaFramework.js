@@ -2956,8 +2956,11 @@
                     ul.children.forEach((li)=>{
                         li.children.forEach((btn)=>{
                             btn.children.forEach((span)=>{
-                                span.classList.remove("fa");
-                                span.classList.remove("fa-fw");
+                                if (span.classList.contains("icon")) {
+                                    // span.classList.remove("fa");
+                                    // span.classList.remove("fa-fw");
+                                    span.removeNode();
+                                }
                             });
                         });
                     });

@@ -1965,13 +1965,16 @@
                 let root = d.documentElement;
                 let body = d.body;
                 
-                that.width  = window.innerWidth || root.clientWidth || body.clientWidth;
-                that.height = window.innerHeight || root.clientHeight || body.clientHeight;
+                // that.width  = window.innerWidth || root.clientWidth || body.clientWidth;
+                // that.height = window.innerHeight || root.clientHeight || body.clientHeight;
+                that.width = instance.getWidth();
+                that.height = instance.getHeight();
             }
         };
         that.keys().forEach((key)=>{
             Object.defineProperty(instance, key, {get: ()=>{
-                return that[key];
+                const method = 'get'+key.firstToUpper();
+                return instance[method]();
             }})
         });
         construct();

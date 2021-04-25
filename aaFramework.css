@@ -484,6 +484,10 @@ div.aaTable.fullscreen div.td{
     background: var(--submit-bg-color);
     border: 1px solid var(--submit-bg-color);
 }
+.aa button.btn-blue span.fa,
+.aa input[type=button].btn-blue span.fa{
+    color: var(--color-dark-blue);
+}
 .aa button.btn-blue:focus,
 .aa input[type=button].btn-blue:focus{
     border: 1px solid #248;
@@ -494,6 +498,10 @@ div.aaTable.fullscreen div.td{
     background: #f66;
     border: 1px solid #f66;
 }
+.aa button.btn-red span.fa,
+.aa input[type=button].btn-red span.fa{
+    color: var(--color-dark-red);
+}
 .aa button.btn-red:focus,
 .aa input[type=button].btn-red:focus{
     border: 1px solid #b33;
@@ -503,6 +511,10 @@ div.aaTable.fullscreen div.td{
     color: #fff;
     background: var(--color-green);
     border: 1px solid var(--color-green);
+}
+.aa button.btn-green span.fa,
+.aa input[type=button].btn-green span.fa{
+    color: var(--color-dark-green);
 }
 .aa button.btn-green:focus,
 .aa input[type=button].btn-green:focus{

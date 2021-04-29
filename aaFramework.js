@@ -7008,6 +7008,38 @@
                 }
             }, spec);
 
+            // Private methods:
+            const newID         = function () {
+                let id = null;
+                do {
+                    id = aa.uid();
+                } while (getter(this, 'index').hasOwnProperty(id));
+                return id;
+            };
+            const newInstance   = function (id, className, args) {
+                if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!nonEmptyString(className)) { throw new TypeError("Second argument must be a non-empty String."); }
+                if (!isArray(args)) { throw new TypeError("Third argument must be an Array."); }
+
+                const cls = getter(this, 'classes')[className];
+                const instance = Object.create(cls.prototype);
+                cls.apply(instance, args);
+                if (instance.id !== undefined) {
+                    id = instance.id;
+                }
+                if (instance.id === undefined || instance.id === null) {
+                    instance.id = id;
+                }
+                return instance;
+            };
+            const updateIndex   = function (id, instance) {
+                if (!nonEmptyString(id)) { throw new TypeError("ID must be a non-empty String."); }
+
+                const index = getter(this, 'index');
+                index[id] = instance;
+                setter(this, 'index', index);
+            };
+
             // Public methods:
             aa.deploy(Instancer.prototype, {
                 declare:    function (className, cls) {
@@ -7020,26 +7052,10 @@
                 },
                 new:        function (className /*, args */) {
                     const args = arguments && arguments.length > 1 ? arguments[1] : [];
-                    if (!nonEmptyString(className)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!isArray(args)) { throw new TypeError("Second argument must be an Array."); }
 
-                    let id = null;
-                    do {
-                        id = aa.uid();
-                    } while (getter(this, 'index').hasOwnProperty(id));
-
-                    // Create instance from classes:
-                    const cls = getter(this, 'classes')[className];
-                    const instance = Object.create(cls.prototype);
-                    cls.apply(instance, args);
-                    if (instance.id === undefined || instance.id === null) {
-                        instance.id = id;
-                    }
-
-                    // Update index:
-                    const index = getter(this, 'index');
-                    index[id] = instance;
-                    setter(this, 'index', index);
+                    const id = newID.call(this);
+                    const instance = newInstance.call(this, id, className, args);
+                    updateIndex.call(this, instance.id, instance);
 
                     return instance;
                 },

@@ -3181,7 +3181,6 @@
                 ]);
 
                 if (aa.mouse.y + menuNode.offsetHeight > aa.browser.height) {
-                    log(menuNode.offsetHeight);
                     if (menuNode.offsetHeight <= (aa.browser.height-2)) {
                         menuNode.style.top = (aa.browser.height - menuNode.offsetHeight-2)+"px";
                         // menuNode.style.top = "auto";
@@ -3191,7 +3190,6 @@
                     }
                 }
                 if (aa.mouse.x + menuNode.offsetWidth > aa.browser.width) {
-                    log(menuNode.offsetWidth);
                     if (menuNode.offsetWidth <= (aa.browser.width-2)) {
                         menuNode.style.left = (aa.browser.width-menuNode.offsetWidth-2)+"px";
                         // menuNode.style.left = "auto";
@@ -7474,7 +7472,6 @@
                     text: gui.getNode(appName),
                     on: {
                         resize: ()=>{
-                            log(aa.browser.height);
                         },
                         hide: ()=>{
                             gui.reset();

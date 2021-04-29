@@ -6,7 +6,7 @@
     const privates = new WeakMap();
     const ENV = {
         MODULE_NAME: "aaFramework",
-        PRODUCTION: true,
+        PRODUCTION: false,
         THEMES: ["light", "dark"],
         DEFAULT_THEME: "light"
     };
@@ -275,6 +275,136 @@
     // ----------------------------------------------------------------
     // Functions:
     const {get, set} = aa.prototypes.mapFactory();
+    aa.definePublics        = function (keyValues /*, spec */) {
+        const spec = arguments && arguments.length > 1 ? arguments[1] : {};
+
+        if (!isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
+        if (!isObject(spec)) { throw new TypeError("second argument must be an Object."); }
+
+        spec.verify({
+            getter: isFunction,
+            setter: isFunction,
+        });
+
+        const getter = spec.getter || get;
+        const setter = spec.setter || set;
+
+        keyValues.forEach((value, key) => {
+            setter(this, key, value);
+            Object.defineProperty(this, key, {
+                get: () => {
+                    return getter(this, key);
+                },
+                set: (value) => {
+                    const setter = 'set'+key.firstToUpper();
+                    if (typeof this[setter] === 'function') {
+                        this[setter].call(value);
+                    } else {
+                        console.warn("Setter '"+key+"' not implemented.");
+                    }
+                }
+            });
+        });
+    };
+    aa.definePrivates       = function (keyValues /*, spec */) {
+        const spec = arguments && arguments.length > 1 ? arguments[1] : {};
+
+        if (!isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
+        if (!isObject(spec)) { throw new TypeError("second argument must be an Object."); }
+
+        spec.verify({
+            getter: isFunction,
+            setter: isFunction,
+        });
+
+        const getter = spec.getter || get;
+        const setter = spec.setter || set;
+
+        keyValues.forEach((value, key) => {
+            setter(this, key, value);
+        });
+    };
+    aa.defineAccessors      = function (accessors /*, spec */) {
+        const spec = arguments && arguments.length > 1 ? arguments[1] : {};
+
+        if (!isObject(accessors)) { throw new TypeError('First argument must be an Object.'); }
+        if (!isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
+
+        accessors.verify({
+            execute: isObject,
+            privates: isObject,
+            publics: isObject,
+            read: isObject,
+            write: isObject
+        });
+        spec.verify({
+            getter: isFunction,
+            setter: isFunction,
+        });
+
+        const getter = spec.getter || get;
+        const setter = spec.setter || set;
+
+        accessors.forEach((keyValues, accessor) => {
+            keyValues.forEach((value, key) => {
+                setter(this, key, value);
+                switch (accessor) {
+                    case 'publics':
+                        Object.defineProperty(this, key, {
+                            get: () => {
+                                return getter(this, key);
+                            },
+                            set: (value) => {
+                                if (typeof this[thisSetter] === 'function') {
+                                    this[thisSetter].call(value);
+                                } else {
+                                    console.warn("Setter '"+key+"' not implemented.");
+                                }
+                            }
+                        });
+                        break;
+                    case 'read':
+                        Object.defineProperty(this, key, {
+                            get: () => {
+                                return getter(this, key);
+                            }
+                        });
+                        break;
+                    case 'write':
+                        Object.defineProperty(this, key, {
+                            set: (value) => {
+                                if (typeof this[thisSetter] === 'function') {
+                                    this[thisSetter].call(value);
+                                } else {
+                                    console.warn("Setter '"+key+"' not implemented.");
+                                }
+                            }
+                        });
+                        break;
+                    case 'execute':
+                        Object.defineProperty(this, key, {
+                            get: () => {
+                                return getter(this, key).call(this);
+                            }
+                        });
+                        break;
+                }
+            });
+        });
+    };
+    aa.getArg               = function (args, i, defaultValue /*, condition */) {
+        const condition = arguments && arguments.length > 3 ? arguments[3] : () => true;
+
+        if (!isArrayLike(args)) { throw new TypeError("First argument must be an Array."); }
+        if (!isPositiveInt(i)) { throw new TypeError("Second argument must be a positive Integer."); }
+        if (!isFunction(condition)) { throw new TypeError("Fourth argument must be a Function."); }
+
+        return (args.length > i && condition(args[i]) ?
+            args[i]
+            : defaultValue
+        );
+    };
+    // ----------------------------------------------------------------
 
     // Classes:
     aa.ActionGroup              = function () {
@@ -6849,6 +6979,99 @@
         });
         return node;
     });
+    aa.newInstancer             = function (/* spec */) {
+        const spec = arguments && arguments.length ? arguments[0] : {};
+        if (!isObject(spec)) { throw new TypeError("Argument must be an Object."); }
+
+        spec.verify({
+            getter: isFunction,
+            setter: isFunction
+        });
+        spec.getter = spec.getter || get;
+        spec.setter = spec.setter || set;
+        const {getter, setter} = spec;
+
+        const Instancer = function () {
+        
+            // Accessors:
+            aa.defineAccessors.call(this, {
+                publics: {
+                },
+                execute: {
+                    all: function () {
+                        return getter(this, 'index');
+                    }
+                },
+                privates: {
+                    index: {},
+                    classes: {}
+                }
+            }, spec);
+
+            // Public methods:
+            aa.deploy(Instancer.prototype, {
+                declare:    function (className, cls) {
+                    if (!nonEmptyString(className)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!isFunction(cls)) { throw new TypeError("Second argument must be a Function or a Class."); }
+
+                    const classes = getter(this, 'classes');
+                    classes[className.trim()] = cls;
+                    setter(this, 'classes', classes);
+                },
+                new:        function (className /*, args */) {
+                    const args = arguments && arguments.length > 1 ? arguments[1] : [];
+                    if (!nonEmptyString(className)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!isArray(args)) { throw new TypeError("Second argument must be an Array."); }
+
+                    let id = null;
+                    do {
+                        id = aa.uid();
+                    } while (getter(this, 'index').hasOwnProperty(id));
+
+                    // Create instance from classes:
+                    const cls = getter(this, 'classes')[className];
+                    const instance = Object.create(cls.prototype);
+                    cls.apply(instance, args);
+                    if (instance.id === undefined || instance.id === null) {
+                        instance.id = id;
+                    }
+
+                    // Update index:
+                    const index = getter(this, 'index');
+                    index[id] = instance;
+                    setter(this, 'index', index);
+
+                    return instance;
+                },
+                get:        function (id) {
+                    if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+
+                    id = id.trim();
+                    return getter(this, 'index')[id];
+                },
+                remove:     function (id) {
+                    if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+
+                    id = id.trim();
+                    const instance = getter(this, 'index')[id];
+                    if (instance) {
+                        const index = getter(this, 'index');
+                        delete index[id];
+                        setter(this, 'index', index);
+                    }
+
+                    return instance;
+                },
+
+                // Getters:
+                // Setters:
+            }, {
+                force: true,
+                condition: (Instancer.prototype.hydrate === undefined)
+            });
+        };
+        return new Instancer();
+    };
     aa.lang = {
 
         // Variables:
@@ -7493,74 +7716,6 @@
     })());
 
     // Functions:
-    aa.extractClassNameAndID    = Object.freeze(function (str) {
-        if (!nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
-
-        let id = null,
-            classes = [];
-        const result = {
-            id: null,
-            classes: [],
-            tagName: str
-        };
-        str = str.trim();
-        if (str.match(/^[^\.\#].*[\.\#]/)) {
-            const o = {
-                tagName: '',
-                idName: '',
-                className: ''
-            };
-            let previousType = "tagName";
-
-            str.forEach(function (char, i) {
-                switch (char) {
-                    case "#":
-                        switch (previousType) {
-                            case "idName":
-                                result.id = o[previousType];
-                                o[previousType] = '';
-                                break;
-                            case "className":
-                                result.classes.push(o[previousType]);
-                                o[previousType] = '';
-                                break;
-                            default:
-                                o.tagName = o[previousType];
-                                break;
-                        }
-                        previousType = 'idName';
-                        break;
-                    case ".":
-                        switch (previousType) {
-                            case "idName":
-                                result.id = o[previousType];
-                                o[previousType] = '';
-                                break;
-                            case "className":
-                                result.classes.push(o[previousType]);
-                                o[previousType] = '';
-                                break;
-                            default:
-                                o.tagName = o[previousType];
-                                break;
-                        }
-                        previousType = "className";
-                        break;
-                    default:
-                        o[previousType] += char;
-                        break;
-                }
-            });
-            result.tagName = o.tagName;
-            if (o.idName) {
-                result.id = o.idName;
-            }
-            if (o.className) {
-                result.classes.push(o.className);
-            }
-        }
-        return Object.freeze(result);
-    });
     aa.action                   = Object.freeze(function (name /*, resolve, reject */) {
         /**
          * @param {string} name
@@ -7846,6 +8001,74 @@
         }
 
         return elt;
+    });
+    aa.extractClassNameAndID    = Object.freeze(function (str) {
+        if (!nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
+
+        let id = null,
+            classes = [];
+        const result = {
+            id: null,
+            classes: [],
+            tagName: str
+        };
+        str = str.trim();
+        if (str.match(/^[^\.\#].*[\.\#]/)) {
+            const o = {
+                tagName: '',
+                idName: '',
+                className: ''
+            };
+            let previousType = "tagName";
+
+            str.forEach(function (char, i) {
+                switch (char) {
+                    case "#":
+                        switch (previousType) {
+                            case "idName":
+                                result.id = o[previousType];
+                                o[previousType] = '';
+                                break;
+                            case "className":
+                                result.classes.push(o[previousType]);
+                                o[previousType] = '';
+                                break;
+                            default:
+                                o.tagName = o[previousType];
+                                break;
+                        }
+                        previousType = 'idName';
+                        break;
+                    case ".":
+                        switch (previousType) {
+                            case "idName":
+                                result.id = o[previousType];
+                                o[previousType] = '';
+                                break;
+                            case "className":
+                                result.classes.push(o[previousType]);
+                                o[previousType] = '';
+                                break;
+                            default:
+                                o.tagName = o[previousType];
+                                break;
+                        }
+                        previousType = "className";
+                        break;
+                    default:
+                        o[previousType] += char;
+                        break;
+                }
+            });
+            result.tagName = o.tagName;
+            if (o.idName) {
+                result.id = o.idName;
+            }
+            if (o.className) {
+                result.classes.push(o.className);
+            }
+        }
+        return Object.freeze(result);
     });
     aa.html                     = Object.freeze(function (nodeName) {
         /*
@@ -9319,7 +9542,4 @@
             aa.events.app("aaFramework").on(evtName, callback , ["forever"]);
         });
     })();
-    if (!aa.settings.production) {
-        console.timeEnd(ENV.MODULE_NAME);
-    }
 })();

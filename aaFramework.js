@@ -6,7 +6,7 @@
     const privates = new WeakMap();
     const ENV = {
         MODULE_NAME: "aaFramework",
-        PRODUCTION: false,
+        PRODUCTION: true,
         THEMES: ["light", "dark"],
         DEFAULT_THEME: "light"
     };

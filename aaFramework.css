@@ -4,7 +4,6 @@
 
     --font-family: 'Fira L', 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     --color: #666;
-    --bg-color: #f8f8f8;
     --submit-bg-color: #49f;
     --submit-color: #fff;
     --reset-color: #aaa;
@@ -21,18 +20,16 @@
     --menu-disabled-color: #ccc;
     --form-placeholder-color: #acf;
 
-    /* Dark */
-    --submit-bg-color-dark: #49f;
-    --button-disabled-bg-color-dark: #444;
-    
+    --bg-color-lighter: #fff;
+    --bg-color: #f8f8f8;
+    --bg-color-darker: #eee;
+
     --warning-color: #fb0;
     --critical-color: #f66;
     --confirm-color: #49f;
 
     --inset: inset 1px 1px 1px rgba(64,128,255,0.2);
 
-    --color-bg: #444;
-    --color-bg: #f8f8f8;
     --color-blue: #49f;
     --color-orange: #fa0;
     --color-gold: #ba8e4d;
@@ -45,12 +42,23 @@
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
+
+    /* Dark */
+    --dark-color: #aaa;
+
+    --dark-submit-bg-color: #49f;
+    --dark-button-disabled-bg-color: #444;
+    --dark-button-disabled-color: #bbb;
     
-    --color-dark-grey: #444;
-    --color-dark-blue: #248;
-    --color-dark-green: #384;
-    --color-dark-orange: #c40;
-    --color-dark-red: #c00;
+    --dark-color-bg-lighter: #333;
+    --dark-color-bg: #222;
+    --dark-color-bg-darker: #111;
+    
+    --dark-color-grey: #444;
+    --dark-color-blue: #248;
+    --dark-color-green: #384;
+    --dark-color-orange: #c40;
+    --dark-color-red: #c00;
 
     --color-bg-controls: rgba(0,0,0,0.4);
     --color-bg-controls-over: rgba(0,0,0,0.6);
@@ -111,6 +119,13 @@ body.aaFrameworkFreeze{
     font-size: 13px;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     line-height: 1.5;
+
+    -webkit-touch-callout: none;
+      -webkit-user-select: none;
+       -khtml-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
 }
 .aa .hidden{
     display: none;
@@ -138,9 +153,23 @@ body.aaFrameworkFreeze{
     font-size: 13px;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     line-height: 1.5;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
 }
 .aa input[type="number"]{
     text-align: right;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
 }
 .aa button,
 .aa input[type="submit"],
@@ -194,7 +223,6 @@ body.aaFrameworkFreeze{
     left: 0px;
     width: 100%;
     height: 100%;
-    background: rgba(255,0,0,0.1);
     background: transparent;
 }
 .aa.bg.vanish{
@@ -329,6 +357,13 @@ div.aaTable.fullscreen div.td{
     height: 120px;
     min-height: 46px;
     resize: vertical;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
 }
 .aa textarea::placeholder,
 .aa input[type=text]::placeholder,
@@ -486,7 +521,7 @@ div.aaTable.fullscreen div.td{
 }
 .aa button.btn-blue span.fa,
 .aa input[type=button].btn-blue span.fa{
-    color: var(--color-dark-blue);
+    color: var(--dark-color-blue);
 }
 .aa button.btn-blue:focus,
 .aa input[type=button].btn-blue:focus{
@@ -500,7 +535,7 @@ div.aaTable.fullscreen div.td{
 }
 .aa button.btn-red span.fa,
 .aa input[type=button].btn-red span.fa{
-    color: var(--color-dark-red);
+    color: var(--dark-color-red);
 }
 .aa button.btn-red:focus,
 .aa input[type=button].btn-red:focus{
@@ -514,7 +549,7 @@ div.aaTable.fullscreen div.td{
 }
 .aa button.btn-green span.fa,
 .aa input[type=button].btn-green span.fa{
-    color: var(--color-dark-green);
+    color: var(--dark-color-green);
 }
 .aa button.btn-green:focus,
 .aa input[type=button].btn-green:focus{
@@ -1418,7 +1453,7 @@ div.aaDialog span.w{
 div.aaDialog span.w3{
     min-width: 64px;
 }
-div.aaDialog select{
+.aa select{
     margin-top: 1px;
     margin-bottom: 8px;
     height: 28px;
@@ -1427,23 +1462,23 @@ div.aaDialog select{
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
     box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
 }
-div.aaDialog select:focus{
+.aa select:focus{
     border: 1px solid var(--submit-bg-color);
 }
-div.aaDialog select:disabled{
+.aa select:disabled{
     background: var(--bg-color);
     color: var(--form-placeholder-color);
     color: #ccc;
     box-shadow: inset 1px 1px 1px transparent;
 }
-div.aaDialog button.input,
-div.aaDialog button.textarea,
-div.aaDialog select,
-div.aaDialog textarea,
-div.aaDialog input[type="password"],
-div.aaDialog input[type="number"],
-div.aaDialog input[type="email"],
-div.aaDialog input[type="text"]{
+.aa button.input,
+.aa button.textarea,
+.aa select,
+.aa textarea,
+.aa input[type="password"],
+.aa input[type="number"],
+.aa input[type="email"],
+.aa input[type="text"]{
     display: block;
     margin: 0px;
     text-decoration: none;
@@ -1463,160 +1498,160 @@ div.aaDialog input[type="text"]{
     border: 1px solid #fff;
     box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
 }
-div.aaDialog input[type="password"]::placeholder,
-div.aaDialog input[type="number"]::placeholder,
-div.aaDialog input[type="email"]::placeholder,
-div.aaDialog input[type="text"]::placeholder,
-div.aaDialog textarea::placeholder{
+.aa input[type="password"]::placeholder,
+.aa input[type="number"]::placeholder,
+.aa input[type="email"]::placeholder,
+.aa input[type="text"]::placeholder,
+.aa textarea::placeholder{
     color: var(--form-placeholder-color);
     font-style: italic;
     font-weight: normal;
     padding-right: 4px;
 }
-div.aaDialog input[type="password"]:focus,
-div.aaDialog input[type="number"]:focus,
-div.aaDialog input[type="text"]:focus{
+.aa input[type="password"]:focus,
+.aa input[type="number"]:focus,
+.aa input[type="text"]:focus{
     border: 1px solid var(--submit-bg-color);
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
 }
-div.aaDialog input[type="text"]::placeholder,
-div.aaDialog input[type="text"]::-moz-placeholder,
-div.aaDialog input[type="text"]::-webkit-placeholder,
-/*div.aaDialog input[type="text"]:-ms-input-placeholder,*/
-div.aaDialog input[type="text"]::-webkit-input-placeholder{
+.aa input[type="text"]::placeholder,
+.aa input[type="text"]::-moz-placeholder,
+.aa input[type="text"]::-webkit-placeholder,
+/*.aa input[type="text"]:-ms-input-placeholder,*/
+.aa input[type="text"]::-webkit-input-placeholder{
     font-style: italic;
 }
-div.aaDialog textarea:invalid,
-div.aaDialog textarea.invalid,
-div.aaDialog input[type="number"]:invalid,
-div.aaDialog input[type="number"].invalid,
-div.aaDialog input[type="email"]:invalid,
-div.aaDialog input[type="email"].invalid,
-div.aaDialog input[type="text"]:invalid,
-div.aaDialog input[type="text"].invalid{
+.aa textarea:invalid,
+.aa textarea.invalid,
+.aa input[type="number"]:invalid,
+.aa input[type="number"].invalid,
+.aa input[type="email"]:invalid,
+.aa input[type="email"].invalid,
+.aa input[type="text"]:invalid,
+.aa input[type="text"].invalid{
     background: #fff0f0;
     color: #c00;
     box-shadow: 1px 1px 2px rgba(128,64,64,0.2) inset;
 }
-div.aaDialog textarea:invalid:focus,
-div.aaDialog textarea.invalid:focus,
-div.aaDialog input[type="number"]:invalid:focus,
-div.aaDialog input[type="number"].invalid:focus,
-div.aaDialog input[type="email"]:invalid:focus,
-div.aaDialog input[type="email"].invalid:focus,
-div.aaDialog input[type="text"]:invalid:focus,
-div.aaDialog input[type="text"].invalid:focus{
+.aa textarea:invalid:focus,
+.aa textarea.invalid:focus,
+.aa input[type="number"]:invalid:focus,
+.aa input[type="number"].invalid:focus,
+.aa input[type="email"]:invalid:focus,
+.aa input[type="email"].invalid:focus,
+.aa input[type="text"]:invalid:focus,
+.aa input[type="text"].invalid:focus{
     border: 1px solid #c00;
 }
-div.aaDialog textarea:invalid::placeholder,
-div.aaDialog textarea.invalid::placeholder,
-div.aaDialog input[type="number"]:invalid::placeholder,
-div.aaDialog input[type="number"].invalid::placeholder,
-div.aaDialog input[type="email"]:invalid::placeholder,
-div.aaDialog input[type="email"].invalid::placeholder,
-div.aaDialog input[type="text"]:invalid::placeholder,
-div.aaDialog input[type="text"].invalid::placeholder{
+.aa textarea:invalid::placeholder,
+.aa textarea.invalid::placeholder,
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"].invalid::placeholder,
+.aa input[type="email"]:invalid::placeholder,
+.aa input[type="email"].invalid::placeholder,
+.aa input[type="text"]:invalid::placeholder,
+.aa input[type="text"].invalid::placeholder{
     color: #faa;
 }
-div.aaDialog textarea:invalid::placeholder,
-div.aaDialog textarea:invalid::-moz-placeholder,
-div.aaDialog textarea:invalid::-webkit-placeholder,
-div.aaDialog textarea:invalid:-ms-input-placeholder,
-div.aaDialog textarea:invalid::-webkit-input-placeholder,
-div.aaDialog textarea.invalid::placeholder,
-div.aaDialog textarea.invalid::-moz-placeholder,
-div.aaDialog textarea.invalid::-webkit-placeholder,
-div.aaDialog textarea.invalid:-ms-input-placeholder,
-div.aaDialog textarea.invalid::-webkit-input-placeholder,
+.aa textarea:invalid::placeholder,
+.aa textarea:invalid::-moz-placeholder,
+.aa textarea:invalid::-webkit-placeholder,
+.aa textarea:invalid:-ms-input-placeholder,
+.aa textarea:invalid::-webkit-input-placeholder,
+.aa textarea.invalid::placeholder,
+.aa textarea.invalid::-moz-placeholder,
+.aa textarea.invalid::-webkit-placeholder,
+.aa textarea.invalid:-ms-input-placeholder,
+.aa textarea.invalid::-webkit-input-placeholder,
 
-div.aaDialog input[type="number"]:invalid::placeholder,
-div.aaDialog input[type="number"]:invalid::-moz-placeholder,
-div.aaDialog input[type="number"]:invalid::-webkit-placeholder,
-div.aaDialog input[type="number"]:invalid:-ms-input-placeholder,
-div.aaDialog input[type="number"]:invalid::-webkit-input-placeholder,
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"]:invalid::-moz-placeholder,
+.aa input[type="number"]:invalid::-webkit-placeholder,
+.aa input[type="number"]:invalid:-ms-input-placeholder,
+.aa input[type="number"]:invalid::-webkit-input-placeholder,
 
-div.aaDialog input[type="email"]:invalid::placeholder,
-div.aaDialog input[type="email"]:invalid::-moz-placeholder,
-div.aaDialog input[type="email"]:invalid::-webkit-placeholder,
-div.aaDialog input[type="email"]:invalid:-ms-input-placeholder,
-div.aaDialog input[type="email"]:invalid::-webkit-input-placeholder,
+.aa input[type="email"]:invalid::placeholder,
+.aa input[type="email"]:invalid::-moz-placeholder,
+.aa input[type="email"]:invalid::-webkit-placeholder,
+.aa input[type="email"]:invalid:-ms-input-placeholder,
+.aa input[type="email"]:invalid::-webkit-input-placeholder,
 
-div.aaDialog input[type="text"]:invalid::placeholder,
-div.aaDialog input[type="text"]:invalid::-moz-placeholder,
-div.aaDialog input[type="text"]:invalid::-webkit-placeholder,
-div.aaDialog input[type="text"]:invalid:-ms-input-placeholder,
-div.aaDialog input[type="text"]:invalid::-webkit-input-placeholder,
+.aa input[type="text"]:invalid::placeholder,
+.aa input[type="text"]:invalid::-moz-placeholder,
+.aa input[type="text"]:invalid::-webkit-placeholder,
+.aa input[type="text"]:invalid:-ms-input-placeholder,
+.aa input[type="text"]:invalid::-webkit-input-placeholder,
 
-div.aaDialog input[type="text"].invalid::placeholder,
-div.aaDialog input[type="text"].invalid::-moz-placeholder,
-div.aaDialog input[type="text"].invalid::-webkit-placeholder,
-div.aaDialog input[type="text"].invalid:-ms-input-placeholder,
-div.aaDialog input[type="text"].invalid::-webkit-input-placeholder{
+.aa input[type="text"].invalid::placeholder,
+.aa input[type="text"].invalid::-moz-placeholder,
+.aa input[type="text"].invalid::-webkit-placeholder,
+.aa input[type="text"].invalid:-ms-input-placeholder,
+.aa input[type="text"].invalid::-webkit-input-placeholder{
     color: #faa;
 }
 /* Round buttons */
-div.aaDialog .message button.round{
+.aa button.round{
     padding: 1px 12px 0 2px;
     color: var(--color-white);
     border-radius: 16px;
     border: 1px solid transparent;
 }
-div.aaDialog .message button.round span.icon{
+.aa button.round span.icon{
     margin-right: 4px;
     color: var(--submit-bg-color);
 }
 /* Blue */
-div.aaDialog .message button.round.blue{
+.aa button.round.blue{
     background-color: var(--color-blue);
     border-color: var(--color-blue);
 }
-div.aaDialog .message button.round.blue:focus{
-    border-color: var(--color-dark-blue);
+.aa button.round.blue:focus{
+    border-color: var(--dark-color-blue);
 }
-div.aaDialog .message button.round.blue span.icon{
-    color: var(--color-dark-blue);
+.aa button.round.blue span.icon{
+    color: var(--dark-color-blue);
 }
 /* Green */
-div.aaDialog .message button.round.green{
+.aa button.round.green{
     background-color: var(--color-green);
     border-color: var(--color-green);
 }
-div.aaDialog .message button.round.green:focus{
-    border-color: var(--color-dark-green);
+.aa button.round.green:focus{
+    border-color: var(--dark-color-green);
 }
-div.aaDialog .message button.round.green span.icon{
-    color: var(--color-dark-green);
+.aa button.round.green span.icon{
+    color: var(--dark-color-green);
 }
 /* Orange */
-div.aaDialog .message button.round.orange{
+.aa button.round.orange{
     background-color: var(--color-orange);
     border-color: var(--color-orange);
 }
-div.aaDialog .message button.round.orange:focus{
-    border-color: var(--color-dark-orange);
+.aa button.round.orange:focus{
+    border-color: var(--dark-color-orange);
 }
-div.aaDialog .message button.round.orange span.icon{
-    color: var(--color-dark-orange);
+.aa button.round.orange span.icon{
+    color: var(--dark-color-orange);
 }
 /* Red */
-div.aaDialog .message button.round.red{
+.aa button.round.red{
     background-color: var(--color-red);
     border-color: var(--color-red);
 }
-div.aaDialog .message button.round.red:focus{
-    border-color: var(--color-dark-red);
+.aa button.round.red:focus{
+    border-color: var(--dark-color-red);
 }
-div.aaDialog .message button.round.red span.icon{
-    color: var(--color-dark-red);
+.aa button.round.red span.icon{
+    color: var(--dark-color-red);
 }
 /* Common */
-div.aaDialog .message button.round:disabled{
+.aa button.round:disabled{
     background-color: var(--color-light-grey);
     border-color: var(--color-light-grey);
     color: var(--color-grey);
     box-shadow: 0 0 0 transparent;
 }
-div.aaDialog .message button.round:disabled span.icon{
+.aa button.round:disabled span.icon{
     color: var(--color-grey);
 }
 /* Labels */
@@ -1658,104 +1693,104 @@ div.aaDialog label.right input[type=password].half,
 div.aaDialog label.right input[type=text].half{
     margin-left: 4px;
 }
-div.aaDialog label.cooked{
+.aa label.cooked{
     display: block;
     width: fit-content;
     margin-left: 4px;
 }
-div.aaDialog label.cooked.disabled{
+.aa label.cooked.disabled{
     color: var(--color-grey);
 }
-div.aaDialog button.mixed{
+.aa button.mixed{
     text-align: left;
     color: var(--color-gold);
 }
-div.aaDialog button.mixed span.fa{
+.aa button.mixed span.fa{
     margin-right: 4px;
     color: var(--submit-bg-color);
     color: var(--color-gold);
 }
-div.aaDialog button.mixed:hover span.fa,
-div.aaDialog button.mixed:focus span.fa{
+.aa button.mixed:hover span.fa,
+.aa button.mixed:focus span.fa{
     color: #36e;
     color: #ba8e4d;
     color: #862;
 }
-div.aaDialog label.cooked input[type=radio],
-div.aaDialog label.cooked input[type=checkbox]{
+.aa label.cooked input[type=radio],
+.aa label.cooked input[type=checkbox]{
     display: none;
 }
-div.aaDialog button.mixed,
-div.aaDialog label.cooked input[type=radio] + button,
-div.aaDialog label.cooked input[type=checkbox] + button{
+.aa button.mixed,
+.aa label.cooked input[type=radio] + button,
+.aa label.cooked input[type=checkbox] + button{
     margin-right: 4px;
 }
-div.aaDialog label.cooked input[type=radio] + button > span.mixed,
-div.aaDialog label.cooked input[type=checkbox] + button > span.mixed,
-div.aaDialog label.cooked input[type=radio] + button > span.checked,
-div.aaDialog label.cooked input[type=checkbox] + button > span.checked,
-div.aaDialog label.cooked input[type=radio] + button > span.disabled,
-div.aaDialog label.cooked input[type=checkbox] + button > span.disabled,
-div.aaDialog label.cooked input[type=radio] + button > span.unchecked,
-div.aaDialog label.cooked input[type=checkbox] + button > span.unchecked{
+.aa label.cooked input[type=radio] + button > span.mixed,
+.aa label.cooked input[type=checkbox] + button > span.mixed,
+.aa label.cooked input[type=radio] + button > span.checked,
+.aa label.cooked input[type=checkbox] + button > span.checked,
+.aa label.cooked input[type=radio] + button > span.disabled,
+.aa label.cooked input[type=checkbox] + button > span.disabled,
+.aa label.cooked input[type=radio] + button > span.unchecked,
+.aa label.cooked input[type=checkbox] + button > span.unchecked{
     display: none;
 }
-div.aaDialog label.cooked input[type=radio] + button > span,
-div.aaDialog label.cooked input[type=checkbox] + button > span{
+.aa label.cooked input[type=radio] + button > span,
+.aa label.cooked input[type=checkbox] + button > span{
     color: var(--color-grey);
 }
-div.aaDialog label.cooked:hover input[type=radio] + button > span,
-div.aaDialog label.cooked:hover input[type=checkbox] + button > span,
-div.aaDialog label.cooked input[type=radio] + button:focus > span,
-div.aaDialog label.cooked input[type=checkbox] + button:focus > span{
+.aa label.cooked:hover input[type=radio] + button > span,
+.aa label.cooked:hover input[type=checkbox] + button > span,
+.aa label.cooked input[type=radio] + button:focus > span,
+.aa label.cooked input[type=checkbox] + button:focus > span{
     color: #aaa;
 }
-div.aaDialog label.cooked input[type=radio] + button > span.checked,
-div.aaDialog label.cooked input[type=checkbox] + button > span.checked{
+.aa label.cooked input[type=radio] + button > span.checked,
+.aa label.cooked input[type=checkbox] + button > span.checked{
     color: var(--submit-bg-color);
 }
-div.aaDialog label.cooked:hover input[type=radio] + button > span.checked,
-div.aaDialog label.cooked:hover input[type=checkbox] + button > span.checked,
-div.aaDialog label.cooked input[type=radio] + button:focus > span.checked,
-div.aaDialog label.cooked input[type=checkbox] + button:focus > span.checked{
+.aa label.cooked:hover input[type=radio] + button > span.checked,
+.aa label.cooked:hover input[type=checkbox] + button > span.checked,
+.aa label.cooked input[type=radio] + button:focus > span.checked,
+.aa label.cooked input[type=checkbox] + button:focus > span.checked{
     color: #36e;
 }
-div.aaDialog label.cooked input[type=radio]:disabled + button > span.disabled,
-div.aaDialog label.cooked input[type=checkbox]:disabled + button > span.disabled{
+.aa label.cooked input[type=radio]:disabled + button > span.disabled,
+.aa label.cooked input[type=checkbox]:disabled + button > span.disabled{
     display: inline-block;
 }
-div.aaDialog label.cooked input[type=radio] + button > span.unchecked,
-div.aaDialog label.cooked input[type=checkbox] + button > span.unchecked{
+.aa label.cooked input[type=radio] + button > span.unchecked,
+.aa label.cooked input[type=checkbox] + button > span.unchecked{
     display: inline-block;
 }
-div.aaDialog label.cooked input[type=radio]:checked + button > span.unchecked,
-div.aaDialog label.cooked input[type=checkbox]:checked + button > span.unchecked{
+.aa label.cooked input[type=radio]:checked + button > span.unchecked,
+.aa label.cooked input[type=checkbox]:checked + button > span.unchecked{
     display: none;
 }
-div.aaDialog label.cooked input[type=radio]:checked + button > span.checked,
-div.aaDialog label.cooked input[type=checkbox]:checked + button > span.checked{
+.aa label.cooked input[type=radio]:checked + button > span.checked,
+.aa label.cooked input[type=checkbox]:checked + button > span.checked{
     display: inline-block;
 }
-div.aaDialog label.cooked input[type=radio]:disabled:checked + button > span.checked,
-div.aaDialog label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
-div.aaDialog label.cooked input[type=radio]:disabled + button > span,
-div.aaDialog label.cooked input[type=checkbox]:disabled + button > span{
+.aa label.cooked input[type=radio]:disabled:checked + button > span.checked,
+.aa label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
+.aa label.cooked input[type=radio]:disabled + button > span,
+.aa label.cooked input[type=checkbox]:disabled + button > span{
     color: var(--color-grey);
 }
-div.aaDialog button.textarea.mixed{
+.aa button.textarea.mixed{
     height: 120px;
 }
-div.aaDialog button.textarea.mixed > div.table{
+.aa button.textarea.mixed > div.table{
     height: 100%;
     display: table;
     vertical-align: top;
 }
-div.aaDialog button.textarea.mixed > div.table > div.cell{
+.aa button.textarea.mixed > div.table > div.cell{
     display: table-cell;
     vertical-align: top;
 }
-div.aaDialog button.textarea.mixed,
-div.aaDialog button.input.mixed{
+.aa button.textarea.mixed,
+.aa button.input.mixed{
     cursor: pointer;
     margin-left: 0;
     font-style: italic;
@@ -1763,23 +1798,23 @@ div.aaDialog button.input.mixed{
     background: var(--color-light-grey);
     box-shadow: inset 1px 1px 1px var(--color-grey);
 }
-div.aaDialog button.textarea.mixed:focus,
-div.aaDialog button.input.mixed:focus{
+.aa button.textarea.mixed:focus,
+.aa button.input.mixed:focus{
     border: 1px solid var(--color-gold);
 }
-div.aaDialog button.textarea.mixed span.fa,
-div.aaDialog button.input.mixed span.fa{
+.aa button.textarea.mixed span.fa,
+.aa button.input.mixed span.fa{
     color: var(--color-gold);
 }
-div.aaDialog button.textarea.mixed:hover span.fa,
-div.aaDialog button.textarea.mixed:focus span.fa,
-div.aaDialog button.input.mixed:hover span.fa,
-div.aaDialog button.input.mixed:focus span.fa{
+.aa button.textarea.mixed:hover span.fa,
+.aa button.textarea.mixed:focus span.fa,
+.aa button.input.mixed:hover span.fa,
+.aa button.input.mixed:focus span.fa{
     color: #862;
 }
-div.aaDialog button.mixed:disabled,
-div.aaDialog button.textarea.mixed:disabled span.fa,
-div.aaDialog button.input.mixed:disabled span.fa{
+.aa button.mixed:disabled,
+.aa button.textarea.mixed:disabled span.fa,
+.aa button.input.mixed:disabled span.fa{
     cursor: default;
     color: var(--color-grey);
 }
@@ -1799,10 +1834,10 @@ div.aaDialog div.buttons.fullscreen{
 div.aaDialog div.buttons.with-details{
     width: 75%;
 }
-div.aaDialog div.buttons button,
-div.aaDialog div.buttons input[type="submit"],
-div.aaDialog div.buttons input[type="reset"],
-div.aaDialog div.buttons input[type="button"]{
+.aa button,
+.aa input[type="submit"],
+.aa input[type="reset"],
+.aa input[type="button"]{
     display: inline-block;
     margin: 0px 2px;
     padding: 4px 16px;
@@ -1812,40 +1847,46 @@ div.aaDialog div.buttons input[type="button"]{
     color: #fff;
     border-radius: 2px;
     border: 1px solid var(--submit-bg-color);
-    /*text-shadow: 1px 1px 1px rgba(0,0,255,0.4);*/
 }
-div.aaDialog div.buttons input[type="submit"]:disabled{
+.aa input[type="submit"]:disabled{
     background: var(--button-disabled-bg-color);
     color: var(--button-disabled-color);
     border: 1px solid var(--button-disabled-bg-color);
     text-shadow: 0px 0px 0px transparent;
 }
-div.aaDialog div.buttons input[type="submit"]:disabled:hover,
-div.aaDialog div.buttons input[type="submit"]:disabled:focus{
+.aa input[type="submit"]:disabled:hover,
+.aa input[type="submit"]:disabled:focus{
     border: 1px solid var(--button-disabled-bg-color);
 }
-div.aaDialog div.buttons button:hover,
-div.aaDialog div.buttons button:focus,
-div.aaDialog div.buttons input[type="submit"]:hover,
-div.aaDialog div.buttons input[type="submit"]:focus,
-div.aaDialog div.buttons input[type="button"]:hover,
-div.aaDialog div.buttons input[type="button"]:focus{
+.aa button:hover,
+.aa button:focus,
+.aa input[type="submit"]:hover,
+.aa input[type="submit"]:focus,
+.aa input[type="button"]:hover,
+.aa input[type="button"]:focus{
     border: 1px solid #248;
 }
-div.aaDialog div.buttons button.reset,
-div.aaDialog div.buttons input[type="reset"],
-div.aaDialog div.buttons input[type="button"].reset{
+.aa button,
+.aa button.reset,
+.aa input[type="reset"],
+.aa input[type="button"],
+.aa input[type="button"].reset{
     background: var(--reset-bg-color);
     color: var(--reset-color);
+    color: var(--button-color);
     border: 1px solid var(--reset-bg-color);
     text-shadow: 0px 0px 0px transparent;
 }
-div.aaDialog div.buttons button.reset:hover,
-div.aaDialog div.buttons button.reset:focus,
-div.aaDialog div.buttons input[type="reset"]:hover,
-div.aaDialog div.buttons input[type="reset"]:focus,
-div.aaDialog div.buttons input[type="button"].reset:hover,
-div.aaDialog div.buttons input[type="button"].reset:focus{
+.aa button:hover,
+.aa button:focus,
+.aa button.reset:hover,
+.aa button.reset:focus,
+.aa input[type="reset"]:hover,
+.aa input[type="reset"]:focus,
+.aa input[type="button"]:hover,
+.aa input[type="button"]:focus,
+.aa input[type="button"].reset:hover,
+.aa input[type="button"].reset:focus{
     border-color: #ddd;
     background: #ddd;
 }
@@ -1878,10 +1919,145 @@ div.aaDialog div.message div.grid > div.row > div.cell input[type=text]{
 div.aaDialog div.message div.grid > div.row > div.cell select{
     width: 100%;
 }
-/* Theme 'Dark' */
+
+/* --------------------------------
+Progress:
+-------------------------------- */
+
+div.aaDialog.progress {
+    padding: 16px;
+}
+div.aaDialog.progress div.item {
+    display: flex;
+    position: relative;
+}
+div.aaDialog.progress div.item input[type=range] {
+    -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+    flex: none;
+}
+div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb { /* Special styling for WebKit/Blink */
+    -webkit-appearance: none;
+    margin-top: 0px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+}
+div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb {
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.progress div.item input[type=range]::-moz-range-thumb { /* All the same stuff for Firefox */
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.progress div.item input[type=range]::-ms-thumb { /* All the same stuff for IE */
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/*Chrome*/
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    div.aaDialog.progress div.item input[type=range] {
+        overflow: hidden;
+        width: 320px;
+        -webkit-appearance: none;
+        background-color: var(--color-light-grey);
+    }
+    div.aaDialog.progress div.item input[type=range]::-webkit-slider-runnable-track {
+        height: 4px;
+        -webkit-appearance: none;
+        color: #13bba4;
+        margin-top: -1px;
+    }
+    div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 0;
+        height: 4px;
+        background: #fff;
+        box-shadow: -320px 0 0 320px var(--submit-bg-color);
+    }
+    div.aaDialog.progress div.item input[type=range].complete::-webkit-slider-thumb {
+        box-shadow: -320px 0 0 320px var(--color-green);
+    }
+}
+/** FF*/
+div.aaDialog.progress div.item input[type=range]::-moz-range-progress {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.progress div.item input[type=range].complete::-moz-range-progress {
+    background-color: var(--color-green);
+}
+div.aaDialog.progress div.item input[type=range]::-moz-range-track {  
+    background-color: var(--color-light-grey);
+}
+/* IE*/
+div.aaDialog.progress div.item input[type=range]::-ms-fill-lower {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.progress div.item input[type=range].complete::-ms-fill-lower {
+    background-color: var(--color-green);
+}
+div.aaDialog.progress div.item input[type=range]::-ms-fill-upper {  
+    background-color: var(--color-light-grey);
+}
+div.aaDialog.progress div.item div:first-child,
+div.aaDialog.progress div.item div:last-child {
+    flex: auto;
+    display: inline-block;
+}
+div.aaDialog.progress div.item div.percent span {
+    text-align: right;
+    display: inline-block;
+    width: 48px;
+}
+div.aaDialog.progress div.item div.percent span::after {
+    content: ' %';
+    color: var(--color-grey);
+}
+div.aaDialog.progress div.item label {
+    display: flex;
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    background: #faa;
+    border-radius: 2px;
+}
+div.aaDialog.progress div.item:hover label {
+    display: flex;
+}
+div.aaDialog.progress div.item label > div {
+    position: relative;
+}
+div.aaDialog.progress div.item label > div > div{
+    position: absolute;
+    top: 0;
+    left: 4px;
+    padding: 2px 8px;
+    background: var(--dark-color-bg);
+    color: var(--dark-color);
+}
+
+/* --------------------------------
+Dark version:
+-------------------------------- */
+
+.aa.dark.bg.shade,
+.aa.dark .bg.shade{
+    background-color: rgba(255,255,255,0.4);
+}
 div.aaDialog.dark{
-    background: #222;
-    color: #aaa;
+    background: var(--dark-color-bg);
+    color: var(--dark-color);
 }
 div.aaDialog.dark h2{
     color: #fff;
@@ -1897,68 +2073,84 @@ div.aaDialog.dark div.message{
 div.aaDialog.dark div.message hr{
     border-top: 1px solid #333;
 }
-div.aaDialog.dark textarea,
-div.aaDialog.dark input[type="password"],
-div.aaDialog.dark input[type="number"],
-div.aaDialog.dark input[type="email"],
-div.aaDialog.dark input[type="text"]{
+.aa.dark textarea,
+.aa.dark input[type="password"],
+.aa.dark input[type="number"],
+.aa.dark input[type="email"],
+.aa.dark input[type="text"]{
     background: #111;
     color: var(--submit-bg-color);
     color: var(--color-white);
     border: 1px solid #222;
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2), inset -1px -1px 0px #444;
 }
-div.aaDialog.dark textarea:focus,
-div.aaDialog.dark input[type="password"]:focus,
-div.aaDialog.dark input[type="number"]:focus,
-div.aaDialog.dark input[type="email"]:focus,
-div.aaDialog.dark input[type="text"]:focus{
+.aa.dark textarea:focus,
+.aa.dark input[type="password"]:focus,
+.aa.dark input[type="number"]:focus,
+.aa.dark input[type="email"]:focus,
+.aa.dark input[type="text"]:focus{
     border: 1px solid var(--submit-bg-color);
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2);
 }
-div.aaDialog.dark div.buttons{
+.aa.dark div.buttons{
     background: transparent;
 }
-div.aaDialog.dark div.buttons button:hover,
-div.aaDialog.dark div.buttons button:focus,
-div.aaDialog.dark div.buttons button[type="submit"]:hover,
-div.aaDialog.dark div.buttons button[type="submit"]:focus,
-div.aaDialog.dark div.buttons input[type="submit"]:hover,
-div.aaDialog.dark div.buttons input[type="submit"]:focus,
-div.aaDialog.dark div.buttons input[type="button"]:hover,
-div.aaDialog.dark div.buttons input[type="button"]:focus{
+.aa.dark button,
+.aa.dark button[type="reset"],
+.aa.dark input[type="reset"],
+.aa.dark input[type="button"],
+.aa.dark button.reset,
+.aa.dark button[type="reset"],
+.aa.dark input[type="reset"],
+.aa.dark input[type="button"].reset{
+    background: var(--dark-color-grey);
+    color: var(--dark-button-disabled-color);
+    border-color: var(--dark-color-grey);
+}
+.aa.dark button[type="submit"]:hover,
+.aa.dark button[type="submit"]:focus,
+.aa.dark input[type="submit"]:hover,
+.aa.dark input[type="submit"]:focus,
+.aa.dark input[type="button"]:hover,
+.aa.dark input[type="button"]:focus{
     border: 1px solid var(--form-placeholder-color);
     box-shadow: 0px 0px 1px var(--form-placeholder-color);
 }
-div.aaDialog.dark div.buttons button.reset,
-div.aaDialog.dark div.buttons button[type="reset"],
-div.aaDialog.dark div.buttons input[type="reset"],
-div.aaDialog.dark div.buttons input[type="button"].reset{
-    background: #444;
-    color: #bbb;
-    border: 1px solid #444;
-}
-div.aaDialog.dark div.buttons button.reset:hover,
-div.aaDialog.dark div.buttons button.reset:focus,
-div.aaDialog.dark div.buttons button[type="reset"].reset:hover,
-div.aaDialog.dark div.buttons button[type="reset"].reset:focus,
-div.aaDialog.dark div.buttons input[type="reset"].reset:hover,
-div.aaDialog.dark div.buttons input[type="reset"].reset:focus,
-div.aaDialog.dark div.buttons input[type="button"].reset:hover,
-div.aaDialog.dark div.buttons input[type="button"].reset:focus{
+.aa.dark button:hover,
+.aa.dark button:focus,
+.aa.dark button[type="reset"]:hover,
+.aa.dark button[type="reset"]:focus,
+.aa.dark input[type="reset"]:hover,
+.aa.dark input[type="reset"]:focus,
+.aa.dark input[type="button"]:hover,
+.aa.dark input[type="button"]:focus,
+.aa.dark button.reset:hover,
+.aa.dark button.reset:focus,
+.aa.dark button[type="reset"].reset:hover,
+.aa.dark button[type="reset"].reset:focus,
+.aa.dark input[type="reset"].reset:hover,
+.aa.dark input[type="reset"].reset:focus,
+.aa.dark input[type="button"].reset:hover,
+.aa.dark input[type="button"].reset:focus{
     border-color: #555;
-    background: #555;
+    background-color: #555;
+}
+.aa.dark button.btn-green,
+.aa.dark input[type="button"].btn-green{
+    color: #fff;
+    background-color: var(--color-green);
+    border-color: var(--color-green);
 }
 div.aaDialog.dark .message fieldset{
-    border-color: var(--button-disabled-bg-color-dark);
+    border-color: var(--dark-button-disabled-bg-color);
 }
 div.aaDialog.dark .message fieldset legend{
 }
 div.aaDialog.dark .message fieldset legend label{
-    color: var(--submit-bg-color-dark);
+    color: var(--dark-submit-bg-color);
 }
 div.aaDialog.dark .message fieldset legend label:first-child{
-    border-left-color: var(--button-disabled-bg-color-dark);
+    border-left-color: var(--dark-button-disabled-bg-color);
 }
 div.aaDialog.dark .message fieldset legend label:last-child{
 }
@@ -1967,7 +2159,7 @@ div.aaDialog.dark .message fieldset legend label input[type="radio"]{
 div.aaDialog.dark .message fieldset legend label input[type="radio"] + span{
     background: #333;
     color: #888;
-    border-color: var(--button-disabled-bg-color-dark);
+    border-color: var(--dark-button-disabled-bg-color);
     border-left-color: transparent;
 }
 div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
@@ -1977,38 +2169,38 @@ div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"]
 div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
 }
 div.aaDialog.dark .message fieldset legend label input[type="radio"] + span:hover{
-    color: var(--submit-bg-color-dark);
+    color: var(--dark-submit-bg-color);
     color: #fff;
 }
 div.aaDialog.dark .message fieldset legend label input[type="radio"]:checked + span{
-    background-color: var(--submit-bg-color-dark);
+    background-color: var(--dark-submit-bg-color);
     color: #fff;
-    border-color: var(--submit-bg-color-dark);
+    border-color: var(--dark-submit-bg-color);
 }
 div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"]:checked + span{
 }
-div.aaDialog.dark input[type="text"]::placeholder,
-div.aaDialog.dark input[type="password"]::placeholder,
-div.aaDialog.dark input[type="number"]::placeholder,
-div.aaDialog.dark textarea::placeholder{
+.aa.dark input[type="text"]::placeholder,
+.aa.dark input[type="password"]::placeholder,
+.aa.dark input[type="number"]::placeholder,
+.aa.dark textarea::placeholder{
     color: var(--submit-bg-color);
     color: #666;
     color: #888;
     color: #3265be;
 }
-div.aaDialog.dark label.cooked.disabled{
+.aa.dark label.cooked.disabled{
     color: #444;
 }
-div.aaDialog.dark button.mixed{
+.aa.dark button.mixed{
     color: var(--color-gold);
 }
-div.aaDialog.dark button.mixed.textarea:focus,
-div.aaDialog.dark button.mixed.input:focus{
+.aa.dark button.mixed.textarea:focus,
+.aa.dark button.mixed.input:focus{
     box-shadow: none;
     border: 1px solid var(--color-gold);
 }
-div.aaDialog.dark button.mixed.textarea,
-div.aaDialog.dark button.mixed.input{
+.aa.dark button.mixed.textarea,
+.aa.dark button.mixed.input{
     background: #111;
     border-color: #222;
     box-shadow: 
@@ -2016,54 +2208,56 @@ div.aaDialog.dark button.mixed.input{
         inset -1px -1px 0px #444
     ;
 }
-div.aaDialog.dark button.mixed span.fa,
-div.aaDialog.dark button.mixed span.fa{
+.aa.dark button.mixed span.fa,
+.aa.dark button.mixed span.fa{
     /*color: var(--color-gold);*/
 }
-div.aaDialog.dark button.mixed:hover span.fa,
-div.aaDialog.dark button.mixed:focus span.fa{
+.aa.dark button.mixed:hover span.fa,
+.aa.dark button.mixed:focus span.fa{
     color: #ca8;
     color: #ddc7a7;
 }
-div.aaDialog.dark button.mixed:disabled,
-div.aaDialog.dark button.mixed:disabled span.fa{
+.aa.dark button.mixed:disabled,
+.aa.dark button.mixed:disabled span.fa{
     color: #666;
 }
-div.aaDialog.dark label.cooked input[type=radio] + button > span,
-div.aaDialog.dark label.cooked input[type=checkbox] + button > span{
+.aa.dark label.cooked input[type=radio] + button > span,
+.aa.dark label.cooked input[type=checkbox] + button > span{
     color: #666;
 }
-div.aaDialog.dark label.cooked:hover input[type=radio] + button > span,
-div.aaDialog.dark label.cooked:hover input[type=checkbox] + button > span,
-div.aaDialog.dark label.cooked input[type=radio] + button:focus > span,
-div.aaDialog.dark label.cooked input[type=checkbox] + button:focus > span{
+.aa.dark label.cooked:hover input[type=radio] + button > span,
+.aa.dark label.cooked:hover input[type=checkbox] + button > span,
+.aa.dark label.cooked input[type=radio] + button:focus > span,
+.aa.dark label.cooked input[type=checkbox] + button:focus > span{
     color: #888;
 }
-div.aaDialog.dark label.cooked input[type=radio] + button > span.checked,
-div.aaDialog.dark label.cooked input[type=checkbox] + button > span.checked{
+.aa.dark label.cooked input[type=radio] + button > span.checked,
+.aa.dark label.cooked input[type=checkbox] + button > span.checked{
     color: var(--submit-bg-color);
 }
-div.aaDialog.dark label.cooked input[type=radio] + button + span,
-div.aaDialog.dark label.cooked input[type=checkbox] + button + span{
+.aa.dark label.cooked input[type=radio] + button + span,
+.aa.dark label.cooked input[type=checkbox] + button + span{
     color: var(--color-white);
 }
-div.aaDialog.dark label.cooked:hover input[type=radio] + button > span.checked,
-div.aaDialog.dark label.cooked:hover input[type=checkbox] + button > span.checked,
-div.aaDialog.dark label.cooked input[type=radio] + button:focus > span.checked,
-div.aaDialog.dark label.cooked input[type=checkbox] + button:focus > span.checked{
+.aa.dark label.cooked:hover input[type=radio] + button > span.checked,
+.aa.dark label.cooked:hover input[type=checkbox] + button > span.checked,
+.aa.dark label.cooked input[type=radio] + button:focus > span.checked,
+.aa.dark label.cooked input[type=checkbox] + button:focus > span.checked{
     color: #8cf;
 }
-div.aaDialog.dark label.cooked input[type=radio]:disabled:checked + button > span.checked,
-div.aaDialog.dark label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
-div.aaDialog.dark label.cooked input[type=radio]:disabled + button > span,
-div.aaDialog.dark label.cooked input[type=checkbox]:disabled + button > span,
-div.aaDialog.dark label.cooked input[type=radio]:disabled + button + span,
-div.aaDialog.dark label.cooked input[type=checkbox]:disabled + button + span{
+.aa.dark label.cooked input[type=radio]:disabled:checked + button > span.checked,
+.aa.dark label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
+.aa.dark label.cooked input[type=radio]:disabled + button > span,
+.aa.dark label.cooked input[type=checkbox]:disabled + button > span,
+.aa.dark label.cooked input[type=radio]:disabled + button + span,
+.aa.dark label.cooked input[type=checkbox]:disabled + button + span{
     color: #666;
 }
-/*****************/
-/* Notifications */
-/*****************/
+
+/* --------------------------------
+    Notifications
+-------------------------------- */
+
 div#aaNotifs{
     position: fixed;
     bottom: 8px;
@@ -2099,16 +2293,25 @@ div#aaNotifs div.icon{
     /*top: -1px;*/
     display: table-cell;
     vertical-align: top;
-    padding: 6px 8px;
+    padding: 8px 8px 8px 16px;
     width: 16px;
     height: 16px;
     background-position: top;
     background-size: contain;
     background-repeat: no-repeat;
-    background-color: var(--bg-color);
+    /*background-color: var(--bg-color);*/
+    color: var(--submit-bg-color);
     border-top-left-radius: 2px;
     border-bottom-left-radius: 2px;
-    color: var(--submit-bg-color);
+}
+div#aaNotifs div.notif.information div.icon{
+    /*background-color: #def;*/
+}
+div#aaNotifs div.notif.warning div.icon{
+    /*background-color: #fed;*/
+}
+div#aaNotifs div.notif.critical div.icon{
+    /*background-color: #fdd;*/
 }
 div#aaNotifs div.icon.warning{
     color: var(--warning-color);

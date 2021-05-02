@@ -10,6 +10,7 @@
         THEMES: ["light", "dark"],
         DEFAULT_THEME: "light"
     };
+
     if (aa === undefined) { throw new Error("'"+ENV.MODULE_NAME+"' needs 'aaJS' to be called first."); }
     // ----------------------------------------------------------------
     // Style:
@@ -25,7 +26,7 @@
         dependencies: {
             aaJS: "^2.0"
         }
-    }, null, (err)=>{
+    }, null, (err) => {
         document.body.appendChild(aa.html("div.dependencyError","Invalid dependencies",{
             style: "z-index: "+aa.getMaxZIndex()
         }));
@@ -83,7 +84,7 @@
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
-        defineAcessors: function (publics, mode) {
+        defineAccessors: function (publics, mode) {
             if (!isObject(publics)) { throw new TypeError("Argument must be an Object."); }
             if (mode && mode.verify({
                 accessor:   o => isArrayOfStrings(o),
@@ -91,10 +92,10 @@
                 writer:     o => isArrayOfStrings(o),
             })) {
                 if (mode.accessor) {
-                    mode.accessor.forEach((key)=>{
+                    mode.accessor.forEach((key) => {
                         Object.defineProperty(this, key, {
-                            get: ()=>{ return publics[key]; },
-                            set: (value)=>{
+                            get: () => { return publics[key]; },
+                            set: (value) => {
                                 const method = "set"+key.firstToUpper();
                                 if (typeof this[method] === "function") {
                                     this[method].call(this, value);
@@ -104,16 +105,16 @@
                     });
                 }
                 if (mode.reader) {
-                    mode.reader.forEach((key)=>{
+                    mode.reader.forEach((key) => {
                         Object.defineProperty(this, key, {
-                            get: ()=>{ return publics[key]; },
+                            get: () => { return publics[key]; },
                         });
                     });
                 }
                 if (mode.writer) {
-                    mode.writer.forEach((key)=>{
+                    mode.writer.forEach((key) => {
                         Object.defineProperty(this, key, {
-                            set: (value)=>{
+                            set: (value) => {
                                 const method = "set"+key.firstToUpper();
                                 if (typeof this[method] === "function") {
                                     this[method].call(this, value);
@@ -134,7 +135,7 @@
             spec = arguments && arguments.length > 0 && isObject(arguments[0]) ? arguments[0] : {};
             const startWith = arguments && arguments.length > 1 && isArray(arguments[1]) ? arguments[1] : [];
 
-            const set = (k, v)=>{
+            const set = (k, v) => {
                 const method = "set"+k.firstToUpper();
                 if (typeof this[method] === "function") {
                     this[method].call(this, v);
@@ -142,7 +143,7 @@
             };
 
             // Do first:
-            startWith.forEach((key)=>{
+            startWith.forEach((key) => {
                 if (spec.hasOwnProperty(key)) {
                     set(key, spec[key]);
                     delete spec[key];
@@ -150,7 +151,7 @@
             });
 
             // Then:
-            spec.forEach((v, k)=>{
+            spec.forEach((v, k) => {
                 set(k, v);
             });
         },
@@ -195,13 +196,13 @@
              */
             
             // Verify argument integrity:
-            aa.prototypes.verify({ param: (key)=>{ return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
+            aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
 
             if (isString(param)) {
                 this.getters([param.trim()]);
             } else if (isArray(param)) {
-                param.forEach((key)=>{
-                    Object.defineProperty(this, key, {get: ()=>{ return get(this, key); }})
+                param.forEach((key) => {
+                    Object.defineProperty(this, key, {get: () => { return get(this, key); }})
                 });
             }
         },
@@ -209,9 +210,9 @@
             /**
              * @param {Array} list
              */
-            aa.prototypes.verify({list: (arr)=>{ return (isArray(arr) && arr.reduce((ok, item)=>{ return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
-            list.forEach((key)=>{
-                Object.defineProperty(this, key, {get: ()=>{ return get(this, key); }});
+            aa.prototypes.verify({list: (arr) => { return (isArray(arr) && arr.reduce((ok, item) => { return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
+            list.forEach((key) => {
+                Object.defineProperty(this, key, {get: () => { return get(this, key); }});
             });
         },
         initPrivates:   function (privates, thisPrivate) {
@@ -220,9 +221,9 @@
             /**
              * @param {Array} list
              */
-            aa.prototypes.verify({list: (arr)=>{ return (isArray(arr) && arr.reduce((ok, item)=>{ return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
-            list.forEach((key)=>{
-                Object.defineProperty(this, key, {set: (value)=>{ set(this, key, value); }});
+            aa.prototypes.verify({list: (arr) => { return (isArray(arr) && arr.reduce((ok, item) => { return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
+            list.forEach((key) => {
+                Object.defineProperty(this, key, {set: (value) => { set(this, key, value); }});
             });
         },
         setters:        function (param) {
@@ -231,13 +232,13 @@
              */
             
             // Verify argument integrity:
-            aa.prototypes.verify({ param: (key)=>{ return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
+            aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
 
             if (isString(param)) {
                 this.setters([param.trim()]);
             } else if (isArray(param)) {
-                param.forEach((key)=>{
-                    Object.defineProperty(this, key.trim(), {set: (value)=>{ set(this, key, value); }});
+                param.forEach((key) => {
+                    Object.defineProperty(this, key.trim(), {set: (value) => { set(this, key, value); }});
                 });
             }
         },
@@ -245,7 +246,7 @@
             if (!isArray(keys)) { throw new TypeError("Argument must be an Object."); }
 
             return function () {
-                return Object.freeze(keys.reduce((o, key)=>{
+                return Object.freeze(keys.reduce((o, key) => {
                     o[key] = this[key];
                     return o;
                 }, {}));
@@ -253,7 +254,7 @@
         },
         toObject:       function () {
             const o = {};
-            this.__public.forEach((v,k)=>{
+            this.__public.forEach((v,k) => {
                 o[k] = v;
             });
             return o;
@@ -347,6 +348,7 @@
 
         accessors.forEach((keyValues, accessor) => {
             keyValues.forEach((value, key) => {
+                const thisSetter = 'set'+key.firstToUpper();
                 setter(this, key, value);
                 switch (accessor) {
                     case 'publics':
@@ -356,7 +358,7 @@
                             },
                             set: (value) => {
                                 if (typeof this[thisSetter] === 'function') {
-                                    this[thisSetter].call(value);
+                                    this[thisSetter].call(this, value);
                                 } else {
                                     console.warn("Setter '"+key+"' not implemented.");
                                 }
@@ -374,7 +376,7 @@
                         Object.defineProperty(this, key, {
                             set: (value) => {
                                 if (typeof this[thisSetter] === 'function') {
-                                    this[thisSetter].call(value);
+                                    this[thisSetter].call(this, value);
                                 } else {
                                     console.warn("Setter '"+key+"' not implemented.");
                                 }
@@ -391,18 +393,6 @@
                 }
             });
         });
-    };
-    aa.getArg               = function (args, i, defaultValue /*, condition */) {
-        const condition = arguments && arguments.length > 3 ? arguments[3] : () => true;
-
-        if (!isArrayLike(args)) { throw new TypeError("First argument must be an Array."); }
-        if (!isPositiveInt(i)) { throw new TypeError("Second argument must be a positive Integer."); }
-        if (!isFunction(condition)) { throw new TypeError("Fourth argument must be a Function."); }
-
-        return (args.length > i && condition(args[i]) ?
-            args[i]
-            : defaultValue
-        );
     };
     // ----------------------------------------------------------------
 
@@ -422,14 +412,14 @@
             initGetters.call(this);
         };
         const initDefault   = function () {
-            attributes.forEach((value, key)=>{
+            attributes.forEach((value, key) => {
                 set(this, key, value);
             });
         };
         const initGetters   = function () {
-            attributes.keys().forEach((key)=>{
+            attributes.keys().forEach((key) => {
                 Object.defineProperty(this, key, {
-                    get: ()=>{ return Object.freeze(get(this, key)); }
+                    get: () => { return Object.freeze(get(this, key)); }
                 });
             });
         };
@@ -452,11 +442,11 @@
             };
             aa.ActionGroup.prototype.setCollection  = function (arr) {
                 const errors = [];
-                const parse = (arr)=>{
+                const parse = (arr) => {
                     if(!isArray(arr)) { throw new TypeError("Argument must be an Array."); }
 
                     const list = [];
-                    arr.forEach((item)=>{
+                    arr.forEach((item) => {
                         if (item instanceof aa.ActionGroup && item.isValid()) {
                             list.push(item);
                         } else if (item instanceof aa.Action && item.isValid()) {
@@ -647,31 +637,31 @@
             evtName = "on"+evtName;
             const list = get(this, "nodesToListen");
             if (list.hasOwnProperty(evtName)) {
-                list[evtName].forEach((listener)=>{
+                list[evtName].forEach((listener) => {
                     listener.callback(listener.node, param);
                 });
             }
         };
         const initAnonymous     = function () {
-            this.execute = (e)=>{ _execute.call(this, e); };
-            this.enable = (e)=>{ _enable.call(this, e); };
-            this.disable = (e)=>{ _disable.call(this, e); };
+            this.execute = (e) => { _execute.call(this, e); };
+            this.enable = (e) => { _enable.call(this, e); };
+            this.disable = (e) => { _disable.call(this, e); };
         };
         const initAttributes    = function () {
-            publics.forEach((v, k)=>{
+            publics.forEach((v, k) => {
                 set(this, k, v);
             });
-            privates.forEach((v, k)=>{
+            privates.forEach((v, k) => {
                 set(this, k, v);
             });
         };
         const initGetters       = function () {
-            publics.forEach((v, k)=>{
+            publics.forEach((v, k) => {
                 Object.defineProperty(this, k, {
-                    get: ()=>{
+                    get: () => {
                         return Object.freeze(get(this, k));
                     },
-                    set: (v)=>{
+                    set: (v) => {
                         const method = "set"+k.firstToUpper();
                         if (typeof this[method] === "function") {
                             this[method](v);
@@ -680,12 +670,12 @@
                 });
             });
             Object.defineProperty(this, "shortcut", {
-                get: ()=>{
+                get: () => {
                     return Object.freeze(getShortcut.call(this));
                 }
             });
             Object.defineProperty(this, "shortcuts", {
-                get: ()=>{
+                get: () => {
                     return Object.freeze(getShortcuts.call(this));
                 }
             });
@@ -878,7 +868,7 @@
             aa.Action.prototype.setCallbacks    = function (list) {
                 verify("callbacks", list);
 
-                return list.forEach((callback)=>{
+                return list.forEach((callback) => {
                     this.setCallback(callback);
                 });
             };
@@ -904,13 +894,13 @@
                 verify("on", o);
 
                 const verifier = {};
-                allowedEvents.forEach((evtName)=>{
+                allowedEvents.forEach((evtName) => {
                     evtName = evtName.replace(/^on/, "");
                     verifier[evtName] = isFunction
                 });
                 if (!o.verify(verifier)) { throw new TypeError("'on' argument is not compliant."); }
 
-                o.forEach((callback, evtName)=>{
+                o.forEach((callback, evtName) => {
                     this.on(evtName, callback);
                 });
             };
@@ -1050,7 +1040,7 @@
                     name: null,
                     on: {}
                 };
-                Object.keys(builder).forEach((k)=>{
+                Object.keys(builder).forEach((k) => {
                     if (builder.hasOwnProperty(k)) {
                         const v = builder[k];
                         if (isFunction(v)) {
@@ -1065,7 +1055,7 @@
                                 break;
                                 case "shortcuts":
                                     if (isArray(v)) {
-                                        v.forEach((s)=>{
+                                        v.forEach((s) => {
                                             shortcuts.push(s);
                                         });
                                     }
@@ -1079,7 +1069,7 @@
                 });
                 const action = new aa.Action(spec);
                 if (action.isValid()) {
-                    shortcuts.forEach((shortcut)=>{
+                    shortcuts.forEach((shortcut) => {
                         shortcut = aa.shortcut.cmdOrCtrl(shortcut);
                         if (aa.shortcut.isValid(shortcut)) {
                             action.setAccessible(true);
@@ -1090,7 +1080,7 @@
                 }
                 return false;
             } else if (isArray(builder)) {
-                return builder.reduce((ok, spec)=>{
+                return builder.reduce((ok, spec) => {
                     if (spec.app === undefined) {
                         spec.app = appName;
                     }
@@ -1221,7 +1211,7 @@
             aa.Event.prototype.setOptions           = function (a) {
                 if (!isArray(a)) { throw new TypeError("Argument must be an Array."); }
 
-                a.forEach((s)=>{
+                a.forEach((s) => {
                     if (!nonEmptyString(s)) { throw new TypeError("Options need to be non-empty Strings."); }
 
                     s = s.trim();
@@ -1254,8 +1244,8 @@
         const verify = aa.prototypes.verify({
             appName: nonEmptyString,
             callback: isFunction,
-            associableParam: (p)=>{ return (isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || nonEmptyString(p)); },
-            callbackOrUndefined: (f)=>{ return (isFunction(f) || f === undefined); },
+            associableParam: (p) => { return (isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || nonEmptyString(p)); },
+            callbackOrUndefined: (f) => { return (isFunction(f) || f === undefined); },
             evtName: nonEmptyString
         });
         const construct = function (app) {
@@ -1313,7 +1303,7 @@
                 const events = this.getEvents(evtName);
                 if (events) {
                     if (param) {
-                        events.forEach((evt)=>{
+                        events.forEach((evt) => {
 
                             // Regular syntax:
                             if (param instanceof aa.Event) {
@@ -1347,7 +1337,7 @@
             aa.EventApp.prototype.listen        = function (spec) {
                 if (!isObject(spec)) { throw new TypeError("Argument must be an object."); }
 
-                spec.forEach((evt, evtName)=>{
+                spec.forEach((evt, evtName) => {
                     evtName = aa.shortcut.rename(evtName);
                     if (!nonEmptyString(evtName)) { throw new TypeError("Event name must be a non-empty String."); }
 
@@ -1356,12 +1346,12 @@
                     if (evt instanceof aa.Event) {
                         pile.push(evt);
                     } else if(isArray(evt)) {
-                        if (!evt.verify((e)=>{ return (e instanceof aa.Event); })) { throw new TypeError("Every item must be instance of 'aa.Event'."); }
-                        evt.forEach((e)=>{
+                        if (!evt.verify((e) => { return (e instanceof aa.Event); })) { throw new TypeError("Every item must be instance of 'aa.Event'."); }
+                        evt.forEach((e) => {
                             pile.push(e);
                         });
                     }
-                    pile.forEach((event)=>{
+                    pile.forEach((event) => {
                         const events = get(this, "events");
 
                         if (event.callback) {
@@ -1388,7 +1378,7 @@
                  */
                 const spec = {}
                 const options = (arguments && arguments.length > 2 && isArray(arguments[2]) ?
-                    arguments[2].filter((opt)=>{
+                    arguments[2].filter((opt) => {
                         return nonEmptyString(opt);
                     })
                     : ["preventDefault"]
@@ -1430,13 +1420,13 @@
                     p = p.trim();
                     o.toSuspend.push(p);
                 } else if(isArray(p)) {
-                    p.forEach((s)=>{
+                    p.forEach((s) => {
                         if (!nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
 
                         o.toSuspend.push(s);
                     });
                 }
-                o.toSuspend.forEach((evtName)=>{
+                o.toSuspend.forEach((evtName) => {
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let o = {};
                     o[evtName] = new aa.Event(new aa.Action({on: {execute: function () {}}}),["preventDefault"]);
@@ -1492,9 +1482,9 @@
                 }
 
                 // else:
-                this.events.forEach((events, evtName)=>{
+                this.events.forEach((events, evtName) => {
                     if (aa.shortcut.isValid(evtName)) {
-                        events.forEach((evt)=>{
+                        events.forEach((evt) => {
                             if (obj instanceof aa.Event) {
                                 if (evt === obj) {
                                     shortcuts.push(evtName);
@@ -1745,11 +1735,11 @@
                 name = name.trim();
                 collection[name] = myClass;
                 Object.defineProperty(this, name,{
-                    get: ()=>{
+                    get: () => {
                         return function () {
                             if (arguments && arguments.length) {
                                 return new (collection[name])(arguments[0]);
-                            } else{
+                            } else {
                                 return new (collection[name])();
                             }
                         };
@@ -1770,12 +1760,12 @@
         let actions = {}; // collection
         let appName = 'aaFramework';
         const verifier = {
-            action: (a)=>{ return (a instanceof aa.Action && a.isValid()); },
+            action: (a) => { return (a instanceof aa.Action && a.isValid()); },
             actionName: nonEmptyString,
             appName: nonEmptyString,
-            add: (a)=>{ return (verifier.action(a) || verifier.arrayOfActions(a)); },
-            arrayOfActions: (arr)=>{ return (isArray(arr) && arr.reduce((ok, a)=>{ return (!verifier.action(a) ? false : ok); }, true)); },
-            remove: (p)=>{ return (verifier.actionName(p) || verifier.action(p)); },
+            add: (a) => { return (verifier.action(a) || verifier.arrayOfActions(a)); },
+            arrayOfActions: (arr) => { return (isArray(arr) && arr.reduce((ok, a) => { return (!verifier.action(a) ? false : ok); }, true)); },
+            remove: (p) => { return (verifier.actionName(p) || verifier.action(p)); },
             spec: isObject
         };
         const verify = aa.prototypes.verify(verifier);
@@ -1830,15 +1820,15 @@
             p = p.trim();
             if (actions.hasOwnProperty(p)) {
                 return actions[p];
-            } else{
+            } else {
                 return undefined;
             }
         };
         this.getFrom = function (spec) {
             verify('spec', spec);
 
-            return actions.filter((action)=>{
-                return spec.reduce((ok, v, k)=>{
+            return actions.filter((action) => {
+                return spec.reduce((ok, v, k) => {
                     return (action[k] === undefined || action[k] !== v ? false : ok);
                 }, true);
             });
@@ -1890,7 +1880,7 @@
                 "Netscape",
                 "MSIE",
                 "Chrome"
-            ].forEach((name)=>{
+            ].forEach((name) => {
                 if (navigator.userAgent.match(new RegExp(name))) {
                     that.name = name.toLowerCase();
                 }
@@ -1923,7 +1913,7 @@
                 if (timers.hasOwnProperty(id) && timers[id]) {
                     window.clearInterval(timers[id]);
                 }
-                timers[id] = window.setInterval(()=>{
+                timers[id] = window.setInterval(() => {
                     if ((isFadeIn && opacity <= 1) || (!isFadeIn && opacity >= 0)) {
                         aa.browser.setOpacity(node, opacity);
                     } else {
@@ -1974,7 +1964,7 @@
                 if (instance.is("ie")) {
                     node.style.filter = "alpha(opacity="+parseInt(value*100)+')';
                 }
-                else{
+                else {
                     node.style.opacity = value;
                 }
             },
@@ -1996,14 +1986,14 @@
                         height = document.body.scrollHeight;
                     }
                 }
-                else{
+                else {
                     if (isNumber(window.innerHeight)) {
                         height = window.innerHeight;
                     }
                     else if( document.documentElement && document.documentElement.clientHeight ) {
                         height = document.documentElement.clientHeight;
                     }
-                    else{
+                    else {
                         height = document.documentElement.scrollHeight-4;
                     }
                 }
@@ -2026,14 +2016,14 @@
                         width = document.body.scrollWidth;
                     }
                 }
-                else{
+                else {
                     if (isNumber(window.innerWidth)) {
                         width = window.innerWidth;
                     }
                     else if( document.documentElement && document.documentElement.clientWidth ) {
                         width = document.documentElement.clientWidth;
                     }
-                    else{
+                    else {
                         width = -4+document.documentElement.scrollWidth;
                     }
                 }
@@ -2052,7 +2042,7 @@
                     if (instance.is("ie")) {
                         return parseInt(node.filters.alpha.opacity / 100);
                     }
-                    else{
+                    else {
                         return node.style.opacity;
                     }
                 }
@@ -2076,8 +2066,8 @@
                         };
                     if (_os && _os.length) {
                         _os = _os[1].toLowerCase();
-                        systems.forEach((list, sys)=>{
-                            list.forEach((element)=>{
+                        systems.forEach((list, sys) => {
+                            list.forEach((element) => {
                                 let re = new RegExp('^'+element);
                                 if (_os.match(re)) {
                                     that.os = sys;
@@ -2101,8 +2091,8 @@
                 that.height = instance.getHeight();
             }
         };
-        that.keys().forEach((key)=>{
-            Object.defineProperty(instance, key, {get: ()=>{
+        that.keys().forEach((key) => {
+            Object.defineProperty(instance, key, {get: () => {
                 const method = 'get'+key.firstToUpper();
                 return instance[method]();
             }})
@@ -2235,7 +2225,7 @@
                                     break;
                             }
                         }
-                        else{
+                        else {
                             txt += '#'+this.intKeyCode;
                         }
                         txt = "key: "+txt;
@@ -2249,7 +2239,7 @@
 
                 if (combinaison) {
                     this.logKeyCode();
-                    ((show)=>{
+                    ((show) => {
                         if (show) {
                             clearTimeout(timerShow);
                             clearInterval(timerFade);
@@ -2268,16 +2258,16 @@
                                 // .replace(/\</g,"&lt;")
                                 // .replace(/\>/g,"&gt;")
                             ;
-                            timerShow = setTimeout(()=>{
-                                timerFade = setInterval((()=>{
+                            timerShow = setTimeout(() => {
+                                timerFade = setInterval((() => {
                                     let i = 0;
-                                    return ()=>{
+                                    return () => {
                                         const div = el("aaFramework_eventLog");
                                         if (i<20) {
                                             if (div) {
                                                 aa.browser.setOpacity(div, 1-(i/10));
                                             }
-                                        } else{
+                                        } else {
                                             if (div) {
                                                 div.removeNode();
                                             }
@@ -2328,9 +2318,9 @@
                     db.load();
                     delete(storage.privates.loadOnce);
 
-                    this.apps.forEach((app, appName)=>{
-                        app.events.forEach((list, evtName)=>{
-                            list.forEach((event)=>{
+                    this.apps.forEach((app, appName) => {
+                        app.events.forEach((list, evtName) => {
+                            list.forEach((event) => {
                                 const action = event.action;
                                 if (action && action.isValid() && action.accessible) {
                                     if (storage.privates.shortcuts.default[appName] === undefined) {
@@ -2348,15 +2338,15 @@
                     });
                     let data = db.select("shortcuts");
                     if (data) {
-                        data.forEach((actions, appName)=>{
-                            actions.forEach((shortcuts, actionName)=>{
+                        data.forEach((actions, appName) => {
+                            actions.forEach((shortcuts, actionName) => {
                                 const action = aa.actionManager.get(actionName);
                                 if (action && action.isValid() && action.accessible) {
-                                    storage.privates.shortcuts.default[appName][action.name].forEach((shortcut)=>{
+                                    storage.privates.shortcuts.default[appName][action.name].forEach((shortcut) => {
                                         aa.events.app(appName).dissociate(shortcut, action);
                                     });
 
-                                    shortcuts.forEach((shortcut)=>{
+                                    shortcuts.forEach((shortcut) => {
                                         if (aa.shortcut.isValid(shortcut)) {
                                             aa.events.app(appName).on(shortcut, action);
                                         }
@@ -2387,7 +2377,7 @@
                 }
             }
         };
-        storage.publics.forEach((callback, key)=>{
+        storage.publics.forEach((callback, key) => {
             if (this.storage === undefined) {
                 this.storage = {};
             }
@@ -2395,6 +2385,28 @@
         });
 
         // Methods:
+        this.fire = function (eventName /*, *args */) {
+            const args = arguments.reduce((args, arg, i) => {
+                if (i > 0) {
+                    args.push(arg);
+                }
+                return args;
+            }, []);
+            if (!nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+
+            eventName = eventName.trim();
+            const event = new CustomEvent(eventName, {detail: args});
+            document.dispatchEvent(event);
+        };
+        this.on = function (eventName, callback) {
+            if (!nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+            if (!isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
+
+            document.on(eventName.trim(), function (e) {
+                const args = e.detail || undefined;
+                callback.apply(null, e.detail);
+            });
+        };
         this.app                = function () {
 
             let app = "";
@@ -2428,13 +2440,13 @@
             evtName = aa.shortcut.cmdOrCtrl(evtName);
 
             if (this.appNames.length) {
-                this.appNames.forEach((appName, i)=>{
+                this.appNames.forEach((appName, i) => {
                     if (i < this.appNames.length-1) {
                         let app = this.apps[appName];
                         if (app instanceof aa.EventApp) {
                             evts = app.getEvents(evtName);
                             if (evts) {
-                                evts.forEach((evt)=>{
+                                evts.forEach((evt) => {
                                     if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("forever")) {
                                         returnValues = evt.execute(response, e);
                                         if (evt.hasOption("preventDefault")) {
@@ -2508,15 +2520,15 @@
             if (data) {
                 if (data[appName]) {
                     const actions = data[appName];
-                    actions.forEach((shortcuts, actionName)=>{
+                    actions.forEach((shortcuts, actionName) => {
                         const action = aa.actionManager.get(actionName);
                         if (action && action.isValid() && action.accessible) {
-                            shortcuts.forEach((shortcut)=>{
+                            shortcuts.forEach((shortcut) => {
                                 if (aa.shortcut.isValid(shortcut)) {
                                     aa.events.app(appName).dissociate(shortcut, action);
                                 }
                             });
-                            storage.privates.shortcuts.default[appName][actionName].forEach((shortcut)=>{
+                            storage.privates.shortcuts.default[appName][actionName].forEach((shortcut) => {
                                 if (aa.shortcut.isValid(shortcut)) {
                                     aa.events.app(appName).on(shortcut, action);
                                 }
@@ -2549,7 +2561,7 @@
         };
         this.isValid    = function (file) {
             if (!isObject(file)) { throw new TypeError("Argument must be an Object."); }
-            const valid = (!file.find((v, k)=>{
+            const valid = (!file.find((v, k) => {
                 return (
                     !verifier.hasOwnProperty(k)
                     || !verifier[k](v)
@@ -2599,13 +2611,13 @@
                 if (isFunction(arg)) {
                     if (functions.length < 2) {
                         functions.push(arg);
-                    } else{
+                    } else {
                         throw new TypeError("Reject callback argument has already been given.");
                     }
                 } else if(isObject(arg)) {
                     if (options === undefined) {
                         options = arg;
-                    } else{
+                    } else {
                         throw new TypeError("Options argument has already been given.");
                     }
                 }
@@ -2646,67 +2658,121 @@
                 )
             }
             let input = aa.html("file" ,{style: "display: none;", multiple: options.multiple});
-            input.on("change", (function (options) {
-                return function (evt) {
-                    if (evt.target !== undefined && evt.target.files !== undefined && evt.target.files.length) {
-                        let i, f, r;
-                        let collection = [];
-                        for(i=0; i<evt.target.files.length; i++) {
-                            collection.push(evt.target.files[i]);
-                        }
-                        const doOnce = function (collection) {
-                            if (collection.length) {
-                                f = collection.shift();
-                                if (f) {
-                                    r = new FileReader();
-                                    if (!r) {
-                                        reject(r);
+            input.on("input", (function (options) {
+                return function (event) {
+                    if (event.target !== undefined && event.target.files !== undefined && event.target.files.length) {
+                        // let i, file, reader;
+                        const collection = [];
+                        event.target.files.forEach((file) => {
+                            collection.push(file);
+                        });
+                        const progress = new aa.gui.Progress({title: "Files loading..."});
+                        progress.show();
+                        collection.forEach((file) => {
+                            if (file) {
+                                progress.add(file.name);
+                                const reader = new FileReader();
+                                if (!reader) {
+                                    reject(reader);
+                                }
+                                reader.on('load', (e) => {
+                                    let content = e.target.result;
+                                    progress.complete(file.name);
+                                    if (content) {
+                                        if (options.base64) {
+                                            if(content.match(/^data\:text\/plain\;base64\,/)){
+                                                content = content
+                                                    .replace(/^data\:text\/plain\;base64\,/, '')
+                                                    .replace('\n', '')
+                                                    .base64Decode()
+                                                ;
+                                            }
+                                        }
+                                        if (options.json) {
+                                            try{
+                                                content = JSON.parse(content);
+                                            }
+                                            catch(e) {
+                                                reject(reader);
+                                                aa.gui.dialog("warning", {text: "Invalid JSON file."});
+                                                throw new Error("Invalid JSON file.");
+                                            }
+                                        }
+                                        resolve({
+                                            content: content,
+                                            lastModified: file.lastModified,
+                                            name: file.name,
+                                            path: file.path,
+                                            size: file.size,
+                                            type: file.type
+                                        });
                                     }
-                                    r.onload = (function (f) {
-                                        return function (e) {
-                                            let content = e.target.result;
-
-                                            if (content) {
-                                                if (options.base64) {
-                                                    if(content.match(/^data\:text\/plain\;base64\,/)){
-                                                        content = content
-                                                            .replace(/^data\:text\/plain\;base64\,/, '')
-                                                            .replace('\n', '')
-                                                            .base64Decode()
-                                                        ;
-                                                    }
+                                    else {
+                                        reject(reader);
+                                    }
+                                });
+                                reader.on('progress', (e) => {
+                                    progress.move(file.name, e.loaded/e.total);
+                                });
+                                reader.readAsText(file);
+                            }
+                        });
+                        const doOnce = () => {
+                            return;
+                            if (collection.length) {
+                                file = collection.shift();
+                                if (file) {
+                                    reader = new FileReader();
+                                    if (!reader) {
+                                        reject(reader);
+                                    }
+                                    reader.on('load', (e) => {
+                                        let content = e.target.result;
+                                        progress.complete();
+                                        if (content) {
+                                            if (options.base64) {
+                                                if(content.match(/^data\:text\/plain\;base64\,/)){
+                                                    content = content
+                                                        .replace(/^data\:text\/plain\;base64\,/, '')
+                                                        .replace('\n', '')
+                                                        .base64Decode()
+                                                    ;
                                                 }
-                                                if (options.json) {
-                                                    try{
-                                                        content = JSON.parse(content);
-                                                    }
-                                                    catch(e) {
-                                                        reject(r);
-                                                        aa.gui.dialog("warning", {text: "Invalid JSON file."});
-                                                        throw new Error("Invalid JSON file.");
-                                                    }
+                                            }
+                                            if (options.json) {
+                                                try{
+                                                    content = JSON.parse(content);
                                                 }
-                                                resolve({
-                                                    content: content,
-                                                    lastModified: f.lastModified,
-                                                    name: f.name,
-                                                    size: f.size,
-                                                    type: f.type
-                                                });
+                                                catch(e) {
+                                                    reject(reader);
+                                                    aa.gui.dialog("warning", {text: "Invalid JSON file."});
+                                                    throw new Error("Invalid JSON file.");
+                                                }
                                             }
-                                            else{
-                                                reject(r);
-                                            }
-                                            doOnce(collection);
-                                        };
-                                    })(f);
-                                    r.readAsText(f);
+                                            resolve({
+                                                content: content,
+                                                lastModified: file.lastModified,
+                                                name: file.name,
+                                                path: file.path,
+                                                size: file.size,
+                                                type: file.type
+                                            });
+                                        }
+                                        else {
+                                            reject(reader);
+                                        }
+                                        doOnce();
+                                    });
+                                    reader.on('progress', (e) => {
+                                        progress.value = e.loaded/e.total;
+                                    });
+                                    reader.readAsText(file);
                                 } else { 
                                     console.error("Failed to load file");
                                 }
                             }
                         };
-                        doOnce(collection);
+                        doOnce();
                         return;
                     }
                 };
@@ -2760,7 +2826,7 @@
                 let event = document.createEvent("MouseEvents");
                 event.initEvent("click", true, true); // deprecated
                 a.dispatchEvent(event);
-            } else{
+            } else {
                 // Don't know...
             }
 
@@ -2780,7 +2846,7 @@
         const verify        = aa.prototypes.verify({
             appName: nonEmptyString,
             boolean: isBool,
-            dialogType: (type)=>{ return (nonEmptyString(type) && dialogTypes.has(type.trim().toLowerCase())); },
+            dialogType: (type) => { return (nonEmptyString(type) && dialogTypes.has(type.trim().toLowerCase())); },
             message: nonEmptyString,
             spec: isObject
         });
@@ -2820,19 +2886,19 @@
                     db.load();
                     const remindersInDB = db.select("reminders") || [];
 
-                    apps.forEach((app)=>{
+                    apps.forEach((app) => {
                         const fieldset = $$("fieldset", {
                             legend: app
                         });
                         content.appendChild(fieldset);
                         fieldset.appendChild($$("div", "Ask for my confirmation before:"));
                         const descriptions = [];
-                        reminders[app].forEach((desc, id)=>{
+                        reminders[app].forEach((desc, id) => {
                             descriptions.push(desc);
                         });
                         descriptions.sortNatural();
-                        descriptions.forEach((desc)=>{
-                            const id = reminders[app].reduce((acc, txt, id)=>{ return txt === desc ? id : acc; }, null);
+                        descriptions.forEach((desc) => {
+                            const id = reminders[app].reduce((acc, txt, id) => { return txt === desc ? id : acc; }, null);
                             if (id) {
                                 const hidden = $$("checkbox.hidden", {
                                     checked: remindersInDB.has(id),
@@ -2845,7 +2911,7 @@
                                     label: desc,
                                     name: "remind[]",
                                     value: id,
-                                    on: {input: (e)=>{
+                                    on: {input: (e) => {
                                         hidden.checked = !e.target.checked;
                                     }}
                                 }));
@@ -2856,7 +2922,7 @@
                     aa.gui.win({
                         title: "User confirmation",
                         text: content,
-                        on: {submit: (data)=>{
+                        on: {submit: (data) => {
                             data.doNotRemind = data.doNotRemind || [];
                             db.insert("reminders", data.doNotRemind);
                         }}
@@ -2874,8 +2940,8 @@
         const shortcutMaker = function (appName) {
             const shortcuts = {};
             if (appName) {
-                aa.events.app(appName).getEvents().forEach((events, evtName)=>{
-                    events.forEach((event)=>{
+                aa.events.app(appName).getEvents().forEach((events, evtName) => {
+                    events.forEach((event) => {
                         const action = event.action;
                         if (action.accessible) {
                             shortcuts[action.name] = aa.shortcut.format(evtName, ["simple"]);
@@ -2902,7 +2968,7 @@
             const explore = function (arr, shortcut, callback, top) {
                 const menu = $$("ul");
                 let index = (top === true ? undefined : top);
-                arr.forEach((entry, i)=>{
+                arr.forEach((entry, i) => {
                     if (entry instanceof aa.ActionGroup && entry.isValid()) {
                         const item = $$("li", $$("button", '<span class="icon fa fa-fw"></span> '+entry.label));
                         item.classList.add("expand");
@@ -2918,13 +2984,13 @@
                             item.classList.add("disabled");
                         }
                     } else if (nonEmptyString(entry)) {
-                        aa.action(entry, (action)=>{
+                        aa.action(entry, (action) => {
                             if (index !== null) {
-                                action.on("execute", ()=>{
+                                action.on("execute", () => {
                                     const top = tops[index];
                                     if (top) {
                                         top.classList.add("flash");
-                                        setTimeout(()=>{
+                                        setTimeout(() => {
                                             top.classList.remove("flash");
                                         }, 100);
                                     }
@@ -2956,12 +3022,12 @@
                             const span = $$("span"+".icon.fa.fa-fw"+icon+type);
                             const btn = $$("button", span);
                             btn.innerHTML += ' '+(action.text ? action.text : action.name);
-                            btn.on("click", (e)=>{
+                            btn.on("click", (e) => {
                                 if (callback) {
                                     callback();
                                 }
                                 if (!action.disabled) {
-                                    action.listeners.onexecute.forEach((func)=>{
+                                    action.listeners.onexecute.forEach((func) => {
                                         func(e);
                                     });
                                 }
@@ -2969,19 +3035,19 @@
                             item.appendChild(btn);
                             menu.appendChild(item);
                             if (action.checkable) {
-                                action.listenNode(btn, "oncheckchange", (node, checked)=>{
+                                action.listenNode(btn, "oncheckchange", (node, checked) => {
                                     node.firstChild.classList[checked ? "add" : "remove"]("fa-check");
                                     node.firstChild.classList[checked ? "add" : "remove"]("checked");
                                 });
                             } else {
-                                action.listenNode(btn, "oniconchange", (node, icon)=>{
+                                action.listenNode(btn, "oniconchange", (node, icon) => {
                                     const span = node.firstChild;
                                     span.classList.remove("fa-"+icon.previous);
                                     span.classList.add("fa-"+icon.new);
                                 });
                             }
-                            action.listenNode(item, "ondisablechange", ((action)=>{
-                                return (node, disabled)=>{
+                            action.listenNode(item, "ondisablechange", ((action) => {
+                                return (node, disabled) => {
                                     node.classList[(disabled || !action.listeners.onexecute.length ? "add" : "remove")]("disabled");
                                 };
                             })(action));
@@ -3002,6 +3068,9 @@
             
             const construct = function () {
                 this.setTheme(aa.settings.theme);
+                aa.events.on('themechange', (theme) => {
+                    this.setTheme(theme);
+                });
                 if (arguments && arguments.length) {
                     this.hydrate(arguments[0]);
                 }
@@ -3082,13 +3151,17 @@
 
                 const menu = $$("div.aaMenu", parse(get(this, "items"), shortcut, this.hide));
                 
-                if (get(this, "theme") !== ENV.THEMES.first) {
-                    menu.classList.add(get(this, "theme"));
-                }
-                menu.children.forEach((ul)=>{
-                    ul.children.forEach((li)=>{
-                        li.children.forEach((btn)=>{
-                            btn.children.forEach((span)=>{
+                // Theme:
+                menu.classList.add(get(this, "theme"));
+                aa.events.on('themechange', (theme, previous) => {
+                    menu.classList.remove(previous);
+                    menu.classList.add(theme);
+                });
+
+                menu.children.forEach((ul) => {
+                    ul.children.forEach((li) => {
+                        li.children.forEach((btn) => {
+                            btn.children.forEach((span) => {
                                 if (span.classList.contains("icon")) {
                                     // span.classList.remove("fa");
                                     // span.classList.remove("fa-fw");
@@ -3101,7 +3174,7 @@
                 return menu;
             };
             Menu.prototype.toObject     = function () {
-                const o = ["appName", "theme", "items"].reduce((o, key)=>{
+                const o = ["appName", "theme", "items"].reduce((o, key) => {
                     o[key] = get(this, key);
                     return o;
                 }, {});
@@ -3115,6 +3188,9 @@
             // Closure private methods:
             const construct     = function () {
                 set(this, "theme", aa.settings.theme);
+                aa.events.on('themechange', (theme) => {
+                    set(this, "theme", theme);
+                });
                 if (arguments && arguments.length) {
                     set(this, "menu", new aa.gui.Menu(arguments[0]));
                 }
@@ -3145,7 +3221,7 @@
                 const menuNode = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide));
                 
                 this.hide();
-                dom.on("contextmenu", (e)=>{
+                dom.on("contextmenu", (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (!aa.isOver(e,"#aaContextMenu")) {
@@ -3153,7 +3229,7 @@
                     }
                     return false;
                 });
-                dom.on("click", (e)=>{
+                dom.on("click", (e) => {
                     if (!aa.isOver(e,"#aaContextMenu")) {
                         e.stopPropagation();
                         this.hide();
@@ -3162,9 +3238,14 @@
                 dom.style.zIndex = aa.getMaxZIndex();
                 document.body.appendChild(dom);
 
-                if (get(this, "theme") !== ENV.THEMES.first) {
-                    menuNode.classList.add(get(this, "theme"));
-                }
+                // Theme:
+                const theme = get(this, 'theme');
+                menuNode.classList.add(theme);
+                aa.events.on('themechange', (theme, previous) => {
+                    menuNode.classList.remove(previous);
+                    menuNode.classList.add(theme);
+                });
+
                 menuNode.style.display = "block";
                 menuNode.style.top = aa.mouse.y+"px";
                 menuNode.style.left = (aa.mouse.x+4)+"px";
@@ -3240,7 +3321,7 @@
                     reminder:   null,
                     yesButton:  null
                 };
-                privates.forEach((v, k)=>{
+                privates.forEach((v, k) => {
                     set(this, k, v);
                 });
 
@@ -3264,13 +3345,13 @@
                 checkValidation:  function () {
                     let form = undefined;
                     let isValid = true;
-                    el("aaDialog-"+this.getID(), (node)=>{
+                    el("aaDialog-"+this.getID(), (node) => {
                         const forms = node.getElementsByTagName("form");
                         if (forms.length === 1) {
                             form = forms[0];
-                            const validation = this.validation || (()=>{ return true; });
-                            const checkElements = ()=>{
-                                return form.elements.reduce((bool, elt)=>{
+                            const validation = this.validation || (() => { return true; });
+                            const checkElements = () => {
+                                return form.elements.reduce((bool, elt) => {
                                     const validation = get(elt, "validation");
                                     if (isFunction(validation)) {
                                         const result = !!validation(elt);
@@ -3284,10 +3365,10 @@
                                     return bool;
                                 }, true);
                             };
-                            const checkPatterns = ()=>{
+                            const checkPatterns = () => {
                                 return form.elements
                                     .filter(elt => ["input", "textarea"].has(elt.nodeName.toLowerCase()))
-                                    .reduce((bool, elt)=>{
+                                    .reduce((bool, elt) => {
                                         const pattern = elt.pattern || elt.dataset.pattern;
                                         return (pattern && !elt.value.match(new RegExp(pattern)) ?
                                             false
@@ -3296,10 +3377,10 @@
                                     }, true)
                                 ;
                             };
-                            const checkrequired = ()=>{
+                            const checkrequired = () => {
                                 return form.elements
                                     .filter(elt => ["input", "textarea"].has(elt.nodeName.toLowerCase()))
-                                    .reduce((bool, elt)=>{
+                                    .reduce((bool, elt) => {
                                         const required = !!elt.required;
                                         return (required && !elt.value ?
                                             false
@@ -3321,15 +3402,15 @@
                 hydrate:            aa.prototypes.hydrate,
                 hide:               function () {
                     // warn("hide.id:", this.id);
-                    el("aaDialogBG-"+this.id, (dom)=>{
+                    el("aaDialogBG-"+this.id, (dom) => {
                         dom.classList.remove("fade");
                         dom.classList.add("fadeOut");
                     });
                     fire.call(this, "hide");
                     pop.call(this);
-                    setTimeout(()=>{
+                    setTimeout(() => {
                         // return;
-                        el("aaDialogBG-"+this.id, (dom)=>{
+                        el("aaDialogBG-"+this.id, (dom) => {
                             View.unblur.call(this);
                             dom.parentNode.removeChild(dom);
                             set(this, "node", null);
@@ -3353,7 +3434,7 @@
                 on:                 function (spec) {
                     const verify = aa.prototypes.verify({
                         spec: isObject,
-                        listener: (name)=>{ return get(this, "listeners").keys().has(name); }
+                        listener: (name) => { return get(this, "listeners").keys().has(name); }
                     });
                     verify("spec", spec);
 
@@ -3364,7 +3445,7 @@
                         ok = spec.ok;
                         delete(spec.ok);
                     }
-                    spec.forEach((callback, evtName)=>{
+                    spec.forEach((callback, evtName) => {
                         verify("listener", evtName);
                         if (!isFunction(callback)) { throw new TypeError("Callback argument must be a Function."); }
 
@@ -3394,7 +3475,7 @@
                                 return undefined;
                             };
 
-                            el("aaDialog-"+this.id, (node)=>{
+                            el("aaDialog-"+this.id, (node) => {
                                 node.diveTheDOM(function (n) {
                                     if (!form && n.tagName.toLowerCase() === "form") {
                                         form = n;
@@ -3411,7 +3492,7 @@
                                     form.style.paddingTop = getPixels(menu, "height")+"px";
                                     form.style.paddingBottom = getPixels(buttons, "height")+"px";
                                 }
-                            }, ()=>{
+                            }, () => {
                                 log("not found");
                             });
                             break;
@@ -3446,7 +3527,7 @@
                                     View.addCancelButtonTo.call(this, buttons);
 
                                     const events = {
-                                        submit: ()=>{
+                                        submit: () => {
                                             const reminder = get(this, "reminder");
                                             if (reminder) {
                                                 const data = getPOST.call(this);
@@ -3455,7 +3536,7 @@
                                             }
                                         }
                                     };
-                                    events.forEach((callback, evtName)=>{
+                                    events.forEach((callback, evtName) => {
                                         form.on(evtName, callback);
                                     });
                                 break;
@@ -3672,7 +3753,7 @@
                         p.forEach(function (n) {
                             this.addNo(n);
                         },this);
-                    } else{
+                    } else {
                         this.addNo(p);
                     }
                 },
@@ -3701,7 +3782,7 @@
                     // s = s.trim();
                     // if (this.suspendedModules.has(s)) {
                     //     return true;
-                    // } else{
+                    // } else {
                     //     return this.suspendedModules.push(s);
                     // }
                 },
@@ -3711,7 +3792,7 @@
                     } else if(nonEmptyString(p)) {
                         this.text = p.trim();
                     } else if (isArray(p)) {
-                        const isOk = p.reduce((bool, elt)=>{
+                        const isOk = p.reduce((bool, elt) => {
                             return (!nonEmptyString(elt) && !isElement(elt) ?
                                 false
                                 : bool
@@ -3749,7 +3830,7 @@
                 },
                 setToolbar:         function (item) {
                     if (isArray(item)) {
-                        item.forEach((a)=>{
+                        item.forEach((a) => {
                             this.setToolbar(a);
                         });
                     } else {
@@ -3782,7 +3863,7 @@
                         p.forEach(function (a) {
                             this.addYes(a);
                         },this);
-                    } else{
+                    } else {
                         this.addYes(p);
                     }
                 },
@@ -3870,14 +3951,14 @@
 
             // Closure private methods:
             const bgOpacity         = function () {
-                dialogs.forEach((dialog)=>{
-                    el("aaDialogBG-"+dialog.id, (bg)=>{
+                dialogs.forEach((dialog) => {
+                    el("aaDialogBG-"+dialog.id, (bg) => {
                         bg.classList.add("transparent");
                     });
                 });
                 const last = dialogs.last;
                 if (last) {
-                    el("aaDialogBG-"+last.id, (bg)=>{
+                    el("aaDialogBG-"+last.id, (bg) => {
                         bg.classList.remove("transparent");
                     });
                 }
@@ -3887,6 +3968,9 @@
                 // Default type:
                 this.setType(dialogTypes[0]);
                 this.setTheme(aa.settings.theme);
+                aa.events.on('themechange', (theme, previous) => {
+                    this.setTheme(theme);
+                });
                 
                 if (arguments && arguments.length) {
                     // Type:
@@ -3942,9 +4026,9 @@
                 }
             };
             const fire              = function (str) {
-                aa.prototypes.verify({str: (str)=>{ return get(this, "listeners").keys().has(str); }})("str", str);
+                aa.prototypes.verify({str: (str) => { return get(this, "listeners").keys().has(str); }})("str", str);
                 
-                get(this, "listeners")[str].forEach((item)=>{
+                get(this, "listeners")[str].forEach((item) => {
                     const data = str === "submit" ?
                         getPOST.call(this)
                         : undefined
@@ -3952,7 +4036,7 @@
 
                     // String:
                     if (isString(item)) {
-                        aa.action(item, (action)=>{
+                        aa.action(item, (action) => {
                             action.execute(data);
                         })
                     }
@@ -3976,7 +4060,7 @@
                 const last = dialogs.last;
                 if (last) {
                     if (last.type === "prompt") {
-                        el("aaDialog-"+last.id+"DialogInput", (node)=>{
+                        el("aaDialog-"+last.id+"DialogInput", (node) => {
                             node.focus();
                         });
                     } else {
@@ -4043,7 +4127,7 @@
                 let div = $$("div#aaDialog-"+this.id, 'Enter a new key combination<div id="aaHotkey" class="hotkey placeholder">'+(this.defaultValue ? aa.shortcut.format(this.defaultValue, ["css"]) : "···")+"</div>");
                 td.appendChild(div);
 
-                const keydown = (e)=>{
+                const keydown = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (!["alt", "control", "meta", "shift"].has(e.key.toLowerCase())) {
@@ -4051,12 +4135,12 @@
                         if (shortcut.match(/\#[0-9]+$/)) {
                             return;
                         }
-                        el("aaHotkey", (node)=>{
+                        el("aaHotkey", (node) => {
                             node.innerHTML = '';
                             node.classList.remove("placeholder");
                             node.innerHTML = aa.shortcut.format(shortcut, ["simple"]);
                         });
-                        get(that, "listeners").submit.forEach((callback)=>{
+                        get(that, "listeners").submit.forEach((callback) => {
                             callback(shortcut);
                         });
                         hide(shortcut, true);
@@ -4074,8 +4158,8 @@
                     btnCancel.disabled = true;
 
                     let opacity=100;
-                    setTimeout(()=>{
-                        const timer = setInterval(()=>{
+                    setTimeout(() => {
+                        const timer = setInterval(() => {
                             opacity -= 2;
                             opacity -= 200;
                             aa.browser.setOpacity(o.dom, (opacity/100));
@@ -4086,7 +4170,7 @@
                                     delete(o.dom);
                                 }
                                 aa.events.removeApp("aaDialog-"+that.getID());
-                                get(that, "listeners").hide.forEach((callback)=>{
+                                get(that, "listeners").hide.forEach((callback) => {
                                     callback();
                                 });
                                 pop();
@@ -4103,9 +4187,9 @@
                     value: "Remove shortcut",
                     on: {
                         click: function () {
-                            el("aaHotkey", (node)=>{
+                            el("aaHotkey", (node) => {
                                 node.innerHTML = "···";
-                                get(that, "listeners").submit.forEach((callback)=>{
+                                get(that, "listeners").submit.forEach((callback) => {
                                     callback(null);
                                 });
                                 hide(null, true);
@@ -4117,8 +4201,8 @@
                 // Cancel button:
                 const btnCancel = aa.html("button", {
                     value: "Cancel",
-                    on: {click: ()=>{
-                        get(that, "listeners").cancel.forEach((callback)=>{
+                    on: {click: () => {
+                        get(that, "listeners").cancel.forEach((callback) => {
                             callback(undefined);
                         });
                         hide(this, false);
@@ -4183,7 +4267,7 @@
                         if (focusIndex < 0) {
                             focusIndex = actions.length-1;
                         }
-                    } else{
+                    } else {
                         if (activeElt) {
                             focusIndex = 1+actions.indexOf(activeElt);
                         }
@@ -4201,7 +4285,7 @@
                 let post = undefined;
                 if (isDom(el("aaDialog-"+this.id))) {
                     if (this.type.toLowerCase() === "prompt") {
-                        el("aaDialog-"+this.id+"DialogInput", (input)=>{
+                        el("aaDialog-"+this.id+"DialogInput", (input) => {
                             post = (input.value.trim() ?
                                 input.value.trim()
                                 : null
@@ -4221,7 +4305,7 @@
                                                     post[name].push(elt.value);
                                                 }
                                             });
-                                        } else{
+                                        } else {
                                             post[name] = dom.value;
                                         }
                                         break;
@@ -4246,7 +4330,7 @@
                                                     if (dom.checked) {
                                                         post[name].push(dom.value);
                                                     }
-                                                } else{
+                                                } else {
                                                     if (dom.checked) {
                                                         post[name] = dom.value;
                                                     }
@@ -4299,7 +4383,7 @@
                     set(this, "btn-cancel", $$("input#aaDialog-"+this.getID()+"-cancelButton.reset", {
                         type: "reset",
                         on: {
-                            click: ()=>{
+                            click: () => {
                                 fire.call(this, "cancel");
                                 this.hide();
                             }
@@ -4318,8 +4402,8 @@
                     if (this.placeholder !== null) {
                         input.placeholder = this.placeholder;
                     }
-                    get(this, "listeners").forEach((list, evtName)=>{
-                        list.forEach((callback)=>{
+                    get(this, "listeners").forEach((list, evtName) => {
+                        list.forEach((callback) => {
                             input.on(evtName, callback);
                         });
                     });
@@ -4339,7 +4423,7 @@
                 addSubmitButtonTo:  function (node) {
                     set(this, "btn-submit", $$("input#aaDialog-"+this.getID()+"-submitButton", {
                         type: "submit",
-                        on: {click: (e)=>{
+                        on: {click: (e) => {
                             fire.call(this, "submit");
                             this.hide();
                         }}
@@ -4349,13 +4433,17 @@
                     get(this, "btn-submit").focus();
                 },
                 addThemeTo:         function (node) {
-                    if (this.theme && this.theme !== ENV.THEMES.first) {
+                    if (this.theme) {
                         node.classList.add(this.theme);
+                        aa.events.on('themechange', (theme, previous) => {
+                            node.classList.remove(previous);
+                            node.classList.add(theme);
+                        });
                     }
                 },
                 addTextTo:           function (node) {
                     if (isArray(this.text)) {
-                        this.text.forEach((txt)=>{
+                        this.text.forEach((txt) => {
                             if (isString(txt)) {
                                 node.appendChild($$("div", txt));
                             } else if (isElement(txt)) {
@@ -4375,7 +4463,7 @@
                 },
                 addToolbarTo:       function (node) {
                     if (this.toolbar.length) {
-                        this.toolbar.forEach((item)=>{
+                        this.toolbar.forEach((item) => {
                             let tool = null;
                             if (isDom(item)) {
                                 tool = item;
@@ -4389,7 +4477,7 @@
                                         text: (a.icon ? '' : a.getText())
                                     }),
                                     { on: {
-                                        click: ()=>{ a.execute(); }
+                                        click: () => { a.execute(); }
                                     }}
                                 );
                             }
@@ -4412,7 +4500,7 @@
                 },
                 focus:              function () {
                     if (this.type.toLowerCase() === "prompt") {
-                        el("aaDialog-"+this.id+"DialogInput", (input)=>{
+                        el("aaDialog-"+this.id+"DialogInput", (input) => {
                             input.select();
                         });
                     } else {
@@ -4423,14 +4511,14 @@
                     }
                 },
                 followFocus:        function (form) {
-                    form.elements.forEach((elt)=>{
-                        elt.on("focus", ()=>{
+                    form.elements.forEach((elt) => {
+                        elt.on("focus", () => {
                             set(this, "lastFocus", elt);
                         });
                     });
                 },
                 invalidCSS:         function (form) {
-                    form.elements.forEach((elt)=>{
+                    form.elements.forEach((elt) => {
                         switch (elt.nodeName.toLowerCase()) {
                             case "input":
                                 break;
@@ -4469,19 +4557,19 @@
 
                     // Click outside:
                     let outside;
-                    const isOutside = (e)=>{
-                        return e.path.reduce((outside, node)=>{
+                    const isOutside = (e) => {
+                        return e.path.reduce((outside, node) => {
                             return (node.classList && node.classList.contains("aaDialog") ?
                                 false
                                 : outside
                             );
                         }, true);
                     };
-                    dom.on("mousedown", (e)=>{
+                    dom.on("mousedown", (e) => {
                         outside = isOutside(e);
                         return true;
                     });
-                    dom.on("mouseup", (e)=>{
+                    dom.on("mouseup", (e) => {
                         if (outside && isOutside(e)) {
                             fire.call(this, "cancel");
                             this.hide();
@@ -4553,7 +4641,7 @@
                         method: "POST",
                         action: "javascript:;",
                         on: {
-                            submit: (e)=>{
+                            submit: (e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 const btn = get(this, "yesButton");
@@ -4563,7 +4651,7 @@
                             }
                         }
                     });
-                    // form.on("submit", (e)=>{
+                    // form.on("submit", (e) => {
                     //     e.stopPropagation();
                     //     e.preventDefault();
                     //     const btn = get(this, "yesButton");
@@ -4579,7 +4667,7 @@
                 },
                 getModal:           function () {
                     const modal = $$("div#aaDialog-"+this.getID()+".aaDialog");
-                    View.addThemeTo.call(modal);
+                    View.addThemeTo.call(this, modal);
                     return modal;
                 },
                 getMenuIcon:        function () {
@@ -4589,19 +4677,19 @@
                     return $$("div.message");
                 },
                 onresize:           function () {
-                    aa.events.app("aaDialog-"+this.getID()).on("windowresize", (e)=>{
+                    aa.events.app("aaDialog-"+this.getID()).on("windowresize", (e) => {
                         this.resize();
-                        get(this, "listeners").resize.forEach((callback)=>{ callback(e); });
+                        get(this, "listeners").resize.forEach((callback) => { callback(e); });
                     }, ["preventDefault", "always"]);
                 },
                 setShortcuts:       function () {
                     ({
-                        // "<Enter>": ()=>{
+                        // "<Enter>": () => {
                         //     if (get(this, "btn-submit")) {
                         //         get(this, "btn-submit").click();
                         //     }
                         // },
-                        "<Esc>": ()=>{
+                        "<Esc>": () => {
                             switch (this.type) {
                                 case "information":
                                 case "warning":
@@ -4621,13 +4709,13 @@
                                     break;
                             }
                         },
-                        "<Tab>": ()=>{
+                        "<Tab>": () => {
                             switchTab.call(this);
                         },
-                        "shift <Tab>": ()=>{
+                        "shift <Tab>": () => {
                             switchTab.call(this, false);
                         }
-                    }).forEach((callback, evtName)=>{
+                    }).forEach((callback, evtName) => {
                         aa.events.app("aaDialog-"+this.getID()).on(evtName, (new aa.Action({on: {execute: callback}})), ["preventDefault", "always"]);
                     });
 
@@ -4676,10 +4764,10 @@
                     return true;
                 },
                 listenValidation:   function (form) {
-                    const verify = ()=>{
+                    const verify = () => {
                         this.checkValidation();
                     };
-                    form.elements.forEach((node)=>{
+                    form.elements.forEach((node) => {
                         switch (node.nodeName.toLowerCase()) {
                             case "input":
                                 switch (node.type.toLowerCase()) {
@@ -4733,10 +4821,18 @@
                     notif.push();
                 */
                 // Attributes:
-                this.id         = null;
-                this.message    = null;
-                this.title      = null;
-                this.type       = null;
+                aa.defineAccessors.call(this, {
+                    publics: {
+                        id: null,
+                        message: null,
+                        title: null,
+                        type: null,
+                    }
+                });
+                // this.id         = null;
+                // this.message    = null;
+                // this.title      = null;
+                // this.type       = null;
 
                 // Lists:
                 this.actions = [];
@@ -4755,17 +4851,20 @@
                             this.hydrate(arguments[1]);
                         }
                     }
+                    el("aaNotifs", null, () => {
+                        document.body.appendChild($$("div#aaNotifs.aa"));
+                    });
                 };
 
-                if (this.hydrate === undefined) {
+                aa.deploy(aa.gui.Notification.prototype, {
 
                     // Methods:
-                    aa.gui.Notification.prototype.hydrate = aa.prototypes.hydrate;
-                    aa.gui.Notification.prototype.isValid       = function () {
+                    hydrate:    aa.prototypes.hydrate,
+                    isValid:    function () {
 
                         return (this.text !== null);
-                    };
-                    aa.gui.Notification.prototype.push          = function () {
+                    },
+                    push:       function () {
                         let notifs = document.getElementById("aaNotifs");
                         if (notifs) {
                             notifs.style.zIndex = 1+aa.getMaxZIndex();
@@ -4773,24 +4872,24 @@
                             if (dom) {
                                 if (notifs.firstChild) {
                                     notifs.insertBefore(dom, notifs.firstChild);
-                                } else{
+                                } else {
                                     notifs.appendChild(dom);
                                 }
                                 notifsLength++;
                             }
                         }
-                    };
-                    aa.gui.Notification.prototype.remove        = function (id) {
+                    },
+                    remove:     function (id) {
                         let dom = document.getElementById('aaNotif_'+id);
                         if (dom) {
                             dom.classList.add('fadeOut');
                             dom.on('animationend',(function (dom) {return function () {dom.style.display = 'none';};})(dom));
                             // dom.parentNode.removeChild(dom);
                         }
-                    };
+                    },
 
                     // Setters:
-                    aa.gui.Notification.prototype.addAction     = function (o) {
+                    addAction:  function (o) {
                         if (!isObject(o)) {
                             throw new TypeError("Options argument must be an object.");
                             return false;
@@ -4801,38 +4900,34 @@
                             return true;
                         }
                         return false;
-                    };
-                    aa.gui.Notification.prototype.setId         = function (p) {
-                        if (!nonEmptyString(p)) {
-                            throw new Error("'ID' option should a non-empty String.");
+                    },
+                    setId:      function (p) {
+                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+                        
+                        set(this, 'id', p.trim());
+                    },
+                    setMessage: function (p) {
+                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+
+                        set(this, 'message', p.trim());
+                    },
+                    setTitle:   function (p) {
+                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+
+                        set(this, 'title', p.trim());
+                    },
+                    setType:    function (p) {
+                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+
+                        p = p.trim().toLowerCase();
+                        if (types.has(p)) {
+                            set(this, 'type', p);
                         }
-                        this.id = p;
-                    };
-                    aa.gui.Notification.prototype.setMessage    = function (p) {
-                        if (isString(p) && p.trim()) {
-                            this.message = p.trim();
-                        }
-                    };
-                    aa.gui.Notification.prototype.setTitle      = function (p) {
-                        if (!nonEmptyString(p)) {
-                            throw new TypeError("Title argument must be a valid String.");
-                            return false;
-                        }
-                        this.title = p.trim();
-                        return true;
-                    };
-                    aa.gui.Notification.prototype.setType       = function (p) {
-                        if (isString(p) && types.has(p.trim().toLowerCase())) {
-                            this.type = p.trim().toLowerCase();
-                            return true;
-                        }
-                        throw new TypeError("Type argument is not valid.");
-                        return false;
-                    };
+                    },
 
                     // Getters:
-                    aa.gui.Notification.prototype.getHTML       = function () {
-                        let dom = aa.html("div.notif#aaNotif_"+notifsLength);
+                    getHTML:    function () {
+                        const dom = aa.html("div.notif."+this.type+"#aaNotif_"+notifsLength);
 
                         if (this.type !== null) {
                             let icon = aa.html("div.icon");
@@ -4886,7 +4981,7 @@
                                         return b.on("click",callback);
                                     });
                                 }
-                                b.on("click", ()=>{ action.execute(); });
+                                b.on("click", () => { action.execute(); });
                                 b.on("click", remove);
                                 bs.appendChild(b);
                                 switch (action.type) {
@@ -4900,27 +4995,210 @@
                             });
                             message.appendChild(bs);
                         }
-                        else{
+                        else {
                             dom.classList.add("waitAndFadeOut");
                             dom.on("animationend",(function (dom) {return function () {dom.style.display = "none";};})(dom));
                         }
                         
                         // dom.appendChild(fade);
                         return dom;
-                    };
-
-                    // Init:
-                    el("aaNotifs", null, ()=>{
-
-                        document.body.appendChild($$("div#aaNotifs.aa"));
-                    });
-                }
+                    }
+                }, {
+                    force: true,
+                    condition: aa.gui.Notification.prototype.hydrate === undefined
+                });
 
                 // Init:
                 construct.apply(this, arguments);
             };
 
             return Object.freeze(Notification);
+        })();
+        this.Progress       = (function () {
+            const collection = {};
+            const uid = () => {
+                let id;
+                do {
+                    id = aa.uid();
+                } while (collection.hasOwnProperty(id));
+                return id;
+            };
+            const Progress = function () {
+
+                // Attributes:
+                aa.defineAccessors.call(this, {
+                    publics: {
+                        title: null,
+                        visible: true
+                    },
+                    write: {
+                    },
+                    privates: {
+                        indexes: {},
+                        id: uid(),
+                        nodes: {
+                            container: null,
+                            collection: {}
+                        }
+                    }
+                });
+
+                const construct = function () {
+                    const id = get(this, 'id');
+                    collection[id] = this;
+                    this.hydrate.apply(this, arguments);
+                };
+                const view = {
+                    percent: function (index, value) {
+                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+
+                        index = index.trim();
+                        const nodes = get(this, 'nodes').collection;
+                        if (nodes.hasOwnProperty(index)) {
+                            nodes[index].percent.innerHTML = value*100;
+                        }
+                    }
+                };
+                const addNode   = function (index) {
+                    if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+
+                    index = index.trim();
+                    const container = get(this, 'nodes').container;
+                    if (container) {
+                        const nodes = get(this, 'nodes').collection;
+                        if (!nodes.hasOwnProperty(index)) {
+                            nodes[index] = {
+                                label: $$('div', index.getFilename()),
+                                range: $$('range', {
+                                    min: 0,
+                                    max: 100,
+                                    step: 1,
+                                    disabled: true,
+                                    value: get(this, 'indexes')[index]+''
+                                }),
+                                percent: $$('span', )
+                            };
+                            nodes[index].container = $$('div.item',
+                                $$('div'),
+                                $$('div', nodes[index].range),
+                                $$('div.percent',
+                                    nodes[index].percent
+                                ),
+                                // $$('label',
+                                //     $$('div',
+                                //         nodes[index].label
+                                //     )
+                                // )
+                            );
+                            container.appendChild(nodes[index].container);
+                        }
+                        view.percent.call(this, index, 0);
+                    }
+                };
+                const moveRange = function (index, value) {
+                    if (!nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+
+                    const nodes = get(this, 'nodes');
+                    if (nodes.collection[index]) {
+                        nodes.collection[index].range.value = value*100;
+                        nodes.collection[index].percent.innerHTML = Math.floor(value*100);
+                    }
+                };
+
+                aa.deploy(Progress.prototype, {
+                    
+                    // Methods:
+                    hydrate: aa.prototypes.hydrate,
+                    add:        function (index) {
+                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+
+                        index = index.trim();
+                        set(this, 'tasks', 1+get(this, 'tasks'));
+                        get(this, 'indexes')[index] = 0;
+                        addNode.call(this, index);
+                    },
+                    complete:   function (index) {
+                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+
+                        index = index.trim();
+                        const indexes = get(this, 'indexes');
+                        const nodes = get(this, 'nodes').collection;
+                        if (indexes.hasOwnProperty(index)) {
+                            delete indexes[index];
+                        }
+                        if (nodes.hasOwnProperty(index)) {
+                            nodes[index].range.value = 100;
+                            nodes[index].range.classList.add('complete');
+                            nodes[index].container.removeNode();
+                            delete nodes[index];
+                        }
+                        if (indexes.keys().length <= 0) {
+                            this.hide();
+                        }
+                    },
+                    hide:       function () {
+                        el('aaProgress-'+get(this, 'id'), (node) => {
+                            node.removeNode();
+                        });
+                        delete collection[this.id];
+                    },
+                    show:       function () {
+                        el('aaProgress', () => {}, () => {
+                            const nodes = get(this, 'nodes');
+                            nodes.container = $$('div.message');
+                            if (this.title) {
+                                nodes.container.appendChild($$('h2.title', this.title));
+                            }
+                            document.body.appendChild($$('div#aaProgress-'+get(this, 'id')+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                                $$('div.aaTable.fullscreen',
+                                    $$('div.td',
+                                        $$('div.aaDialog.progress',
+                                            nodes.container
+                                        )
+                                    )
+                                )
+                            ));
+                            get(this, 'indexes').forEach((value, index) => {
+                                addNode.call(this, index);
+                            });
+                        });
+                    },
+
+                    // Getters:
+                    // Setters:
+                    move:       function (index, value) {
+                        if (!nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                        if (!isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+
+                        index = index.trim();
+                        const indexes = get(this, 'indexes');
+                        if (indexes.hasOwnProperty(index)) {
+                            indexes[index] = value;
+                        }
+                        moveRange.call(this, index, value);
+                    },
+                    setTitle:   function (title) {
+                        if (!nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
+
+                        set(this, 'title', title.trim());
+                    },
+                    setVisible: function (visible) {
+                        if (!isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
+
+                        set(this, 'visible', visible);
+                        el('aaProgress-'+get(this, 'id'), (node) => {
+                            node.classList[visible ? 'remove' : 'add']('hidden');
+                        })
+                    }
+                }, {
+                    force: true,
+                    condition: Progress.prototype.hydrate === undefined
+                });
+
+                construct.apply(this, arguments);
+            };
+            return Object.freeze(Progress);
         })();
 
         // Simplified aliases:
@@ -4956,7 +5234,7 @@
 
             const gui = new aa.gui.Dialog("loading", spec);
             gui.show();
-            setTimeout(()=>{
+            setTimeout(() => {
                 let ok = true;
                 try {
                     callback();
@@ -4982,24 +5260,24 @@
              * @return void
 
                 // ----------------------------
-                aa.gui.notification('message à afficher',{
+                aa.gui.notification('message à afficher', {
                     type:   'confirm', // optional ('information','warning','critical','confirm')
-                    action:{
+                    action: { // action builder...
                         text:   'Oui',
                         name:   'action1_name',
                         // callback: function(){}, // deprecated
                         on: {
-                            execute: ()=>{}
+                            execute: () => {}
                         }
                     },
-                    actions:[
+                    actions: [ // action builders...
                         {
                             text:   'Non',
                             name:   'action2_name',
                             type:   'reset', // optional
                             // callback: function(){}, // deprecated
                             on: {
-                                execute: ()=>{}
+                                execute: () => {}
                             }
                         },
                         {
@@ -5008,7 +5286,7 @@
                             type:   'reset', // optional
                             // callback: function(){}, // deprecated
                             on: {
-                                execute: ()=>{}
+                                execute: () => {}
                             }
                         }
                     ]
@@ -5052,8 +5330,8 @@
         };
 
         // Aliases:
-        dialogTypes.filter((type)=>{ return (type !== "loading"); }).forEach((type)=>{
-            this[type] = (spec)=>{
+        dialogTypes.filter((type) => { return (type !== "loading"); }).forEach((type) => {
+            this[type] = (spec) => {
                 return this.dialog(type, spec);
             };
         });
@@ -5874,7 +6152,7 @@
 
                 let nodeName = undefined;
                 let suffix = '';
-                classes.forEach((className)=>{
+                classes.forEach((className) => {
                     if (this.has(className)) {
                         if (!nodeName) {
                             nodeName = "span.fa";
@@ -6857,7 +7135,7 @@
                 let span = undefined;
                 let suffix = '';
                 const content = [];
-                classes.forEach((className)=>{
+                classes.forEach((className) => {
                     if (this.has(className)) {
                         if (!span) {
                             span = "span.material-icons";
@@ -6897,17 +7175,17 @@
             const spec = {
                 onglets: []
             };
-            aa.gui.loading(()=>{
-                fonts.forEach((font)=>{
-                    const filter = (e)=>{
+            aa.gui.loading(() => {
+                fonts.forEach((font) => {
+                    const filter = (e) => {
                         const value = e.target.value;
                         searchValue = value;
                         const regex = new RegExp(value);
-                        grid.children.forEach((row)=>{
+                        grid.children.forEach((row) => {
                             row.classList[((row.dataset && row.dataset.key.match(regex)) ? "remove" : "add")]("hidden");
                         });
                         let found = false;
-                        grid.childNodes.forEach((row)=>{
+                        grid.childNodes.forEach((row) => {
                             if (row.dataset && row.dataset.key.match(regex)) {
                                 found = true;
                             }
@@ -6927,8 +7205,8 @@
                     spec.onglets.push({
                         name: "aafw-fonts",
                         label: obj.constructor.name,
-                        text: (()=>{
-                            obj.keys().forEach((key)=>{
+                        text: (() => {
+                            obj.keys().forEach((key) => {
                                 grid.appendChild($$("div.row", {dataset: {key: key}},
                                     $$("div.cell", {style: "min-width: fit-content;"},
                                         $$("icon.fa-fw."+key, {style: "margin: 2px;", title: key}),
@@ -6948,7 +7226,7 @@
                             );
                         })(),
                         on: {
-                            check: ()=>{
+                            check: () => {
                                 search.value = searchValue;
                                 search.click()
                                 search.select();
@@ -6960,7 +7238,7 @@
                     title: "Fonts",
                     text: $$("div", spec)
                 });
-            }, ()=>{
+            }, () => {
             });
             return;
         }
@@ -6968,7 +7246,7 @@
         const {id, tagName} = extracts;
         let {classes} = extracts;
         let node = undefined;
-        fonts.forEach((font)=>{
+        fonts.forEach((font) => {
             const obj = new font();
             const result = obj.getNode(id, classes, args);
             if (result && !node) {
@@ -7019,7 +7297,9 @@
                 if (!nonEmptyString(className)) { throw new TypeError("Second argument must be a non-empty String."); }
                 if (!isArray(args)) { throw new TypeError("Third argument must be an Array."); }
 
-                const cls = getter(this, 'classes')[className];
+                const classes = getter(this, 'classes');
+                if (!classes.hasOwnProperty(className)) { throw new TypeError("Class '"+className+"' not indexed."); }
+                const cls = classes[className];
                 const instance = Object.create(cls.prototype);
                 cls.apply(instance, args);
                 if (instance.id !== undefined) {
@@ -7242,7 +7522,7 @@
                     aa.mouse.y = evt.clientY;
                     aa.mouse.absoluteX = evt.pageX;
                     aa.mouse.absoluteY = evt.pageY;
-                } else{
+                } else {
                     aa.mouse.x = event.clientX;
                     aa.mouse.y = event.clientY;
                     aa.mouse.absoluteX = event.clientX + document.body.scrollLeft;
@@ -7323,9 +7603,9 @@
         const verify = aa.prototypes.verify({
             appName: nonEmptyString,
             callback: isFunction,
-            defaultValue: (v)=>{ return (!v || nonEmptyString(v)); },
+            defaultValue: (v) => { return (!v || nonEmptyString(v)); },
             evtName: nonEmptyString,
-            shortcut: (str)=>{ return (nonEmptyString(str) && str.match(re)); }
+            shortcut: (str) => { return (nonEmptyString(str) && str.match(re)); }
         });
         const btnText = "add a shortcut";
 
@@ -7361,7 +7641,7 @@
                 if (isRegex) {
                     searchNode.classList.remove(cssSearch);
                     searchNode.title = "";
-                    node.children.forEach((tr)=>{
+                    node.children.forEach((tr) => {
                         if (tr.id !== "aaShortcuts-actionNotFound") {
                             if (tr.children[1].innerText.trim().toLowerCase().match(re)) {
                                 tr.classList.remove(cssTR);
@@ -7371,9 +7651,9 @@
                             }
                         }
                     });
-                    el("aaShortcuts-actionNotFound", (tr)=>{
+                    el("aaShortcuts-actionNotFound", (tr) => {
                         tr.classList[!search || count ? "add" : "remove"]("hidden");
-                    }, ()=>{
+                    }, () => {
                         if (search && !count) {
                             node.appendChild(aa.html("tr#aaShortcuts-actionNotFound", aa.html("td.gris", "<i>No action matches the request.</i>")));
                         }
@@ -7387,7 +7667,7 @@
             refresh:    function (appName) {
                 node.clear();
                 
-                dico.forEach((title)=>{
+                dico.forEach((title) => {
                     const action = byTitle[title].action;
                     const parts = (action.description ? action.description : action.name).match(/^(.*\:)?([^\:]*)$/);
                     let text = '';
@@ -7396,10 +7676,10 @@
                     }
 
                     const tr = aa.html("tr",
-                        (()=>{
+                        (() => {
                             const td = aa.html("td#aaShortcutValue-"+action.name, {style: "min-width: 160px; text-align: right;"});
                             let empty = true;
-                            shortcuts[action.name].forEach((s)=>{
+                            shortcuts[action.name].forEach((s) => {
                                 empty = false;
                                 td.appendChild(gui.getButton(appName, s, action));
                             });
@@ -7425,7 +7705,7 @@
                 shortcuts = {};
 
                 // Load:
-                aa.actionManager.getFrom({app: appName, accessible: true}).forEach((action)=>{
+                aa.actionManager.getFrom({app: appName, accessible: true}).forEach((action) => {
                     const title = (action.description ? action.description+'-'+action.name : action.name);
                     if (!dico.has(title)) {
                         dico.push(title);
@@ -7436,8 +7716,8 @@
                     };
                     shortcuts[action.name] = [];
                 });
-                aa.events.app(appName).getEvents().forEach((events, evtName)=>{
-                    events.forEach((event)=>{
+                aa.events.app(appName).getEvents().forEach((events, evtName) => {
+                    events.forEach((event) => {
                         const action = event.action;
                         if (action.accessible) {
                             if (!shortcuts.hasOwnProperty(action.name)) {
@@ -7471,9 +7751,9 @@
                     title: "Edit shortcuts",
                     text: gui.getNode(appName),
                     on: {
-                        resize: ()=>{
+                        resize: () => {
                         },
-                        hide: ()=>{
+                        hide: () => {
                             gui.reset();
                             isGuiOpened = false;
                         }
@@ -7490,17 +7770,17 @@
                     title: "Edit shortcut",
                     text: (s ? aa.shortcut.format(s, ["css"]) : btnText),
                     on: {
-                        click: ((s, action)=>{
-                            return ()=>{
+                        click: ((s, action) => {
+                            return () => {
                                 const spec = {
                                     app: action.app,
                                     on: {
-                                        submit: (shortcut)=>{
+                                        submit: (shortcut) => {
                                             if (shortcut !== undefined) {
 
                                                 // Shortcut String changed:
                                                 if (shortcut !== s) {
-                                                    const doit = ()=>{
+                                                    const doit = () => {
                                                         if (s) {
                                                             aa.events.app(appName).dissociate(s);
                                                         }
@@ -7518,7 +7798,7 @@
                                                             const previous = events.last.action;
                                                             aa.gui.confirm({
                                                                 text: "Shortcut "+aa.shortcut.format(shortcut, ["css"])+" is already assigned to <b>"+previous.getDescription()+"</b>.<br><br>Are you sure you would like to assign it to <b>"+action.getDescription()+"</b>?",
-                                                                on: { submit: ()=>{
+                                                                on: { submit: () => {
                                                                     doit();
                                                                 } }
                                                             });
@@ -7546,7 +7826,7 @@
                 restoreNode = aa.html("button.link", {
                     text: "Restore default",
                     on: {
-                        click: (e)=>{
+                        click: (e) => {
                             aa.events.restoreShortcuts(appName);
                             gui.reload(appName);
                             gui.refresh();
@@ -7557,10 +7837,10 @@
                     value: '',
                     placeholder: "Search by action...",
                     on: {
-                        change: (e)=>{
+                        change: (e) => {
                             gui.filter(e.target.value);
                         },
-                        keyup: (e)=>{
+                        keyup: (e) => {
                             gui.filter(e.target.value);
                         }
                     }
@@ -7601,7 +7881,7 @@
             verify("shortcut", str);
             if (arguments && arguments.length>1) {
                 if (!isArray(arguments[1])) { throw new TypeError("Second argument must be an Array."); }
-                if (arguments[1].verify((v)=>{ return allowedOptions.has(v); })) { throw new TypeError("Invalid items found in second argument."); }
+                if (arguments[1].verify((v) => { return allowedOptions.has(v); })) { throw new TypeError("Invalid items found in second argument."); }
             }
             const options = (arguments && arguments.length>1 ? arguments[1] : []);
 
@@ -7622,9 +7902,9 @@
             if (prefix) {
                 prefix = (function () {
                     const list = prefix.split('+');
-                    specialKeys.filter((specialKey)=>{
+                    specialKeys.filter((specialKey) => {
                         return list.has(specialKey);
-                    }).forEach((key)=>{
+                    }).forEach((key) => {
                         specials.push(key);
                     });
                     return specials.join('+');
@@ -7633,7 +7913,7 @@
             // log({str: str, prefix: prefix, key: key});
             if (os === "mac") {
                 str = str.replace(/[a-z\+]+\s/gi, '');
-                prefix = (specials.reduce((acc, special)=>{
+                prefix = (specials.reduce((acc, special) => {
                     return acc+css(chars[special]);
                 }, ''));
                 str = str.replace(/clavier\_/i,'')
@@ -7641,7 +7921,7 @@
                 ;
             } else {
                 if (options.has("css")) {
-                    prefix = (specials.reduce((acc, special)=>{
+                    prefix = (specials.reduce((acc, special) => {
                         acc = acc+css(special.firstToUpper());
                         return acc;
                     }, ''));
@@ -7664,13 +7944,13 @@
             if (!isGuiOpened) {
                 isGuiOpened = true;
 
-                aa.gui.loading(()=>{ // loading...
+                aa.gui.loading(() => { // loading...
                     gui.reset();
                     gui.reload(appName);
-                }, ()=>{ // Resolved...
+                }, () => { // Resolved...
 
                     gui.show(appName);
-                }, ()=>{ // Rejected...
+                }, () => { // Rejected...
 
                     aa.gui.warn("An error occured.");
                 });
@@ -7688,7 +7968,7 @@
                 if (res[2] !== undefined) {
                     const specials = res[2].split('+');
                     const key = res[3];
-                    res = specialKeys.filter((special)=>{
+                    res = specialKeys.filter((special) => {
                         return specials.has(special);
                     }).join('+')+' <'+key+'>';
                     return res;
@@ -7698,29 +7978,48 @@
         };
 
         // Getters:
-        this.get = function (e) {
-            if (e.constructor && e.constructor.name && e.constructor.name === "KeyboardEvent") {
-                if (!["Alt", "Meta", "Shift", "Control"].has(e.key)) {
-                    let key = null;
-                    const prefix = (specialKeys.filter((specialKey)=>{
-                        const special = (specialKey === "cmd" ? "meta" : specialKey);
-                        return e[special+"Key"];
-                    })).join('+');
-                    
-                    if (inbetween(e.keyCode, 65, 90)) {
-                        key = String.fromCharCode(e.keyCode).toUpperCase();
-                    } else
-                    if(inbetween(e.keyCode, 112, 123)) {
-                        key = 'F'+(e.keyCode-111);
-                    } else if(keyCodes.hasOwnProperty(e.keyCode)) {
-                        key = keyCodes[e.keyCode];
-                    } else if (e.key.toLowerCase() === "dead"){
-                        key = e.code;
-                    } else{
-                        key = e.key;
+        this.get = function (event) {
+            if (event.constructor && event.constructor.name) {
+                if (event.constructor.name === "KeyboardEvent") {
+                    if (!["Alt", "Meta", "Shift", "Control"].has(event.key)) {
+                        let key = null;
+                        const prefix = (specialKeys.filter((specialKey) => {
+                            const special = (specialKey === "cmd" ? "meta" : specialKey);
+                            return event[special+"Key"];
+                        })).join('+');
+                        
+                        if (inbetween(event.keyCode, 65, 90)) {
+                            key = String.fromCharCode(event.keyCode).toUpperCase();
+                        } else
+                        if(inbetween(event.keyCode, 112, 123)) {
+                            key = 'F'+(event.keyCode-111);
+                        } else if(keyCodes.hasOwnProperty(event.keyCode)) {
+                            key = keyCodes[event.keyCode];
+                        } else if (event.key.toLowerCase() === "dead"){
+                            key = event.code;
+                        } else {
+                            key = event.key;
+                        }
+                        const str = (prefix ? prefix+' ' : '')+'<'+key+'>';
+                        return str;
                     }
-                    const str = (prefix ? prefix+' ' : '')+'<'+key+'>';
-                    return str;
+                } else if (event.constructor.name === "MouseEvent" || event.constructor.name === "Event") {
+                    const parts = [];
+                    const prefix = (specialKeys.filter((specialKey) => {
+                        const special = (specialKey === "cmd" ? "meta" : specialKey);
+                        return event[special+"Key"];
+                    })).join('+');
+                    if (prefix) {
+                        parts.push(prefix);
+                    }
+                    const button = (event.button === 0 ?
+                        ''
+                        : event.button === 1 ?
+                            'Middle'
+                            : 'Right'
+                    );
+                    parts.push('<'+button+'Click>');
+                    return parts.join(' ');
                 }
             }
 
@@ -7788,19 +8087,19 @@
 
         let elt = undefined;
         let temp;
-        el("aafw_temp", (node)=>{
+        el("aafw_temp", (node) => {
             temp = node;
-        }, ()=>{
+        }, () => {
             temp = $$("div#aafw_temp", {style: "display: none;"});
             document.body.appendChild(temp);
         });
-        const getElement = (tagName)=>{
+        const getElement = (tagName) => {
             let mixed = undefined;
             let editStarted = false;
             let input = undefined;
             let node = undefined;
             
-            const getInput = ()=>{
+            const getInput = () => {
                 if (!node) {
                     let span = null;
                     node = $$("label");
@@ -7811,17 +8110,17 @@
                         spec.ignoreKeys("label", "mixable", "mixed")
                     );
                     const events = {
-                        blur: ()=>{
+                        blur: () => {
                             if (spec.mixable && !editStarted) {
                                 node.insertAfter(getMixed());
                                 temp.appendChild(node);
                             }
                         },
-                        input: ()=>{
+                        input: () => {
                             editStarted = true;
                         }
                     };
-                    events.forEach((callback, evtName)=>{
+                    events.forEach((callback, evtName) => {
                         input.on(evtName, callback);
                     });
                     node.appendChild(input);
@@ -7831,13 +8130,13 @@
                 }
                 return node;
             };
-            const getMixed = ()=>{
+            const getMixed = () => {
                 if (!mixed) {
                     delete(spec.mixed);
                     mixed = $$("button."+(!["textarea", "button"].has(tagName) ? "input" : tagName)+".mixed",
                         {
                             disabled: !!spec.disabled,
-                            on: {click: ()=>{
+                            on: {click: () => {
                                 mixed.insertAfter(getInput());
                                 temp.appendChild(mixed);
                                 input[(tagName === "input" ? "select" : "focus")]();
@@ -7881,13 +8180,13 @@
             
             case "checkbox":
             case "radio":
-                elt = (()=>{
+                elt = (() => {
                     let constructing    = true;
                     let elt             = undefined;
                     let mixed           = undefined;
                     let node            = undefined;
 
-                    const getTxt = ()=>{
+                    const getTxt = () => {
                         let txt;
                         if (spec.label && isString(spec.label)) {
                             txt = $$("span", spec.label);
@@ -7896,13 +8195,13 @@
                         }
                         return txt;
                     };
-                    const getInput = ()=>{
+                    const getInput = () => {
                         if (!node) {
                             node = node || $$("label.cooked"+(spec.disabled ? ".disabled" : ''));
                             const input = $$(tagName+(!!id ? '#'+id : '')+(classes.length ? '.'+classes.join('.') : ''),
                                 spec.ignoreKeys("label", "mixable", "mixed")
                             );
-                            input.on("input", (e)=>{
+                            input.on("input", (e) => {
                                 if (spec.mixable && spec.mixable === true && input.checked === true) {
                                     if (events.onmix) {
                                         events.onmix.call();
@@ -7929,7 +8228,7 @@
                                 $$("span.checked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "check-square" : "circle")),
                                 {
                                     disabled: !!spec.disabled,
-                                    on: {click: (e)=>{
+                                    on: {click: (e) => {
                                         e.preventDefault();
                                         input.click();
                                     }}
@@ -7942,7 +8241,7 @@
                         }
                         return node;
                     };
-                    const getMixed = ()=>{
+                    const getMixed = () => {
                         if (spec.hasOwnProperty("on") && spec.on.some((callback, evtName)=> !isFunction(callback))) { throw new TypeError("Spec 'on' must be an Array of Functions."); }
 
                         if (!mixed) {
@@ -7958,7 +8257,7 @@
                                     disabled: (spec.disabled && spec.disabled === true),
                                     style: "display: block; width: fit-content;",
                                     dataset: {value: spec.value},
-                                    on: {click: ()=>{
+                                    on: {click: () => {
                                         if (events.oncheck) {
                                             events.oncheck.call();
                                         }
@@ -7972,7 +8271,7 @@
                             );
                             mixed.checked = true;
                             if (spec.hasOwnProperty("on")) {
-                                spec.on.forEach((callback, evtName)=>{
+                                spec.on.forEach((callback, evtName) => {
                                     mixed.on(evtName, callback);
                                 });
                             }
@@ -7989,7 +8288,7 @@
                         onmix: null,
                         onuncheck: null
                     };
-                    events.forEach((callback, evtName)=>{
+                    events.forEach((callback, evtName) => {
                         const name = evtName.replace(/^on/, '');
                         if (spec.on && spec.on[name]) {
                             events[evtName] = spec.on[name];
@@ -8227,7 +8526,7 @@
                             elt.classList.add(value.trim());
                         }
                     });
-                } else{
+                } else {
                     elt.classList.add(value);
                 }
             });
@@ -8259,7 +8558,7 @@
                                     throw new Error("className doesn't allow space caracter.");
                                     return false;
                                 }
-                            } else{
+                            } else {
                                 switch (nodeName) {
                                     case "textarea":
                                         elt.innerText += option;
@@ -8283,7 +8582,7 @@
                                                 let checkedRadio = null;
                                                 elt.appendChild(container);
 
-                                                option.forEach((spec, i)=>{
+                                                option.forEach((spec, i) => {
                                                     if (!isObject(spec)) { throw new TypeError("'onglets' option must be an Array of spec Object."); }
                                                     if (!spec.verify({
                                                         checked:    p => isBool(p),
@@ -8323,14 +8622,14 @@
                                                         radio.name = spec.name;
                                                     }
                                                     if (spec.on) {
-                                                        spec.on.forEach((callback, evtName)=>{
+                                                        spec.on.forEach((callback, evtName) => {
                                                             if (!isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
                                                             evtName = evtName.toLowerCase();
                                                             switch (evtName) {
                                                                 case "check":
-                                                                    radio.on("change", ()=>{
+                                                                    radio.on("change", () => {
                                                                         if (radio.checked) {
-                                                                            setTimeout(()=>{
+                                                                            setTimeout(() => {
                                                                                 callback();
                                                                             }, 50);
                                                                         }
@@ -8350,18 +8649,18 @@
                                                         spec.value = spec.value.trim();
                                                         radio.value = spec.value;
                                                     }
-                                                    radio.on("change", ()=>{
-                                                        container.diveTheDOM((node)=>{
+                                                    radio.on("change", () => {
+                                                        container.diveTheDOM((node) => {
                                                             if (node.classList.contains("aaDialogOngletContent")) {
                                                                 node.classList.add("hidden");
                                                             }
                                                         });
-                                                        el(spec.id, (content)=>{
+                                                        el(spec.id, (content) => {
                                                             content.classList.remove("hidden");
                                                         });
                                                     });
                                                 });
-                                                option.forEach((spec, i)=>{
+                                                option.forEach((spec, i) => {
                                                     if (spec.text) {
                                                         spec.text = isString(spec.text) ? spec.label.trim() : spec.text;
                                                         const content = aa.html("div#"+spec.id+".aaDialogOngletContent", spec.text);
@@ -8369,14 +8668,14 @@
                                                         container.appendChild(content);
                                                     }
                                                 });
-                                                setTimeout(()=>{
+                                                setTimeout(() => {
                                                     if (checkedRadio) {
                                                         checkedRadio.click();
                                                     } else {
                                                         const found = onglets.childNodes
-                                                            .find((onglet)=>{
+                                                            .find((onglet) => {
                                                                 let radio;
-                                                                onglet.diveTheDOM((node)=>{
+                                                                onglet.diveTheDOM((node) => {
                                                                     if (node.type && node.type.toLowerCase() === "radio") {
                                                                         radio = node;
                                                                     }
@@ -8402,10 +8701,10 @@
                                             
                                             case "dataset":
                                                 if (isObject(option)) {
-                                                    option.forEach((v, k)=>{
+                                                    option.forEach((v, k) => {
                                                         if (nonEmptyString(v)) {
                                                             elt.dataset[k] = v;
-                                                        } else{
+                                                        } else {
                                                             warn("Dataset argument should be an Object of non-empty Strings only.");
                                                         }
                                                     });
@@ -8418,7 +8717,7 @@
                                                     && (["vertical"]).has(option)
                                                 ) {
                                                     elt.setAttribute("orient", option);
-                                                } else{
+                                                } else {
                                                     warn("Invalid 'orient' argument.");
                                                 }
                                                 break;
@@ -8495,10 +8794,10 @@
                                                         if (option.length > 2) {
                                                             let bubble = option[2];
                                                             return elt.on(evt,callback,bubble);
-                                                        } else{
+                                                        } else {
                                                              return elt.on(evt,callback);
                                                         }
-                                                    } else{
+                                                    } else {
                                                         option.forEach(function (listener) {
                                                             if (isArray(listener) && listener.length > 1) {
                                                                 let evt = listener[0];
@@ -8512,10 +8811,8 @@
                                                             }
                                                         });
                                                     }
-                                                } else if(isObject(option)) {
-                                                    // log('> object');
+                                                } else if (isObject(option)) {
                                                     option.forEach(function (callback,evt) {
-                                                        // log('>> '+evt,callback)
                                                         if (typeof callback === 'function') {
                                                             return elt.on(evt,callback);
                                                         } else if(isArray(callback)) {
@@ -8547,7 +8844,7 @@
                                                     
                                                     case "textarea":
                                                         elt.dataset.pattern = option;
-                                                        elt.on("input", ()=>{
+                                                        elt.on("input", () => {
                                                             const re = new RegExp(option);
                                                             elt.classList[(elt.value.match(re) ?
                                                                 "remove"
@@ -8573,7 +8870,7 @@
                                             case "value":
                                                 if (nodeName === "button") {
                                                     elt.innerHTML = option;
-                                                } else{
+                                                } else {
                                                     elt.setAttribute('value',(option ? option+'' : ''));
                                                 }
                                                 break;
@@ -8586,7 +8883,7 @@
                                                 }
                                                 break;
                                         }
-                                    } else{
+                                    } else {
                                         warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)");
                                     }
                                 }
@@ -8603,7 +8900,7 @@
     });
     aa.img                      = Object.freeze(new (function () {
         const o = {
-            convertUriToJpg: (uri, resolve /*, reject */)=>{
+            convertUriToJpg: (uri, resolve /*, reject */) => {
                 if (!nonEmptyString(uri)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!isFunction(resolve)) { throw new TypeError("Second argument must be a Function."); }
                 const reject = (arguments && arguments.length > 2 ? arguments[2] : undefined);
@@ -8612,7 +8909,7 @@
                 const canvas = $$("canvas");
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
-                img.on("load", ()=>{
+                img.on("load", () => {
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
@@ -8642,7 +8939,7 @@
     };
     aa.isTheme                  = function (str) {
 
-        return (isString(str) && (["light", "dark"]).has(str));
+        return (isString(str) && ENV.THEMES.has(str));
     }
     aa.ClassFactory             = function () {
         aa.ClassFactory.group("Classify");
@@ -8750,7 +9047,7 @@
 
                     if (arrays.has(ns)) {
                     } else if(objects.has(ns)) {
-                    } else{
+                    } else {
                         throw new Error("Namespace '"+ns+"' not defined in prototype.");
                         return undefined;
                     }
@@ -8774,7 +9071,7 @@
                             }
                             return aaClass.prototype[ns][methodName];
                         }
-                    } else{
+                    } else {
                         return undefined;
                     }
                 }
@@ -8801,7 +9098,7 @@
                         for(i=0; i<nsCopy.length; i++) {
                             getNS(ns)[i] = indexes[nsCopy[i]];
                         }
-                    } else{
+                    } else {
                         warn("Method '"+methodName+"' not found in '"+ns+"'.");
                         return false;
                     }
@@ -8956,77 +9253,51 @@
     })();
     aa.settings                 = (function () {
 
-        // Attributes:
-        const privates = {
-            scripts:    []
-        };
-        const publics = {
-            production: ENV.PRODUCTION,
-            theme:      ENV.DEFAULT_THEME
-        };
-        const mode = {
-            accessor: [
-                "production",
-                "theme"
-            ],
-            reader: [],
-            writer: [
-                "script",
-                "scripts"
-            ]
-        };
-
-        // Private methods:
-        const construct = function () {
-            aa.prototypes.hydrate.apply(this, arguments);
-            // this.set(publics);
-            initialize.call(this, publics);
-            aa.prototypes.defineAcessors.call(this, publics, mode);
-        };
-        const initialize = function (/* spec */) {
-            /**
-             * @param {object} spec (optional)
-             *
-             * @return {void}
-             */
-            const spec = (arguments && arguments.length > 0 ? arguments[0] : {});
-            if (!isObject(spec)) { throw new TypeError("Argument must be an Object."); }
-            const found = spec.keys().find((k)=>{ return !publics.hasOwnProperty(k); });
-            if (!!found) { throw new TypeError("Spec '"+found+"' key not allowed."); }
-
-            aa.prototypes.hydrate.call(this, spec);
-        };
-
         // Class:
         const Settings  = function () {
 
-            construct.apply(this, arguments);
+            aa.defineAccessors.call(this, {
+                publics: {
+                    production: ENV.PRODUCTION,
+                    theme:      ENV.DEFAULT_THEME
+                },
+                write: {
+                    script: null,
+                    scripts: []
+                },
+                privates: {
+                }
+            });
         };
 
         // Public methods:
         aa.deploy(Settings.prototype, {
             setProduction:  function (isProd) {
                 if (!isBool(isProd)) { throw new TypeError("Argument must be a Boolean."); }
-                publics.production = isProd;
+                set(this, 'production', isProd);
             },
             setScript:      function (path) {
                 if (!nonEmptyString(path)) { throw new TypeError("Argument must be a non-empty String."); }
                 path = path.trim();
-                if (!privates.scripts.has(path)) {
-                    privates.scripts.push(path);
+                if (!get(this, 'scripts').has(path)) {
+                    get(this, 'scripts').push(path);
                     addScriptToDOM(path);
                 }
             },
             setScripts:     function (scripts) {
-                if (!isArray(scripts) || !scripts.every(path => nonEmptyString(path))) { throw new TypeError("Argument must be an Array of non-empty Strings."); }
-                scripts.forEach((path)=>{
+                if (!isArray(scripts) || scripts.find(path => !nonEmptyString(path))) { throw new TypeError("Argument must be an Array of non-empty Strings."); }
+                scripts.forEach((path) => {
                     this.setScript(path);
                 });
             },
             setTheme:       function (theme) {
                 if (theme !== undefined && !nonEmptyString(theme)) { throw new TypeError("'theme' spec must be a non-empty String."); }
                 if (ENV.THEMES.has(theme)) {
-                    publics.theme = theme;
+                    const previous = get(this, 'theme');
+                    set(this, 'theme', theme);
+                    if (theme !== previous) {
+                        aa.events.fire('themechange', theme, previous);
+                    }
                 } else {
                     console.warn("Theme '"+theme+"' not valid.");
                 }
@@ -9156,7 +9427,7 @@
                             // Une version simple mais à corriger pour que soient accessibles de multiples <checkbox> :
                             data = new FormData(options.form);
                             xhr = new XMLHttpRequest();
-                        } else{
+                        } else {
                             data = '';
                             options.form.diveTheDOM(function (n) {
                                 if (n.name) {
@@ -9252,7 +9523,7 @@
                             };
                             xhr.send(data);
                         }
-                    } else{
+                    } else {
                         throw new Error("Invalid form in 'aa.XHR'.");
                     }
                     break;
@@ -9326,13 +9597,13 @@
                             };
                             xhr.send(data);
                         }
-                    } else{
+                    } else {
                         throw new Error("Invalid form in 'aa.XHR'.");
                     }
                     break;
                 }
             }
-        } else{
+        } else {
             console.warn("Invalid 'aa.XHR' arguments.");
         }
     };
@@ -9361,7 +9632,7 @@
                 times.push(lorem);
             }
             return times.join('\n\n');
-        } else{
+        } else {
             return lorem;
         }
     };
@@ -9373,7 +9644,7 @@
         if (arguments && arguments.length) {
             if (isElement(arguments[0])) {
                 dom = arguments[0];
-            } else{
+            } else {
                 throw new TypeError("First argument must be a DOM element.");
                 return false;
             }
@@ -9450,16 +9721,16 @@
         window.onunload         = function () { return aa.events.execute("windowunload"); }; // return value has to be a String
 
         document.on((aa.browser.is("firefox") ? "DOMMouseScroll" : "mousewheel"), aa.events.custom.mousewheel);
-        document.on("keydown", (e)=>{ return aa.events.custom.keyboard(e); });
+        document.on("keydown", (e) => { return aa.events.custom.keyboard(e); });
         // document.on("keyup", aa.events.custom.keyboard);
         // document.on("click", aa.events.custom.click);
-        document.on("contextmenu", (e)=>{ return aa.events.custom.click(e); });
-        document.on("mousemove", (e)=>{ return aa.mouse.onMove(e); });
-        document.on("mousedown", (e)=>{ return aa.events.execute("mousedown", e); });
-        document.on("mouseup", (e)=>{ return aa.events.execute("mouseup", e); });
+        document.on("contextmenu", (e) => { return aa.events.custom.click(e); });
+        document.on("mousemove", (e) => { return aa.mouse.onMove(e); });
+        document.on("mousedown", (e) => { return aa.events.execute("mousedown", e); });
+        document.on("mouseup", (e) => { return aa.events.execute("mouseup", e); });
 
         // Custom:
-        window.on("shortcutchange", (e)=>{ return aa.events.execute("shortcutchange", e); });
+        window.on("shortcutchange", (e) => { return aa.events.execute("shortcutchange", e); });
         
         // bodyload:
         (function () {
@@ -9527,7 +9798,7 @@
     (function () { /* tests */
         return;
         ({
-            bodyload: ()=>{
+            bodyload: () => {
                 aa.gui.todo(("Douglas Crockford recommends to create Objects like this:\n<pre>"
                     +"const constructor = function(spec){\n"
                     +"    let {member} = spec;\n"
@@ -9551,7 +9822,7 @@
                     .replace(/\s/g, "&nbsp;")
                 , false);
             }
-        }).forEach((callback, evtName)=>{
+        }).forEach((callback, evtName) => {
             aa.events.app("aaFramework").on(evtName, callback , ["forever"]);
         });
     })();

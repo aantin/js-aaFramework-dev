@@ -1,5 +1,4 @@
-// é
-"use strict";
+"use strict"; // é
 (function () {
 
     // Private:
@@ -162,7 +161,7 @@
                  * @param {any} that;
                  * @param {any} key;
                  *
-                 * @return {void}
+                 * @return {any}
                  */
                 get: function (that, key) {
                     aa.prototypes.verify({ key: nonEmptyString })("key", key);
@@ -172,6 +171,7 @@
                     }
                     return results[key];
                 },
+
                 /**
                  * @param {any} that;
                  * @param {String} key;
@@ -214,6 +214,37 @@
             list.forEach((key) => {
                 Object.defineProperty(this, key, {get: () => { return get(this, key); }});
             });
+        },
+        dispatcher:   function (listeners) {
+            aa.arg.test(listeners, isObject(listeners) && listeners.verify({
+                root: nonEmptyString,
+                names: isArrayOfStrings,
+            }, true), 0);
+
+            return (eventName, data) => {
+                aa.arg.test(eventName, nonEmptyString, 0);
+
+                if (!listeners.names.has(eventName)) {
+                    warn(`Event '${eventName}' not known.`);
+                } else {
+                    aa.events.fire(`${listeners.root}:${this.id}:${eventName}`, data);
+                }
+            };
+        },
+        listener:     function (listeners) {
+            aa.arg.test(listeners, isObject(listeners) && listeners.verify({
+                root: nonEmptyString,
+                names: isArrayOfStrings
+            }, true), 0);
+
+            return (eventName, callback) => {
+                aa.arg.test(eventName, nonEmptyString, 0);
+                aa.arg.test(callback, isFunction, 1);
+
+                if (listeners.names.has(eventName)) {
+                    aa.events.on(`${listeners.root}:${this.id}:${eventName}`, callback);
+                }
+            };
         },
         initPrivates:   function (privates, thisPrivate) {
         },
@@ -1370,12 +1401,36 @@
             };
             aa.EventApp.prototype.on            = function (evtName, callback /*, options */) {
                 /**
+                 * Usage:
+                 *      // aa.EventApp.prototype.on(eventName, callback);
+                 *      // aa.EventApp.prototype.on(eventName, callback, options);
+                 *      // aa.EventApp.prototype.on({eventName: callback});
+                 *      // aa.EventApp.prototype.on({eventName: callback}, options);
+                 *
                  * @param {string} evtName (event name, aa' standard)
                  * @param {function|aa.Action} callback
                  * @param {array} options (Array of non-empty Strings)
                  *
                  * @return {object} this (=> chainable 'on' functions)
                  */
+
+                // Recur in case of signature: aa.EventApp.prototype.on({eventName: callback} /*, options */);
+                if (isObject(evtName)) {
+                    const options = callback || [];
+                    evtName.forEach((func, name) => {
+                        this.on(name, func, options);
+                    });
+                    return this;
+                }
+
+                // else:
+                if (arguments.length === 1 && isObject(arguments[0])) {
+                    arguments[0].forEach((func, name) => {
+                        this.on(name, func);
+                    });
+                    return this;
+                }
+
                 const spec = {}
                 const options = (arguments && arguments.length > 2 && isArray(arguments[2]) ?
                     arguments[2].filter((opt) => {
@@ -2368,9 +2423,13 @@
                         if (!app.hasOwnProperty(action.name)) {
                             app[action.name] = storage.privates.shortcuts.default[appName][action.name];
                         }
-                        app[action.name].remove(oldShortcut);
-                        if (newShortcut && !app[action.name].has(newShortcut)) {
-                            app[action.name].push(newShortcut);
+                        if (app[action.name]) {
+                            if (oldShortcut) {
+                                app[action.name].remove(oldShortcut);
+                            }
+                            if (newShortcut && !app[action.name].has(newShortcut)) {
+                                app[action.name].push(newShortcut);
+                            }
                         }
                     }
                     db.insert("shortcuts", apps);
@@ -2399,6 +2458,12 @@
             document.dispatchEvent(event);
         };
         this.on = function (eventName, callback) {
+            if (isObject(eventName)) {
+                eventName.forEach((callback, evtName) => {
+                    this.on(evtName, callback);
+                });
+                return this;
+            }
             if (!nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
             if (!isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
 
@@ -2406,6 +2471,7 @@
                 const args = e.detail || undefined;
                 callback.apply(null, e.detail);
             });
+            return this;
         };
         this.app                = function () {
 
@@ -2958,9 +3024,10 @@
             };
         };
         const parse = function (arr, shortcut /*, callback */) {
-            if (!isArray(arr)) { throw new TypeError("First argument must be an Array."); }
-            if (!isFunction(shortcut)) { throw new TypeError("Second argument must be a Function."); }
-            const callback = (arguments && arguments.length > 2 ? arguments[2] : undefined);
+            aa.arg.test(arr, isArray, 0);
+            aa.arg.test(shortcut, isFunction, 1);
+            const callback = aa.arg.optional(arguments, 2, undefined);
+
             if (callback !== undefined && !isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
 
             let tops = [];
@@ -2983,8 +3050,12 @@
                         } else {
                             item.classList.add("disabled");
                         }
-                    } else if (nonEmptyString(entry)) {
-                        aa.action(entry, (action) => {
+                    } else if (nonEmptyString(entry) || entry instanceof aa.Action) {
+                        const action = (nonEmptyString(entry) ?
+                            aa.action(entry)
+                            : entry
+                        );
+                        if (action instanceof aa.Action && action.isValid()) {
                             if (index !== null) {
                                 action.on("execute", () => {
                                     const top = tops[index];
@@ -3051,7 +3122,9 @@
                                     node.classList[(disabled || !action.listeners.onexecute.length ? "add" : "remove")]("disabled");
                                 };
                             })(action));
-                        });
+                        } else {
+                            console.warn("Invalid Action.");
+                        }
                     } else if (entry === null) {
                         menu.appendChild($$("hr"));
                     }
@@ -4851,8 +4924,15 @@
                             this.hydrate(arguments[1]);
                         }
                     }
-                    el("aaNotifs", null, () => {
-                        document.body.appendChild($$("div#aaNotifs.aa"));
+                    el("aaNotifs", (node) => {
+                        node.classList.add(aa.settings.theme);
+                    }, () => {
+                        const node = $$("div#aaNotifs.aa"+aa.settings.theme);
+                        document.body.appendChild(node);
+                        aa.events.on('themechange', (theme, previous) => {
+                            node.classList.remove(previous);
+                            node.classList.add(theme);
+                        });
                     });
                 };
 
@@ -4883,8 +4963,10 @@
                         let dom = document.getElementById('aaNotif_'+id);
                         if (dom) {
                             dom.classList.add('fadeOut');
-                            dom.on('animationend',(function (dom) {return function () {dom.style.display = 'none';};})(dom));
-                            // dom.parentNode.removeChild(dom);
+                            dom.on('animationend',(function (dom) {return function () {
+                                dom.style.display = 'none';
+                                dom.removeNode();
+                            };})(dom));
                         }
                     },
 
@@ -4997,10 +5079,12 @@
                         }
                         else {
                             dom.classList.add("waitAndFadeOut");
-                            dom.on("animationend",(function (dom) {return function () {dom.style.display = "none";};})(dom));
+                            dom.on("animationend",(function (dom) {return function () {
+                                dom.style.display = "none";
+                                dom.removeNode();
+                            };})(dom));
                         }
                         
-                        // dom.appendChild(fade);
                         return dom;
                     }
                 }, {
@@ -5150,15 +5234,23 @@
                             if (this.title) {
                                 nodes.container.appendChild($$('h2.title', this.title));
                             }
-                            document.body.appendChild($$('div#aaProgress-'+get(this, 'id')+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                            const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
+                                nodes.container
+                            );
+                            const node = $$('div#aaProgress-'+get(this, 'id')+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
                                 $$('div.aaTable.fullscreen',
                                     $$('div.td',
-                                        $$('div.aaDialog.progress',
-                                            nodes.container
-                                        )
+                                        dialog
                                     )
                                 )
-                            ));
+                            );
+                            document.body.appendChild(node);
+                            node.style.zIndex = aa.getMaxZIndex()+1;
+                            aa.events.on('themechange', (theme, previous) => {
+                                dialog.classList.remove(previous);
+                                dialog.classList.add(theme);
+                            });
+
                             get(this, 'indexes').forEach((value, index) => {
                                 addNode.call(this, index);
                             });
@@ -7255,16 +7347,39 @@
         });
         return node;
     });
+    /* aa.Selectable */ (() => {
+        aa.Selectable               = function (/* dimensions */) {
+            const dimensions = aa.arg.optional(arguments, 0, 1, isInt);
+            aa.defineAccessors.call(this, {
+                privates: {
+                    collection: []
+                }
+            });
+            for (let i = 0; i < dimensions; i++) {
+                get(this, 'collection').push([]);
+            }
+        };
+        aa.Selectable.prototype = Object.create(Array.prototype);
+        aa.deploy(aa.Selectable.prototype, {
+            select: function (...index) {
+                log(index)
+            }
+        }, { force: true });
+    })();
     aa.newInstancer             = function (/* spec */) {
-        const spec = arguments && arguments.length ? arguments[0] : {};
+        const defaultSpec = {
+            getter: get,
+            setter: set
+        };
+        const spec = arguments && arguments.length && isObject(arguments[0]) ? Object.assign(defaultSpec, arguments[0]) : defaultSpec;
         if (!isObject(spec)) { throw new TypeError("Argument must be an Object."); }
 
         spec.verify({
             getter: isFunction,
             setter: isFunction
         });
-        spec.getter = spec.getter || get;
-        spec.setter = spec.setter || set;
+        // spec.getter = spec.getter || get;
+        // spec.setter = spec.setter || set;
         const {getter, setter} = spec;
 
         const Instancer = function () {
@@ -7274,8 +7389,11 @@
                 publics: {
                 },
                 execute: {
-                    all: function () {
+                    all:        function () {
                         return getter(this, 'index');
+                    },
+                    classes:    function () {
+                        return getter(this, 'classes');
                     }
                 },
                 privates: {
@@ -9337,7 +9455,7 @@
             return uid;
         };
     })();
-    aa.xhr                      = function (method="GET", src, options={}) {
+    aa.xhr                      = function (method='GET', src, options={}) {
         if (isObject(options)
         && isString(method) && method.trim()
         && isString(src) && src.trim()) {
@@ -9363,9 +9481,9 @@
 
             // Execute:
             switch (method.toUpperCase()) {
-                case "GET":{
+                case 'GET':{
                     let xhr = new XMLHttpRequest();
-                    xhr.open("GET", src);
+                    xhr.open('GET', src);
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4) {
                             switch (xhr.status) {
@@ -9382,23 +9500,23 @@
                                     if (json) {
                                         if (options.default) {
                                             if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
-                                                (new aa.gui.Dialog("critical",{
-                                                    text: "- "+json.dialog.critical.join("<br>- ")
+                                                (new aa.gui.Dialog('critical',{
+                                                    text: "- "+json.dialog.critical.join('<br>- ')
                                                 })).show();
                                                 options.callback.call(null, undefined, json.dialog);
                                             }
                                             else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
-                                                (new aa.gui.Dialog("warning",{
-                                                    text: "- "+json.dialog.warning.join("<br>- ")
+                                                (new aa.gui.Dialog('warning',{
+                                                    text: "- "+json.dialog.warning.join('<br>- ')
                                                 })).show();
                                                 options.callback.call(null, json.response, json.dialog);
                                             }
                                             else if(json.dialog && json.dialog.information && json.dialog.information.length) {
-                                                (new aa.gui.Dialog("information",{
-                                                    text: "- "+json.dialog.information.join("<br>- ")
+                                                (new aa.gui.Dialog('information',{
+                                                    text: "- "+json.dialog.information.join('<br>- ')
                                                 })).show();
                                                 options.callback.call(null,json.response);
-                                            } else if(typeof json.response !== "undefined") {
+                                            } else if(typeof json.response !== 'undefined') {
                                                 options.callback.call(null, json.response, json.dialog);
                                             }
                                         } else if(json.response && json.dialog) {
@@ -9418,9 +9536,9 @@
                     xhr.send();
                     break;
                 }
-                case "POST":{
+                case 'POST':{
                     if (options.form !== undefined
-                    && isDom(options.form) && options.form.tagName.toLowerCase() === "form") {
+                    && isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
                         let xhr,data;
 
                         if (false) {
@@ -9446,11 +9564,11 @@
                                     /**/
                                     
                                     // Test des champs de formulaire :
-                                    if ((n.type === "checkbox") && !n.checked) { // typeof() ou .type
+                                    if ((n.type === 'checkbox') && !n.checked) { // typeof() ou .type
                                     }
-                                    else if((n.type === "radio") && !n.checked) {
+                                    else if((n.type === 'radio') && !n.checked) {
                                     }
-                                    else if((n.type === "files") && !n.checked) {
+                                    else if((n.type === 'files') && !n.checked) {
                                     }
                                     else {
                                         data += n.name+'='+v+'&';

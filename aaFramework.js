@@ -7362,7 +7362,7 @@
         aa.Selectable.prototype = Object.create(Array.prototype);
         aa.deploy(aa.Selectable.prototype, {
             select: function (...index) {
-                log(index)
+                log('Selectable:', index);
             }
         }, { force: true });
     })();

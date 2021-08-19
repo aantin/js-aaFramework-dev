@@ -3434,13 +3434,15 @@
                                             : bool
                                         );
                                     }
-                                    elt.classList.remove("invalid");
+                                    if (elt.classList) {
+                                        elt.classList.remove("invalid");
+                                    }
                                     return bool;
                                 }, true);
                             };
                             const checkPatterns = () => {
                                 return form.elements
-                                    .filter(elt => ["input", "textarea"].has(elt.nodeName.toLowerCase()))
+                                    .filter(elt => elt.nodeName && ["input", "textarea"].has(elt.nodeName.toLowerCase()))
                                     .reduce((bool, elt) => {
                                         const pattern = elt.pattern || elt.dataset.pattern;
                                         return (pattern && !elt.value.match(new RegExp(pattern)) ?
@@ -3452,7 +3454,7 @@
                             };
                             const checkrequired = () => {
                                 return form.elements
-                                    .filter(elt => ["input", "textarea"].has(elt.nodeName.toLowerCase()))
+                                    .filter(elt => elt.nodeName && ["input", "textarea"].has(elt.nodeName.toLowerCase()))
                                     .reduce((bool, elt) => {
                                         const required = !!elt.required;
                                         return (required && !elt.value ?
@@ -3978,14 +3980,14 @@
                     return "aaDialog-"+this.getID();
                 }
             }, {
-                // condition: Dialog.prototype.hydrate === undefined,
+                condition: Dialog.prototype.hydrate === undefined,
                 force: true
             });
             aa.deploy(Dialog.prototype, {
                 setDefault:       Dialog.prototype.setDefaultValue,
                 setValue:         Dialog.prototype.setDefaultValue,
             }, {
-                // condition: Dialog.prototype.setValue === undefined,
+                condition: Dialog.prototype.setValue === undefined,
                 force: true
             });
             /**
@@ -4592,22 +4594,26 @@
                 },
                 invalidCSS:         function (form) {
                     form.elements.forEach((elt) => {
-                        switch (elt.nodeName.toLowerCase()) {
-                            case "input":
-                                break;
-                            
-                            case "textarea":
-                                if (elt.dataset && elt.dataset.pattern) {
-                                    try {
-                                        const regex = new RegExp(elt.dataset.pattern);
-                                        elt.classList[(elt.value.match(regex) ?
-                                            "remove"
-                                            : "add"
-                                        )]("invalid");
-                                    } catch (e) {
+                        if (elt.nodeName) {
+                            switch (elt.nodeName.toLowerCase()) {
+                                case "input":
+                                    break;
+                                
+                                case "textarea":
+                                    if (elt.dataset && elt.dataset.pattern) {
+                                        try {
+                                            const regex = new RegExp(elt.dataset.pattern);
+                                            elt.classList[(elt.value.match(regex) ?
+                                                "remove"
+                                                : "add"
+                                            )]("invalid");
+                                        } catch (e) {
+                                        }
                                     }
-                                }
-                                break;
+                                    break;
+                            }
+                        } else if (elt instanceof RadioNodeList) {
+                            aa.gui.todo("RadioNodeList...");
                         }
                     });
                 },
@@ -4841,28 +4847,30 @@
                         this.checkValidation();
                     };
                     form.elements.forEach((node) => {
-                        switch (node.nodeName.toLowerCase()) {
-                            case "input":
-                                switch (node.type.toLowerCase()) {
-                                    case "button":
-                                    case "submit":
-                                    case "reset":
-                                        break;
-                                    case "checkbox":
-                                    case "radio":
-                                        node.on("change", verify);
-                                        break;
-                                    default:
-                                        node.on("input", verify);
-                                        break;
-                                }
-                                break;
-                            case "select":
-                            case "textarea":
-                                node.on("input", verify);
-                                break;
-                            default:
-                                break;
+                        if (node.nodeName) {
+                            switch (node.nodeName.toLowerCase()) {
+                                case "input":
+                                    switch (node.type.toLowerCase()) {
+                                        case "button":
+                                        case "submit":
+                                        case "reset":
+                                            break;
+                                        case "checkbox":
+                                        case "radio":
+                                            node.on("change", verify);
+                                            break;
+                                        default:
+                                            node.on("input", verify);
+                                            break;
+                                    }
+                                    break;
+                                case "select":
+                                case "textarea":
+                                    node.on("input", verify);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     });
                     verify();
@@ -5427,10 +5435,10 @@
                 return this.dialog(type, spec);
             };
         });
-        this.info = this.information;
-        this.warn = this.warning;
+        this.info   = this.information;
+        this.warn   = this.warning;
         this.window = this.win;
-        this.notif = this.notification;
+        this.notif  = this.notification;
     })());
     aa.icon                     = Object.freeze(function (which, ...args) {
         /**

@@ -3895,13 +3895,13 @@
                     if (!nonEmptyString(s)) { throw new TypeError("Dialog title must be a non-empty String."); }
 
                     this.title = s.trim();
-                    return (!!this.title);
+                    return !!this.title;
                 },
                 setType:            function (type) {
                     verify("dialogType", type);
 
                     this.type = type.trim().toLowerCase();
-                    return (!!this.type);
+                    return !!this.type;
                 },
                 setToolbar:         function (item) {
                     if (isArray(item)) {
@@ -3918,7 +3918,7 @@
                     if (!isFunction(callback)) { throw new TypeError("Dialog validation must be a Function."); }
 
                     this.validation = callback;
-                    return (!!this.validation);
+                    return !!this.validation;
                 },
                 setWidth:           function (n) {
                     if (isInt(n) && n>0) {
@@ -4690,11 +4690,12 @@
                     const form = View.getForm.call(this);
                     modal.appendChild(form);
 
+                    View.addTitleTo.call(this, form);
                     // Message:
                     const message = View.getMessage.call(this);
                     form.appendChild(message);
 
-                    View.addTitleTo.call(this, message);
+                    // View.addTitleTo.call(this, message);
                     View.addTextTo.call(this, message);
 
                     // Buttons:

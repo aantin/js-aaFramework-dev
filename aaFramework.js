@@ -5413,6 +5413,9 @@
         };
         this.todo           = function (message /*, show */) {
             /**
+             * Usage:
+             *      todo("message")
+             *      todo("message", true)
              * @param {String} message
              * @param {Boolean} show=false (Display button if true)
              *

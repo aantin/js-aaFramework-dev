@@ -1607,9 +1607,10 @@ div.aaDialog span.w3{
 .aa button.textarea,
 .aa select,
 .aa textarea,
-.aa input[type="password"],
-.aa input[type="number"],
+.aa input[type="date"],
 .aa input[type="email"],
+.aa input[type="number"],
+.aa input[type="password"],
 .aa input[type="text"]{
     display: block;
     margin: 0px;
@@ -1630,9 +1631,10 @@ div.aaDialog span.w3{
     border: 1px solid #fff;
     box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
 }
-.aa input[type="password"]::placeholder,
-.aa input[type="number"]::placeholder,
+.aa input[type="date"]::placeholder,
 .aa input[type="email"]::placeholder,
+.aa input[type="number"]::placeholder,
+.aa input[type="password"]::placeholder,
 .aa input[type="text"]::placeholder,
 .aa textarea::placeholder{
     color: var(--form-placeholder-color);
@@ -1640,8 +1642,10 @@ div.aaDialog span.w3{
     font-weight: normal;
     padding-right: 4px;
 }
-.aa input[type="password"]:focus,
+.aa input[type="date"]:focus,
+.aa input[type="email"]:focus,
 .aa input[type="number"]:focus,
+.aa input[type="password"]:focus,
 .aa input[type="text"]:focus{
     border: 1px solid var(--submit-bg-color);
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
@@ -1655,10 +1659,12 @@ div.aaDialog span.w3{
 }
 .aa textarea:invalid,
 .aa textarea.invalid,
-.aa input[type="number"]:invalid,
-.aa input[type="number"].invalid,
+.aa input[type="date"]:invalid,
+.aa input[type="date"].invalid,
 .aa input[type="email"]:invalid,
 .aa input[type="email"].invalid,
+.aa input[type="number"]:invalid,
+.aa input[type="number"].invalid,
 .aa input[type="text"]:invalid,
 .aa input[type="text"].invalid{
     background: #fff0f0;
@@ -1667,20 +1673,24 @@ div.aaDialog span.w3{
 }
 .aa textarea:invalid:focus,
 .aa textarea.invalid:focus,
-.aa input[type="number"]:invalid:focus,
-.aa input[type="number"].invalid:focus,
+.aa input[type="date"]:invalid:focus,
+.aa input[type="date"].invalid:focus,
 .aa input[type="email"]:invalid:focus,
 .aa input[type="email"].invalid:focus,
+.aa input[type="number"]:invalid:focus,
+.aa input[type="number"].invalid:focus,
 .aa input[type="text"]:invalid:focus,
 .aa input[type="text"].invalid:focus{
     border: 1px solid #c00;
 }
 .aa textarea:invalid::placeholder,
 .aa textarea.invalid::placeholder,
-.aa input[type="number"]:invalid::placeholder,
-.aa input[type="number"].invalid::placeholder,
+.aa input[type="date"]:invalid::placeholder,
+.aa input[type="date"].invalid::placeholder,
 .aa input[type="email"]:invalid::placeholder,
 .aa input[type="email"].invalid::placeholder,
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"].invalid::placeholder,
 .aa input[type="text"]:invalid::placeholder,
 .aa input[type="text"].invalid::placeholder{
     color: #faa;
@@ -1696,17 +1706,23 @@ div.aaDialog span.w3{
 .aa textarea.invalid:-ms-input-placeholder,
 .aa textarea.invalid::-webkit-input-placeholder,
 
-.aa input[type="number"]:invalid::placeholder,
-.aa input[type="number"]:invalid::-moz-placeholder,
-.aa input[type="number"]:invalid::-webkit-placeholder,
-.aa input[type="number"]:invalid:-ms-input-placeholder,
-.aa input[type="number"]:invalid::-webkit-input-placeholder,
+.aa input[type="date"]:invalid::placeholder,
+.aa input[type="date"]:invalid::-moz-placeholder,
+.aa input[type="date"]:invalid::-webkit-placeholder,
+.aa input[type="date"]:invalid:-ms-input-placeholder,
+.aa input[type="date"]:invalid::-webkit-input-placeholder,
 
 .aa input[type="email"]:invalid::placeholder,
 .aa input[type="email"]:invalid::-moz-placeholder,
 .aa input[type="email"]:invalid::-webkit-placeholder,
 .aa input[type="email"]:invalid:-ms-input-placeholder,
 .aa input[type="email"]:invalid::-webkit-input-placeholder,
+
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"]:invalid::-moz-placeholder,
+.aa input[type="number"]:invalid::-webkit-placeholder,
+.aa input[type="number"]:invalid:-ms-input-placeholder,
+.aa input[type="number"]:invalid::-webkit-input-placeholder,
 
 .aa input[type="text"]:invalid::placeholder,
 .aa input[type="text"]:invalid::-moz-placeholder,

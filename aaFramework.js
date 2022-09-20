@@ -4637,7 +4637,7 @@
                     // Click outside:
                     let outside;
                     const isOutside = (e) => {
-                        return e.path.reduce((outside, node) => {
+                        return e.composedPath().reduce((outside, node) => {
                             return (node.classList && node.classList.contains("aaDialog") ?
                                 false
                                 : outside
@@ -9061,7 +9061,7 @@
             args.forEach(function (arg) {
             });
             
-            let isOver = !!e.path.find(function (elt) {
+            let isOver = !!e.composedPath().find(function (elt) {
                 return (elt.id === "aaContextMenu");
             });
         }

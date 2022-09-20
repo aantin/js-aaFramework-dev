@@ -414,12 +414,11 @@ div.aaTable.fullscreen div.td{
     border: 1px solid var(--submit-bg-color);
 }
 .aa button[type=submit]:hover,
-.aa input[type=submit]:hover{
-    box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
-}
+.aa input[type=submit]:hover,
 .aa button[type=submit]:focus,
 .aa input[type=submit]:focus{
-    border: 1px solid #248;
+    background: var(--submit-bg-color);
+    border: 1px solid var(--color-blue-darker);
     box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
 }
 .aa button.text,
@@ -1871,6 +1870,8 @@ div.aaDialog label.right input[type=text].half{
 .aa button.mixed,
 .aa label.cooked input[type=radio] + button,
 .aa label.cooked input[type=checkbox] + button{
+    border: 0 !important;
+    background: transparent !important;
     margin-right: 4px;
 }
 .aa label.cooked input[type=radio] + button > span.mixed,
@@ -2012,7 +2013,8 @@ div.aaDialog div.buttons.with-details{
 .aa input[type="submit"]:focus,
 .aa input[type="button"]:hover,
 .aa input[type="button"]:focus{
-    border: 1px solid #248;
+    background: var(--submit-bg-color);
+    border-color: var(--color-blue-darker);
 }
 .aa button,
 .aa button.reset,
@@ -2022,7 +2024,7 @@ div.aaDialog div.buttons.with-details{
     background: var(--reset-bg-color);
     color: var(--reset-color);
     color: var(--button-color);
-    border: 1px solid var(--reset-bg-color);
+    border-color: var(--reset-bg-color);
     text-shadow: 0px 0px 0px transparent;
 }
 .aa button:hover,
@@ -2037,6 +2039,18 @@ div.aaDialog div.buttons.with-details{
 .aa input[type="button"].reset:focus{
     border-color: #ddd;
     background: #ddd;
+}
+.aa button[type=submit]:hover,
+.aa button[type=submit]:focus{
+    background: var(--submit-bg-color);
+    border-color: var(--color-blue-darker);
+}
+.aa input[type=submit]:disabled,
+.aa button[type=submit]:disabled{
+    color: var(--button-disabled-color);
+    background: var(--button-disabled-bg-color);
+    border-color: var(--button-disabled-bg-color);
+    box-shadow: 0 0 0 transparent;
 }
 div.aaDialog div.message div.grid{
     display: table;

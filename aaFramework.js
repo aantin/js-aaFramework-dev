@@ -136,9 +136,9 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, aa.isFunction);
-                aa.arg.test(key, aa.nonEmptyString);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
+                aa.arg.test(getter, isFunction);
+                aa.arg.test(key, nonEmptyString);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
                 return function emit (evtName, data) {
                     /**
@@ -150,7 +150,7 @@
                      * 
                      * @return {void}
                      */
-                    aa.arg.test(evtName, aa.nonEmptyString);
+                    aa.arg.test(evtName, nonEmptyString);
                     const listeners = getter(this, key);
                     aa.arg.test(listeners, aa.isObject);
 
@@ -174,9 +174,9 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, aa.isFunction);
-                aa.arg.test(key, aa.nonEmptyString);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
+                aa.arg.test(getter, isFunction);
+                aa.arg.test(key, nonEmptyString);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
                 const on = function (evtName, callback) {
                     /**
@@ -198,18 +198,18 @@
                      */
 
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, aa.isObject);
+                    aa.arg.test(listeners, isObject);
 
-                    if (aa.isObject(evtName)) {
-                        aa.arg.test(evtName, aa.isObjectOfFunctions);
+                    if (isObject(evtName)) {
+                        aa.arg.test(evtName, isObjectOfFunctions);
                         evtName.forEach((callback, name) => {
                             on.call(this, name, callback);
                         });
                         return;
                     }
 
-                    aa.arg.test(evtName, aa.nonEmptyString);
-                    aa.arg.test(callback, aa.isFunction);
+                    aa.arg.test(evtName, nonEmptyString);
+                    aa.arg.test(callback, isFunction);
 
                     evtName = evtName.trim();
                     if (!listeners.hasOwnProperty(evtName)) {

@@ -124,6 +124,105 @@
                 }
             }
         },
+        events: {
+            getEmitter:     function (getter, key /*, spec */) {
+                /**
+                 *  Usage:
+                 *      const emit = getEmitter(get, "listeners");
+                 * 
+                 * @param {function} getter
+                 * @param {string} key
+                 * @param {object} spec (optional)
+                 * 
+                 * @return {function}
+                 */
+                aa.arg.test(getter, aa.isFunction);
+                aa.arg.test(key, aa.nonEmptyString);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
+
+                return function emit (evtName, data) {
+                    /**
+                     *  Usage:
+                     *      emit.call(this, "eventname", data);
+                     * 
+                     * @param {string} evtName
+                     * @param {any} data
+                     * 
+                     * @return {void}
+                     */
+                    aa.arg.test(evtName, aa.nonEmptyString);
+                    const listeners = getter(this, key);
+                    aa.arg.test(listeners, aa.isObject);
+
+                    evtName = evtName.trim();
+                    if (listeners.hasOwnProperty(evtName)) {
+                        listeners[evtName].forEach(callback => {
+                            const event = null; // A future event, some day...
+                            callback(event, data);
+                        });
+                    }
+                };
+            },
+            getListener:    function (getter, key /*, spec */) {
+                /**
+                 * Usage:
+                 *      MyClass.prototype.on = getListener(get, "listeners");
+                 * 
+                 * @param {function} getter
+                 * @param {string} key
+                 * @param {object} spec (optional)
+                 * 
+                 * @return {function}
+                 */
+                aa.arg.test(getter, aa.isFunction);
+                aa.arg.test(key, aa.nonEmptyString);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
+
+                const on = function (evtName, callback) {
+                    /**
+                     *  Usage:
+                     *      this.on("eventname", (data) => {
+                     *          // do stuff with data...
+                     *      }));
+                     *  or
+                     *      this.on({
+                     *          eventname: data => {
+                     *              // do stuff with data...
+                     *          }
+                     *      });
+                     * 
+                     * @param {string} evtName
+                     * @param {function} callback
+                     * 
+                     * @return {void}
+                     */
+
+                    const listeners = getter(this, key);
+                    aa.arg.test(listeners, aa.isObject);
+
+                    if (aa.isObject(evtName)) {
+                        aa.arg.test(evtName, aa.isObjectOfFunctions);
+                        evtName.forEach((callback, name) => {
+                            on.call(this, name, callback);
+                        });
+                        return;
+                    }
+
+                    aa.arg.test(evtName, aa.nonEmptyString);
+                    aa.arg.test(callback, aa.isFunction);
+
+                    evtName = evtName.trim();
+                    if (!listeners.hasOwnProperty(evtName)) {
+                        listeners[evtName] = [];
+                    }
+                    listeners[evtName].push(callback);
+                };
+                return on;
+            },
+            specs: {
+                verbose: value => typeof value === "boolean"
+            }
+        },
         hydrate:        function (spec /*, startWith */) {
             /**
              * @param {object} spec={}
@@ -215,7 +314,7 @@
                 Object.defineProperty(this, key, {get: () => { return get(this, key); }});
             });
         },
-        dispatcher:   function (listeners) {
+        dispatcher:     function (listeners) {
             aa.arg.test(listeners, isObject(listeners) && listeners.verify({
                 root: nonEmptyString,
                 names: isArrayOfStrings,
@@ -231,7 +330,7 @@
                 }
             };
         },
-        listener:     function (listeners) {
+        listener:       function (listeners) {
             aa.arg.test(listeners, isObject(listeners) && listeners.verify({
                 root: nonEmptyString,
                 names: isArrayOfStrings

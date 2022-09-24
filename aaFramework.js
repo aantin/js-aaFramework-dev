@@ -356,13 +356,20 @@
                 Object.defineProperty(this, key, {set: (value) => { set(this, key, value); }});
             });
         },
+        setter: key => {
+            return function (value) {
+                aa.arg.test(value, privates.verifiers[key], `'${key}'`);
+                this[key] = value;
+            };
+        },
         setters:        function (param) {
             /**
              * @param {Array|String} param
              */
             
             // Verify argument integrity:
-            aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
+            aa.arg.test(param, key => nonEmptyString(key) || isArrayOfStrings(key), `'param'`);
+            // aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
 
             if (isString(param)) {
                 this.setters([param.trim()]);
@@ -401,7 +408,11 @@
                 if (!o[key](value)) { log({o : o, key: key, value: value}); throw new TypeError("'"+key.trim()+"' argument not verified."); }
                 return true;
             };
-        }
+        },
+        verifyObject:               function (spec) {
+            aa.arg.test(spec, isObject, `'spec'`);
+            return arg => isObject(arg) && arg.verify(spec);
+        },
     });
     // ----------------------------------------------------------------
     // Functions:

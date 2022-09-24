@@ -408,11 +408,7 @@
                 if (!o[key](value)) { log({o : o, key: key, value: value}); throw new TypeError("'"+key.trim()+"' argument not verified."); }
                 return true;
             };
-        },
-        verifyObject:               function (spec) {
-            aa.arg.test(spec, isObject, `'spec'`);
-            return arg => isObject(arg) && arg.verify(spec);
-        },
+        }
     });
     // ----------------------------------------------------------------
     // Functions:

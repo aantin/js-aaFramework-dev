@@ -136,27 +136,27 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, isFunction);
-                aa.arg.test(key, nonEmptyString);
+                aa.arg.test(getter, isFunction, `'getter'`);
+                aa.arg.test(key, nonEmptyString, `'key'`);
                 const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
-                return function emit (evtName, data) {
+                return function emit (eventName, data) {
                     /**
                      *  Usage:
                      *      emit.call(this, "eventname", data);
                      * 
-                     * @param {string} evtName
+                     * @param {string} eventName
                      * @param {any} data
                      * 
                      * @return {void}
                      */
-                    aa.arg.test(evtName, nonEmptyString);
+                    aa.arg.test(eventName, nonEmptyString, `'eventName'`);
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, aa.isObject);
+                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
 
-                    evtName = evtName.trim();
-                    if (listeners.hasOwnProperty(evtName)) {
-                        listeners[evtName].forEach(callback => {
+                    eventName = eventName.trim();
+                    if (listeners.hasOwnProperty(eventName)) {
+                        listeners[eventName].forEach(callback => {
                             const event = null; // A future event, some day...
                             callback(event, data);
                         });
@@ -174,11 +174,11 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, isFunction);
-                aa.arg.test(key, nonEmptyString);
+                aa.arg.test(getter, isFunction, `'getter'`);
+                aa.arg.test(key, nonEmptyString, `'key'`);
                 const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
-                const on = function (evtName, callback) {
+                const on = function (eventName, callback) {
                     /**
                      *  Usage:
                      *      this.on("eventname", (data) => {
@@ -191,31 +191,31 @@
                      *          }
                      *      });
                      * 
-                     * @param {string} evtName
+                     * @param {string} eventName
                      * @param {function} callback
                      * 
                      * @return {void}
                      */
 
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, isObject);
+                    aa.arg.test(listeners, isObject, `'listeners'`);
 
-                    if (isObject(evtName)) {
-                        aa.arg.test(evtName, isObjectOfFunctions);
-                        evtName.forEach((callback, name) => {
+                    if (isObject(eventName)) {
+                        aa.arg.test(eventName, isObjectOfFunctions, `'eventName'`);
+                        eventName.forEach((callback, name) => {
                             on.call(this, name, callback);
                         });
                         return;
                     }
 
-                    aa.arg.test(evtName, nonEmptyString);
-                    aa.arg.test(callback, isFunction);
+                    aa.arg.test(eventName, nonEmptyString, `'eventName'`);
+                    aa.arg.test(callback, isFunction, `'callback'`);
 
-                    evtName = evtName.trim();
-                    if (!listeners.hasOwnProperty(evtName)) {
-                        listeners[evtName] = [];
+                    eventName = eventName.trim();
+                    if (!listeners.hasOwnProperty(eventName)) {
+                        listeners[eventName] = [];
                     }
-                    listeners[evtName].push(callback);
+                    listeners[eventName].push(callback);
                 };
                 return on;
             },

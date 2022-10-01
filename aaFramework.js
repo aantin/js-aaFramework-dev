@@ -152,7 +152,7 @@
                      */
                     aa.arg.test(eventName, nonEmptyString, `'eventName'`);
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
+                    aa.arg.test(listeners, isObject, `'listeners'`);
 
                     eventName = eventName.trim();
                     if (listeners.hasOwnProperty(eventName)) {

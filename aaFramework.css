@@ -1516,7 +1516,7 @@ div.aaDialog .message fieldset.scrollable{
     overflow: auto;
     box-sizing: border-box;
     width: 100%;
-    background: #f0f8ff;
+    background: var(--color-light-blue);
     color: #000;
     font-family: var(--font-family);
     /*font-size: 13px;*/
@@ -1588,7 +1588,7 @@ div.aaDialog span.w3{
     margin-top: 1px;
     margin-bottom: 8px;
     height: 28px;
-    background: #f0f8ff;
+    background: var(--color-light-blue);
     border: 1px solid #fff;
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
     box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
@@ -1619,7 +1619,7 @@ div.aaDialog span.w3{
     box-sizing: border-box;
     width: 100%;
     min-width: auto;
-    background: #f0f8ff;
+    background: var(--color-light-blue);
     color: #000;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     font-weight: normal;

@@ -18,6 +18,8 @@
     --menu-shortcut-color: #acf;
     --menu-disabled-color: #ccc;
     --form-placeholder-color: #acf;
+    --form-focus-color: #36e;
+    --color-placeholder: #248;
 
     --bg-color-lighter: #fff;
     --bg-color: #f8f8f8;
@@ -27,11 +29,10 @@
     --critical-color: #f66;
     --confirm-color: #49f;
 
-    --inset: inset 1px 1px 1px rgba(64,128,255,0.2);
-
     --color-blue-lighter: #acf;
     --color-blue: #49f;
     --color-blue-darker: #248;
+    --color-blue-fade: rgba(64,128,255,0.2);
     --color-orange: #fa0;
     --color-gold: #ba8e4d;
     --color-green: #6c8;
@@ -46,6 +47,11 @@
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
+
+    --notif-bg:  #fff;
+    --notif-text: #444;
+
+    --inset: inset 1px 1px 1px var(--color-blue-fade);
 
     /* --------------------------------
     Dark
@@ -266,8 +272,8 @@ body.aaFrameworkFreeze{
     color: #fff;
 }
 .aa.shortcut div.hotkey.placeholder{
-    color: rgba(64,128,255,0.2);
-    color: #248;
+    color: var(--color-blue-fade);
+    color: var(--color-blue-darker);
 }
 .aa .keyboardKey{
     display: inline-block;
@@ -275,7 +281,7 @@ body.aaFrameworkFreeze{
     padding: 0 0.4em;
     min-width: 26px;
     background: #acf;
-    color: #248;
+    color: var(--color-blue-darker);
     border-radius: 0.2em;
     box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
@@ -284,11 +290,11 @@ body.aaFrameworkFreeze{
 .aa.shortcut .keyboardKey{
     /* active */
     background: #acf;
-    color: #248;
+    color: var(--color-blue-darker);
 }
 .aa.shortcut div.placeholder .keyboardKey{
     /* placeholder */
-    background: #248;
+    background: var(--color-blue-darker);
     color: #124;
 }
 .aa.shortcut button{
@@ -301,8 +307,8 @@ body.aaFrameworkFreeze{
 }
 .aa.shortcut button[disabled]{
     color: #124;
-    background-color: #248;
-    border-color: #248;
+    background-color: var(--color-blue-darker);
+    border-color: var(--color-blue-darker);
 }
 .aa .right{
     text-align: right;
@@ -534,7 +540,7 @@ div.aaTable.fullscreen div.td{
 }
 .aa button.btn-blue:focus,
 .aa input[type=button].btn-blue:focus{
-    border: 1px solid #248;
+    border: 1px solid var(--color-blue-darker);
 }
 .aa button.btn-red,
 .aa input[type=button].btn-red{
@@ -872,7 +878,7 @@ div.aaTable.fullscreen div.td{
 }
 .aaMenu > ul > li ul li:hover > button > span.fa.icon{
     color: var(--submit-color);
-    color: #248;
+    color: var(--color-blue-darker);
     color: var(--menu-shortcut-color);
 }
 .aaMenu > ul > li ul li:hover > ul{
@@ -989,7 +995,7 @@ div.aaTable.fullscreen div.td{
 }
 #aaContextMenu ul li:hover button > span.fa.icon{
     color: var(--submit-color);
-    color: #248;
+    color: var(--color-blue-darker);
     color: var(--menu-shortcut-color);
 }
 #aaContextMenu ul li.shortcut::before{
@@ -1523,7 +1529,7 @@ div.aaDialog .message fieldset.scrollable{
     line-height: 1.5;
     border-radius: 3px;
     border: 1px solid #fff;
-    box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
 }
 div.aaDialog .message fieldset.scrollable .grey{
     color: var(--form-placeholder-color);
@@ -1575,7 +1581,7 @@ div.aaDialog .message fieldset.scrollable .gris{
     color: var(--submit-bg-color);
 }
 div.aaDialog .message fieldset.scrollable button.key:focus .keyboardKey{
-    border-color: #248;
+    border-color: var(--color-blue-darker);
 }
 div.aaDialog span.w{
     display: inline-block;
@@ -1591,7 +1597,7 @@ div.aaDialog span.w3{
     background: var(--color-light-blue);
     border: 1px solid #fff;
     box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-    box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
 }
 .aa select:focus{
     border: 1px solid var(--submit-bg-color);
@@ -1628,7 +1634,7 @@ div.aaDialog span.w3{
     line-height: 1.5;
     border-radius: 3px;
     border: 1px solid #fff;
-    box-shadow: inset 1px 1px 1px rgba(64,128,255,0.2);
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
 }
 .aa input[type="date"]::placeholder,
 .aa input[type="email"]::placeholder,
@@ -1902,7 +1908,7 @@ div.aaDialog label.right input[type=text].half{
 .aa label.cooked:hover input[type=checkbox] + button > span.checked,
 .aa label.cooked input[type=radio] + button:focus > span.checked,
 .aa label.cooked input[type=checkbox] + button:focus > span.checked{
-    color: #36e;
+    color:  var(--form-focus-color);
 }
 .aa label.cooked input[type=radio]:disabled + button > span.disabled,
 .aa label.cooked input[type=checkbox]:disabled + button > span.disabled{
@@ -2523,8 +2529,8 @@ div#aaNotifs div.notif{
     padding: 0px;
     width: 256px;
     max-width: 256px;
-    background: #fff;
-    color: #444;
+    background: var(--notif-bg);
+    color: var(--notif-text);
     border-radius: 2px;
     box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
 }
@@ -2585,12 +2591,12 @@ div#aaNotifs div.buttons input[type="button"]{
     margin: 0px 2px;
     padding: 2px 8px;
     background: var(--submit-bg-color);
-    color: #fff;
+    color: var(--submit-color);
     border-radius: 2px;
     border: 1px solid var(--submit-bg-color);
 }
 div#aaNotifs div.buttons input[type="button"]:focus{
-    border: 1px solid #248;
+    border: 1px solid var(--color-blue-darker);
 }
 div#aaNotifs div.buttons button.reset,
 div#aaNotifs div.buttons input[type="button"].reset{
@@ -2622,7 +2628,7 @@ div#aaNotifs.dark div.buttons input[type="button"]{
     border-color: var(--submit-bg-color);
 }
 div#aaNotifs.dark div.buttons input[type="button"]:focus{
-    border-color: #248;
+    border-color: var(--color-blue-darker);
 }
 div#aaNotifs.dark div.buttons button.reset,
 div#aaNotifs.dark div.buttons input[type="button"].reset{

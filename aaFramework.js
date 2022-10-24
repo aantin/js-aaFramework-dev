@@ -2955,15 +2955,22 @@
             /**
              * @param {string} fileName
              * @param {string} content
-             * @param {object} options {base64}
+             * @param {object} options {<bool> base64, <bool> utf8}
              *
              * @return {void}
              */
-            if (!nonEmptyString(fileName)) { throw new TypeError("First argument must be a non-empty String."); }
-            if (!isString(content)) { throw new TypeError("Second argument must be a String."); }
 
-            const options = (arguments && arguments.length > 2 && isObject(arguments[2]) ? arguments[2] : {});
-            options.base64 = (options.hasOwnProperty("base64") && isBool(options.base64) ? options.base64 : false);
+            aa.arg.test(fileName, nonEmptyString, `'fileName'`);
+            aa.arg.test(content, isString, `'content'`);
+            const options = aa.arg.optional(arguments, 2, {}, verifyObject({
+                base64: isBool,
+                mimetype: value => isString(value) && !!value.match(/^[a-z0-9\-]+\/[a-z0-9\-]+$/i),
+                utf8: isBool
+            }));
+            log({options});
+            options.sprinkle({
+                mimetype: `text/plain`
+            });
 
             if (options.base64) {
                 const len = 64;
@@ -2983,10 +2990,15 @@
                 }
             }
 
-            const a = document.createElement("a");
-            const url = window.URL.createObjectURL(aa.blob.build(content));
-            a.setAttribute("href", url);
-            a.setAttribute("download", fileName);
+            const url = window.URL.createObjectURL(
+                options.utf8 ?
+                new Blob([content], {type: options.mimetype})
+                : aa.blob.build(content)
+            );
+            const a = aa.html(`a`, {
+                href: url,
+                download: fileName
+            });
 
             // Trigger 'click' Event:
             if (a.click) {
@@ -8665,6 +8677,7 @@
                 // Attributes to include as themselves:
                 "action",
                 "charset",
+                "download",
                 "enctype",
                 "for",
                 "href",

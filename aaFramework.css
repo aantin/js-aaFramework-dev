@@ -1833,6 +1833,7 @@ div.aaDialog label input[type="checkbox"].highlighter + span{
 div.aaDialog label input[type="checkbox"].highlighter:checked + span{
     color: #666;
 }
+div.aaDialog label select.half,
 div.aaDialog label input[type=email].half,
 div.aaDialog label input[type=number].half,
 div.aaDialog label input[type=password].half,
@@ -1840,6 +1841,7 @@ div.aaDialog label input[type=text].half{
     display: inline-block;
     width: 50%;
 }
+div.aaDialog label.right select.half,
 div.aaDialog label.right input[type=email].half,
 div.aaDialog label.right input[type=number].half,
 div.aaDialog label.right input[type=password].half,
@@ -2525,9 +2527,11 @@ div#aaNotifs input[type="text"]{
 }
 div#aaNotifs div.notif{
     display: block;
+    overflow-y: auto;
     margin-top: 8px;
     padding: 0px;
     width: 256px;
+    max-height: 96vh;
     max-width: 256px;
     background: var(--notif-bg);
     color: var(--notif-text);

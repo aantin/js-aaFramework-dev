@@ -2951,6 +2951,44 @@
             })(options));
             input.click();
         };
+        this.read       = function (file, resolve /*, reject */) {
+            /**
+             * @param {file} file
+             * @param {function} resolve
+             * @param {function} reject (optional)
+             * 
+             * @return {void}
+             */
+            aa.arg.test(file, file instanceof File, `'file'`);
+            aa.arg.test(resolve, aa.isFunction, `'resolve'`);
+            const reject = aa.arg.optional(arguments, 2, undefined, aa.isFunction);
+
+            const task = () => {
+                const reader = new FileReader();
+                if (!reader && reject) {
+                    reject();
+                }
+                reader.on('load', (e) => {
+                    const content = e.target.result;
+                    resolve(content);
+                });
+                reader.on('progress', (e) => {
+                });
+                try {
+                    reader.readAsText(file);
+                } catch(err) {
+                    if (reject) {
+                        reject(err);
+                    }
+                }
+            };
+
+            if (aa.gui && aa.gui.loading) {
+                aa.gui.loading(task);
+            } else {
+                task();
+            }
+        }
         this.saveAs     = function (fileName, content /*, options */) {
             /**
              * @param {string} fileName

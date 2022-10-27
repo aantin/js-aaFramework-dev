@@ -2021,7 +2021,7 @@
 
         // Attributes:
         const that = {
-            cmd:    "ctrl",
+            cmd:    null,
             height: null,
             name:   null,
             os:     null,
@@ -2111,6 +2111,7 @@
                         that.cmd = "cmd";
                         break;
                     default:
+                        that.cmd = "ctrl";
                         break;
                 }
             },
@@ -2131,7 +2132,7 @@
             },
 
             // Getters:
-            getHeight:  function () {            
+            getHeight:  function () {
                 let height = 0;
 
                 if (instance.is("firefox")) {
@@ -2200,12 +2201,10 @@
                         throw new Error("- browser error : element introuvable.");
                         return false;
                     }
-                    if (instance.is("ie")) {
-                        return parseInt(node.filters.alpha.opacity / 100);
-                    }
-                    else {
-                        return node.style.opacity;
-                    }
+                    return (instance.is("ie") ?
+                        parseInt(node.filters.alpha.opacity / 100)
+                        : node.style.opacity
+                    );
                 }
                 return undefined;
             },
@@ -2254,6 +2253,9 @@
         };
         that.keys().forEach((key) => {
             Object.defineProperty(instance, key, {get: () => {
+                if (that.hasOwnProperty(key) && that[key] !== null) {
+                    return that[key];
+                }
                 const method = 'get'+key.firstToUpper();
                 return instance[method]();
             }})

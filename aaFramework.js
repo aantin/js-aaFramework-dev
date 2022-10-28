@@ -8125,18 +8125,22 @@
                 } catch (e) {
                 }
                 if (isRegex) {
-                    searchNode.classList.remove(cssSearch);
-                    searchNode.title = "";
-                    node.children.forEach((tr) => {
-                        if (tr.id !== "aaShortcuts-actionNotFound") {
-                            if (tr.children[1].innerText.trim().toLowerCase().match(re)) {
-                                tr.classList.remove(cssTR);
-                                count += 1;
-                            } else {
-                                tr.classList.add(cssTR);
+                    if (searchNode) {
+                        searchNode.classList.remove(cssSearch);
+                        searchNode.title = "";
+                    }
+                    if (node) {
+                        node.children.forEach((tr) => {
+                            if (tr.id !== "aaShortcuts-actionNotFound") {
+                                if (tr.children[1].innerText.trim().toLowerCase().match(re)) {
+                                    tr.classList.remove(cssTR);
+                                    count += 1;
+                                } else {
+                                    tr.classList.add(cssTR);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                     el("aaShortcuts-actionNotFound", (tr) => {
                         tr.classList[!search || count ? "add" : "remove"]("hidden");
                     }, () => {
@@ -8144,11 +8148,13 @@
                             node.appendChild(aa.html("tr#aaShortcuts-actionNotFound", aa.html("td.gris", "<i>No action matches the request.</i>")));
                         }
                     });
-                } else {
+                } else if (searchNode) {
                     searchNode.classList.add(cssSearch);
                     searchNode.title = "RegExp not valid.";
                 }
-                dialog.resize();
+                if (dialog) {
+                    dialog.resize();
+                }
             },
             refresh:    function (appName) {
                 node.clear();
@@ -8233,6 +8239,7 @@
 
                 // Display window:
                 dialog = aa.gui.window({
+                    buttons: false,
                     width: 720,
                     title: "Edit shortcuts",
                     text: gui.getNode(appName),

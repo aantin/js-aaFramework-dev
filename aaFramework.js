@@ -412,20 +412,21 @@
     });
     // ----------------------------------------------------------------
     // Functions:
-    const {get, set} = aa.prototypes.mapFactory();
+    const {get, set} = aa.mapFactory();
     aa.definePublics        = function (keyValues /*, spec */) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
         if (!isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
         if (!isObject(spec)) { throw new TypeError("second argument must be an Object."); }
 
-        spec.verify({
+        aa.arg.test(spec, aa.verifyObject({
             getter: isFunction,
             setter: isFunction,
-        });
+        }), `'spec'`);
+        spec.sprinkle({ get, set });
 
-        const getter = spec.getter || get;
-        const setter = spec.setter || set;
+        const getter = spec.getter;
+        const setter = spec.setter;
 
         keyValues.forEach((value, key) => {
             setter(this, key, value);
@@ -1225,6 +1226,204 @@
                 }, true);
             } else { throw new TypeError("Argument must be an Object or an Array of Objects."); }
         };
+    })();
+    aa.Collection = (() => {
+      const {get, set} = aa.mapFactory();
+
+      /**
+       * Usage:
+       * new aa.Collection({
+       *    authenticate: <function>, // a function that returns a boolean, used to verify each item integrity with the collection
+       *    on: {
+       *        added: <function>,    // a callback function that will be called after an item is added to the collection
+       *        removed: <function>   // a callback function that will be called after an item is removed from the collection
+       *    },
+       *    parent: <any>
+       * });
+       * 
+       * @param {object} spec (optional)
+       * 
+       * @return {void}
+       */
+      function Collection (/* spec */) {
+            aa.defineAccessors.call(this, {
+            publics: {
+                authenticate: null
+            },
+            privates: {
+                data: [],
+                listeners: {},
+            },
+            read: {
+                parent: null
+            },
+            execute: {
+                first:  () => get(this, "data").first,
+                last:   () => get(this, "data").last,
+                length: () => get(this, "data").length
+            }
+            }, { getter: get, setter: set });
+            privates.construct.apply(this, arguments);
+        }
+
+        // Privates:
+        const privates = {
+            // Attributes:
+            verifiers: {
+                authenticate: aa.isFunction,
+                on: aa.verifyObject({
+                    added:    aa.isFunction,
+                    removed:  aa.isFunction
+                }),
+                parent: () => true
+            },
+            
+            // Methods:
+            construct:          function (/* spec */) {
+                const spec = aa.arg.optional(arguments, 0, {});
+                this.hydrate(spec);
+            },
+            emit:               aa.prototypes.events.getEmitter(get, "listeners"),
+        };
+
+        // Publics:
+        aa.deploy(Collection.prototype, {
+            forEach:            function (callback /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+
+                const data = get(this, "data");
+                data.forEach(callback, thisArg);
+            },
+            filter:             function (callback /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+
+                const data = get(this, "data");
+                return data.filter(callback, thisArg);
+            },
+            find:               function (callback /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+
+                const data = get(this, "data");
+                return data.find(callback, thisArg);
+            },
+            map:                function (callback /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+                return get(this, "data").map(callback, thisArg);
+            },
+            reduce:             function (callback, accumulator /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+
+                const data = get(this, "data");
+                return data.reduce(callback, accumulator, thisArg);
+            },
+            some:               function (callback /*, thisArg */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+
+                const data = get(this, "data");
+                return data.some(callback, thisArg);
+            },
+
+            // General:
+            clear:              function () {
+                get(this, `data`).clear();
+            },
+            has:                function (value) {
+                return (get(this, "data").indexOf(value) > -1);
+            },
+            hydrate:            function (spec) {
+                aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`);
+                aa.prototypes.hydrate.call(this, spec);
+            },
+            indexOf:            function (value) {
+                return get(this, "data").indexOf(value);
+            },
+            join:               function () {
+                return (
+                    get(this, `data`).join.apply(this, arguments)
+                );
+            },
+            on:                 aa.prototypes.events.getListener(get, "listeners"),
+            push:               function (...items) {
+                const data = get(this, "data");
+                items.forEach(item => {
+                    if (this.authenticate) {
+                        if (!this.authenticate(item)) {
+                            console.error(`parent:`, this.parent);
+                            console.error(`unauthorized item:`, item);
+                            throw new Error(`Invalid collection item.`);
+                            return;
+                        }
+                    }
+                    data.push(item);
+                    const index = data.length - 1;
+                    if (!this.hasOwnProperty(index)) {
+                        Object.defineProperty(this, index, {
+                            get: () => {
+                                if (index >= data.length) { throw new Error(``); }
+                                return get(this, "data")[index];
+                            }
+                        });
+                    }
+                    privates.emit.call(this, `added`, item);
+                });
+            },
+            remove:             function (...items) {
+                const removedItems = [];
+                const data = get(this, "data");
+                items.forEach(item => {
+                    const index = data.indexOf(item);
+                    if (index > -1) {
+                        const removedItem = data.splice(index, 1);
+                        if (removedItem.length) {
+                            privates.emit.call(this, `removed`, removedItem[0]);
+                            removedItems.push(removedItem[0]);
+                        }
+                    }
+                });
+                return removedItems;
+            },
+            sort:               function (func) {
+                get(this, 'data').sort(func);
+            },
+
+            // Getters:
+            toArray:            function () {
+                return Array.from(get(this, 'data'));
+            },
+
+            // Setters:
+            setAuthenticate:    function (verifier) {
+                aa.arg.test(verifier, aa.isFunction);
+                set(this, "authenticate", value => {
+                    const isVerified = verifier(value);
+                    if (!aa.isBool(isVerified)) { throw new Error(`'authenticate' Function must return a Boolean.`); }
+                    return isVerified;
+                });
+            },
+            setOn:              function (listeners) {
+            aa.arg.test(listeners, privates.verifiers.on, `'listeners'`);
+
+            listeners.forEach((callback, eventName) => {
+                this.on(eventName, callback);
+            });
+            },
+            setParent:          function (parent) {
+
+                set(this, "parent", parent);
+            }
+        }, {force: true});
+
+        // Static:
+        aa.deploy(Collection, {
+        }, {force: true});
+
+        return Collection;
     })();
     aa.Event                    = function (actionOrCallback, options /* , spec */) {
         /*
@@ -9530,6 +9729,124 @@
             return aaClass;
         };
     })();
+    aa.deploy(Function.prototype, {
+        manufacture: function (blueprint /*, accessors */) {
+            const Instancer = this;
+
+            aa.arg.test(blueprint, aa.verifyObject({
+                accessors:          aa.isObject,
+                startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+                methods:            aa.verifyObject({
+                    publics:        aa.isObjectOfFunctions,
+                    setters:        aa.isObjectOfFunctions
+                }),
+                statics:            aa.isObject,
+                verifiers:          aa.isObject,
+            }), `'blueprint'`);
+            blueprint.sprinkle({
+                accessors: {
+                    publics: {
+                    },
+                    privates: {
+                        listeners: {}
+                    },
+                    read: {},
+                    execute: {},
+                },
+                startHydratingWith: [],
+                methods: {
+                    publics: {},
+                    setters: {}
+                },
+                statics: {},
+                verifiers: {}
+            });
+            const accessors = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
+                get: aa.isFunction,
+                set: aa.isFunction,
+            }));
+            accessors.sprinkle({ get, set });
+
+            const getter = accessors.get;
+            const setter = accessors.set;
+
+            const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
+
+            // Constructor:
+            setter(Instancer, `construct`, function (/* spec */) {
+                const spec = aa.arg.optional(arguments, 0, {});
+
+                // Define setters:
+                Object.keys(blueprint.accessors.publics)
+                .forEach(key => {
+                    if (blueprint.accessors.publics.hasOwnProperty(key)) {
+                        Instancer.prototype[`set${key.firstToUpper()}`] = function (value) {
+                            aa.arg.test(
+                                value,
+                                value =>
+                                    blueprint.verifiers
+                                    && blueprint.verifiers.hasOwnProperty(key)
+                                    && blueprint.verifiers[key].call(this, value),
+                                `'${key}' setter`
+                            );
+                            const isDifferent = (value !== getter(this, key));
+
+                            if (isDifferent) { emit.call(this, `${key}change`, value); }
+                            if (blueprint.methods.setters[key]) {
+                                blueprint.methods.setters[key].call(this, value);
+                            } else {
+                                setter(this, key, value);
+                            }
+                            if (isDifferent) { emit.call(this, `${key}changed`, value); }
+                        }
+                    }
+                });
+                
+                aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
+                
+                this.hydrate(spec, blueprint.startHydratingWith);
+            });
+
+            // Public:
+            aa.deploy(Instancer.prototype, Object.assign({
+                hydrate:    function (spec, order) {
+                    aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
+                    aa.arg.test(order, list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)), `'order'`);
+
+
+                    // First assign with starting keys:
+                    order.forEach((key) => {
+                        if (spec.hasOwnProperty(key)) {
+                            const method = `set${key.firstToUpper()}`;
+                            if (isFunction(this[method])) {
+                                this[method](spec[key]);
+                            }
+                        }
+                    });
+
+                    // Then assign remaining keys:
+                    Object.keys(spec)
+                    .filter(key => !order.has(key))
+                    .forEach(key => {
+                        const method = `set${key.firstToUpper()}`;
+                        if (isFunction(this[method])) {
+                            this[method](spec[key]);
+                        }
+                    });
+                },
+                on:         aa.prototypes.events.getListener(getter, `listeners`),
+            }, blueprint.methods.publics), {force: true});
+
+            // Static:
+            aa.deploy(Instancer, blueprint.statics, {force: true});
+
+            return Instancer;
+        }
+    }, {force: true});
+    aa.manufacture              = function (Instancer, blueprint /*, accessors */) {
+        const accessors = aa.arg.optional(arguments, 2, {});
+        Instancer.manufacture(Instancer, blueprint, accessors);
+    };
     aa.newID                    = (function () {
         let x = 0;
         return function () {
@@ -9594,37 +9911,6 @@
         });
 
         return Object.freeze(new Settings());
-    })();
-    aa.uuidv4                   = function () {
-        /**
-         * Found at https://stackoverflow.com/a/8809472
-         */
-        deprecated("aa.uuidv4");
-        var dt = new Date().getTime();
-        var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-            var r = (dt + Math.random()*16)%16 | 0;
-            dt = Math.floor(dt/16);
-            return (c=='x' ? r :(r&0x3|0x8)).toString(16);
-        });
-        return uuid;
-    };
-    aa.uid                      = (function () {
-        let x = 0;
-        return function () {
-            let i;
-            let prefix = '';
-            let now = Date.now().toString(16)+x.toString(16);
-
-            for (i=0; i<32-now.length; i++) {
-                prefix += Math.floor(16*Math.random()).toString(16);
-            }
-            now = prefix+now;
-            const p = now.match(/^.*([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{3})([0-9a-f]{4})([0-9a-f]{12})$/);
-            const uid = p[1]+'-'+p[2]+'-4'+p[3]+'-'+p[4]+'-'+p[5];
-
-            x++;
-            return uid;
-        };
     })();
     aa.xhr                      = function (method='GET', src, options={}) {
         if (isObject(options)

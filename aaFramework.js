@@ -1227,7 +1227,7 @@
             } else { throw new TypeError("Argument must be an Object or an Array of Objects."); }
         };
     })();
-    aa.Collection = (() => {
+    aa.Collection               = (() => {
       const {get, set} = aa.mapFactory();
 
       /**
@@ -1340,8 +1340,8 @@
                 aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`);
                 aa.prototypes.hydrate.call(this, spec);
             },
-            indexOf:            function (value) {
-                return get(this, "data").indexOf(value);
+            indexOf:            function (/* value */) {
+                return get(this, "data").indexOf.apply(this, arguments);
             },
             join:               function () {
                 return (
@@ -9736,7 +9736,13 @@
     }, {force: true});
     aa.manufacture              = function (Instancer, blueprint /*, accessors */) {
         aa.arg.test(blueprint, aa.verifyObject({
-            accessors:          aa.isObject,
+            accessors:          aa.verifyObject({
+                publics:        aa.isObject,
+                privates:       aa.isObject,
+                read:           aa.isObject,
+                execute:        aa.isObject
+            }),
+            construct:          aa.isFunction,
             startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
             methods:            aa.verifyObject({
                 publics:        aa.isObjectOfFunctions,
@@ -9755,6 +9761,7 @@
                 read: {},
                 execute: {},
             },
+            construct: function () {},
             startHydratingWith: [],
             methods: {
                 publics: {},
@@ -9806,6 +9813,8 @@
             });
             
             aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
+
+            blueprint.construct.apply(this, arguments);
             
             this.hydrate(spec, blueprint.startHydratingWith);
         });

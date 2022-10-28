@@ -3206,7 +3206,6 @@
                 mimetype: value => isString(value) && !!value.match(/^[a-z0-9\-]+\/[a-z0-9\-]+$/i),
                 utf8: isBool
             }));
-            log({options});
             options.sprinkle({
                 mimetype: `text/plain`
             });
@@ -9731,121 +9730,120 @@
     })();
     aa.deploy(Function.prototype, {
         manufacture: function (blueprint /*, accessors */) {
-            const Instancer = this;
-
-            aa.arg.test(blueprint, aa.verifyObject({
-                accessors:          aa.isObject,
-                startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
-                methods:            aa.verifyObject({
-                    publics:        aa.isObjectOfFunctions,
-                    setters:        aa.isObjectOfFunctions
-                }),
-                statics:            aa.isObject,
-                verifiers:          aa.isObject,
-            }), `'blueprint'`);
-            blueprint.sprinkle({
-                accessors: {
-                    publics: {
-                    },
-                    privates: {
-                        listeners: {}
-                    },
-                    read: {},
-                    execute: {},
+            const accessors = aa.arg.optional(arguments, 1, {});
+            aa.manufacture(this, blueprint, accessors);
+        }
+    }, {force: true});
+    aa.manufacture              = function (Instancer, blueprint /*, accessors */) {
+        aa.arg.test(blueprint, aa.verifyObject({
+            accessors:          aa.isObject,
+            startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+            methods:            aa.verifyObject({
+                publics:        aa.isObjectOfFunctions,
+                setters:        aa.isObjectOfFunctions
+            }),
+            statics:            aa.isObject,
+            verifiers:          aa.isObject,
+        }), `'blueprint'`);
+        blueprint.sprinkle({
+            accessors: {
+                publics: {
                 },
-                startHydratingWith: [],
-                methods: {
-                    publics: {},
-                    setters: {}
+                privates: {
+                    listeners: {}
                 },
-                statics: {},
-                verifiers: {}
-            });
-            const accessors = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
-                get: aa.isFunction,
-                set: aa.isFunction,
-            }));
-            accessors.sprinkle({ get, set });
+                read: {},
+                execute: {},
+            },
+            startHydratingWith: [],
+            methods: {
+                publics: {},
+                setters: {}
+            },
+            statics: {},
+            verifiers: {}
+        });
+        const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            get: aa.isFunction,
+            set: aa.isFunction,
+        }));
+        accessors.sprinkle({ get, set });
 
-            const getter = accessors.get;
-            const setter = accessors.set;
+        const getter = accessors.get;
+        const setter = accessors.set;
 
-            const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
+        const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
 
-            // Constructor:
-            setter(Instancer, `construct`, function (/* spec */) {
-                const spec = aa.arg.optional(arguments, 0, {});
+        // Constructor:
+        setter(Instancer, `construct`, function (/* spec */) {
+            const spec = aa.arg.optional(arguments, 0, {});
 
-                // Define setters:
-                Object.keys(blueprint.accessors.publics)
-                .forEach(key => {
-                    if (blueprint.accessors.publics.hasOwnProperty(key)) {
-                        Instancer.prototype[`set${key.firstToUpper()}`] = function (value) {
-                            aa.arg.test(
-                                value,
-                                value =>
-                                    blueprint.verifiers
-                                    && blueprint.verifiers.hasOwnProperty(key)
-                                    && blueprint.verifiers[key].call(this, value),
-                                `'${key}' setter`
-                            );
-                            const isDifferent = (value !== getter(this, key));
+            // Define setters:
+            Object.keys(blueprint.accessors.publics)
+            .forEach(key => {
+                if (blueprint.accessors.publics.hasOwnProperty(key)) {
+                    const method = `set${key.firstToUpper()}`;
+                    Instancer.prototype[method] = function (value) {
+                        aa.arg.test(
+                            value,
+                            value =>
+                                blueprint.verifiers
+                                && blueprint.verifiers.hasOwnProperty(key)
+                                && blueprint.verifiers[key].call(this, value),
+                            `'${key}' setter`
+                        );
+                        const isDifferent = (value !== getter(this, key));
 
-                            if (isDifferent) { emit.call(this, `${key}change`, value); }
-                            if (blueprint.methods.setters[key]) {
-                                blueprint.methods.setters[key].call(this, value);
-                            } else {
-                                setter(this, key, value);
-                            }
-                            if (isDifferent) { emit.call(this, `${key}changed`, value); }
+                        if (isDifferent) { emit.call(this, `${key}change`, value); }
+                        if (blueprint.methods.setters[key]) {
+                            blueprint.methods.setters[key].call(this, value);
+                        } else {
+                            setter(this, key, value);
                         }
+                        if (isDifferent) { emit.call(this, `${key}changed`, value); }
                     }
-                });
-                
-                aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
-                
-                this.hydrate(spec, blueprint.startHydratingWith);
+                }
             });
+            
+            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
+            
+            this.hydrate(spec, blueprint.startHydratingWith);
+        });
 
-            // Public:
-            aa.deploy(Instancer.prototype, Object.assign({
-                hydrate:    function (spec, order) {
-                    aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
-                    aa.arg.test(order, list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)), `'order'`);
+        // Public:
+        aa.deploy(Instancer.prototype, Object.assign({
+            hydrate:    function (spec, order) {
+                aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
+                aa.arg.test(order, list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)), `'order'`);
 
 
-                    // First assign with starting keys:
-                    order.forEach((key) => {
-                        if (spec.hasOwnProperty(key)) {
-                            const method = `set${key.firstToUpper()}`;
-                            if (isFunction(this[method])) {
-                                this[method](spec[key]);
-                            }
-                        }
-                    });
-
-                    // Then assign remaining keys:
-                    Object.keys(spec)
-                    .filter(key => !order.has(key))
-                    .forEach(key => {
+                // First assign with starting keys:
+                order.forEach((key) => {
+                    if (spec.hasOwnProperty(key)) {
                         const method = `set${key.firstToUpper()}`;
                         if (isFunction(this[method])) {
                             this[method](spec[key]);
                         }
-                    });
-                },
-                on:         aa.prototypes.events.getListener(getter, `listeners`),
-            }, blueprint.methods.publics), {force: true});
+                    }
+                });
 
-            // Static:
-            aa.deploy(Instancer, blueprint.statics, {force: true});
+                // Then assign remaining keys:
+                Object.keys(spec)
+                .filter(key => !order.has(key))
+                .forEach(key => {
+                    const method = `set${key.firstToUpper()}`;
+                    if (isFunction(this[method])) {
+                        this[method](spec[key]);
+                    }
+                });
+            },
+            on:         aa.prototypes.events.getListener(getter, `listeners`),
+        }, blueprint.methods.publics), {force: true});
 
-            return Instancer;
-        }
-    }, {force: true});
-    aa.manufacture              = function (Instancer, blueprint /*, accessors */) {
-        const accessors = aa.arg.optional(arguments, 2, {});
-        Instancer.manufacture(Instancer, blueprint, accessors);
+        // Static:
+        aa.deploy(Instancer, blueprint.statics, {force: true});
+
+        return Instancer;
     };
     aa.newID                    = (function () {
         let x = 0;
@@ -10042,7 +10040,6 @@
                             // xhr.setRequestHeader("Content-length", chaine.length);
                             // xhr.setRequestHeader("Connection", "close");
                             xhr.onreadystatechange = function () {
-                                // console.log({readyState:xhr.readyState});
                                 if (xhr.readyState === 4) {
                                     switch (xhr.status) {
                                         case 200:{

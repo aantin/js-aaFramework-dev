@@ -3479,7 +3479,7 @@
                                 };
                             })(action));
                         } else {
-                            console.warn("Invalid Action.");
+                            console.warn(`Invalid Action${aa.nonEmptyString(entry) ? ` '${entry}'` : ''}.`);
                         }
                     } else if (entry === null) {
                         menu.appendChild($$("hr"));
@@ -4335,17 +4335,11 @@
                     }
                     return "aaDialog-"+this.getID();
                 }
-            }, {
-                condition: Dialog.prototype.hydrate === undefined,
-                force: true
-            });
+            }, {force: true });
             aa.deploy(Dialog.prototype, {
                 setDefault:       Dialog.prototype.setDefaultValue,
                 setValue:         Dialog.prototype.setDefaultValue,
-            }, {
-                condition: Dialog.prototype.setValue === undefined,
-                force: true
-            });
+            }, {force: true});
             /**
              * How to use:
                 let d = new aa.Dialog(String type);
@@ -8210,16 +8204,18 @@
                 });
                 aa.events.app(appName).getEvents().forEach((events, evtName) => {
                     events.forEach((event) => {
-                        const action = event.action;
-                        if (action.accessible) {
-                            if (!shortcuts.hasOwnProperty(action.name)) {
-                                shortcuts[action.name] = [];
+                        if (event) {
+                            const action = event.action;
+                            if (action.accessible) {
+                                if (!shortcuts.hasOwnProperty(action.name)) {
+                                    shortcuts[action.name] = [];
+                                }
+                                shortcuts[action.name].push(evtName);
+                                if (byShortcuts[evtName] === undefined) {
+                                    byShortcuts[evtName] = [];
+                                }
+                                byShortcuts[evtName].push(action);
                             }
-                            shortcuts[action.name].push(evtName);
-                            if (byShortcuts[evtName] === undefined) {
-                                byShortcuts[evtName] = [];
-                            }
-                            byShortcuts[evtName].push(action);
                         }
                     });
                 });
@@ -8437,16 +8433,20 @@
             if (!isGuiOpened) {
                 isGuiOpened = true;
 
-                aa.gui.loading(() => { // loading...
-                    gui.reset();
-                    gui.reload(appName);
-                }, () => { // Resolved...
-
-                    gui.show(appName);
-                }, () => { // Rejected...
-
-                    aa.gui.warn("An error occured.");
-                });
+                aa.gui.loading(
+                    
+                    // loading:
+                    () => {
+                        gui.reset();
+                        gui.reload(appName);
+                    },
+                    
+                    // Resolved:
+                    () => { gui.show(appName); },
+                    
+                    // Rejected:
+                    () => { aa.gui.warn("An error occured."); }
+                );
             }
         };
         this.isValid    = function (str) {

@@ -1848,6 +1848,14 @@ div.aaDialog label.right input[type=password].half,
 div.aaDialog label.right input[type=text].half{
     margin-left: 4px;
 }
+div.aaDialog label > span.half {
+    display: inline-block;
+    width: 50%;
+}
+div.aaDialog label > span.half:first-child {
+    padding-right: .4em;
+    text-align: right;
+}
 .aa label.cooked{
     display: block;
     width: fit-content;

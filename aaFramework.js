@@ -8548,6 +8548,217 @@
 
         return Object.freeze(action);
     });
+    aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
+        aa.arg.test(blueprint, aa.verifyObject({
+            accessors:          aa.verifyObject({
+                publics:        aa.isObject,
+                privates:       aa.isObject,
+                read:           aa.isObject,
+                execute:        aa.isObject
+            }),
+            construct:          aa.isFunction,
+            startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+            methods:            aa.verifyObject({
+                publics:        aa.isObjectOfFunctions,
+                setters:        aa.isObjectOfFunctions
+            }),
+            statics:            aa.isObject,
+            verifiers:          aa.isObject,
+        }), `'blueprint'`);
+        blueprint.sprinkle({
+            accessors: {
+                publics: {
+                },
+                privates: {
+                    listeners: {}
+                },
+                read: {},
+                execute: {},
+            },
+            construct: function () {},
+            startHydratingWith: [],
+            methods: {
+                publics: {},
+                setters: {}
+            },
+            statics: {},
+            verifiers: {}
+        });
+        const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            get: aa.isFunction,
+            set: aa.isFunction,
+        }));
+        accessors.sprinkle({ get, set });
+
+        const getter = accessors.get;
+        const setter = accessors.set;
+
+        const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
+
+        // Constructor:
+        setter(Instancer, `construct`, function (/* spec */) {
+            const spec = aa.arg.optional(arguments, 0, {});
+
+            // Define setters:
+            Object.keys(blueprint.accessors.publics)
+            .forEach(key => {
+                if (blueprint.accessors.publics.hasOwnProperty(key)) {
+                    const method = `set${key.firstToUpper()}`;
+                    Instancer.prototype[method] = function (value) {
+                        aa.arg.test(
+                            value,
+                            value =>
+                                blueprint.verifiers
+                                && blueprint.verifiers.hasOwnProperty(key)
+                                && blueprint.verifiers[key].call(this, value),
+                            `'${key}' setter`
+                        );
+                        const isDifferent = (value !== getter(this, key));
+
+                        if (isDifferent) { emit.call(this, `${key}change`, value); }
+                        if (blueprint.methods.setters[key]) {
+                            blueprint.methods.setters[key].call(this, value);
+                        } else {
+                            setter(this, key, value);
+                        }
+                        if (isDifferent) { emit.call(this, `${key}changed`, value); }
+                    }
+                }
+            });
+            
+            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
+
+            blueprint.construct.apply(this, arguments);
+            
+            this.hydrate(spec, blueprint.startHydratingWith);
+        });
+
+        // Public:
+        aa.deploy(Instancer.prototype, Object.assign({
+            hydrate:    function (/* spec, order */) {
+                const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
+                // aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
+                const order = aa.arg.optional(arguments, 1, [], list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
+
+
+                // First assign with starting keys:
+                order.forEach((key) => {
+                    if (spec.hasOwnProperty(key)) {
+                        const method = `set${key.firstToUpper()}`;
+                        if (isFunction(this[method])) {
+                            this[method](spec[key]);
+                        }
+                    }
+                });
+
+                // Then assign remaining keys:
+                Object.keys(spec)
+                .filter(key => !order.has(key))
+                .forEach(key => {
+                    const method = `set${key.firstToUpper()}`;
+                    if (isFunction(this[method])) {
+                        this[method](spec[key]);
+                    }
+                });
+            },
+            on:         aa.prototypes.events.getListener(getter, `listeners`),
+        }, blueprint.methods.publics), {force: true});
+
+        // Static:
+        aa.deploy(Instancer, blueprint.statics, {force: true});
+
+        return Object.freeze({
+            emitter: emit
+        });
+    });
+    aa.Animation                = (() => {
+        /**
+         * Events:
+         *      - onstart
+         *      - onpause
+         *      - onresume
+         *      - onstop
+         */
+        function Animation () { get(Animation, `construct`).apply(this, arguments); }
+        const blueprint = {
+            accessors: {
+                publics: {},
+                privates: {
+                    callback:   null,
+                    delay:      null,
+                    id:         null
+                },
+                read: {
+                    isPlaying: false
+                },
+                execute: {}
+            },
+            verifiers: {
+                callback:   aa.isFunction,
+                delay:      aa.isStrictlyPositiveInt,
+                id:         aa.isStrictlyPositiveInt,
+            },
+            construct: function (delay, callback) {
+                aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`);
+                aa.arg.test(callback, blueprint.verifiers.callback, `'callback'`);
+
+                set(this, `callback`, callback);
+                set(this, `delay`, delay);
+                set(this, `isPlaying`, false);
+            },
+            startHydratingWith: [],
+            methods: {
+                publics: {
+                    start:  function () {
+                        if (get(this, `id`)) {
+                            this.resume();
+                            return;
+                        }
+                        set(this, `isPlaying`, true);
+                        
+                        const delay = get(this, `delay`);
+                        let previousTime = Date.now();
+                        
+                        emit.call(this, 'start');
+                        const step = () => {
+                            const isPlaying = get(this, `isPlaying`);
+                            const now = Date.now();
+                            
+                            if (isPlaying) {
+                                if (now >= previousTime + delay) {
+                                    previousTime = now;
+                                    get(this, `callback`).call(this);
+                                }
+                            }
+                            set(this, `id`, requestAnimationFrame(step));
+                        }
+                        set(this, `id`, requestAnimationFrame(step));
+                    },
+                    pause:  function () {
+                        if (get(this, `id`)) {
+                            set(this, `isPlaying`, false);
+                            emit.call(this, 'pause');
+                        }
+                    },
+                    resume: function () {
+                        if (get(this, `id`)) {
+                            set(this, `isPlaying`, true);
+                            emit.call(this, 'resume');
+                        }
+                    },
+                    stop:   function () {
+                        cancelAnimationFrame(get(this, `id`));
+                        set(this, `id`, null);
+                        set(this, `isPlaying`, false);
+                        emit.call(this, 'stop');
+                    },
+                }
+            },
+            statics: {}
+        };
+        const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
+        return Animation;
+    })();
     aa.cook                     = Object.freeze(function (name /*, spec */) {
         /**
          * @param {string} name
@@ -9746,126 +9957,6 @@
             aa.manufacture(this, blueprint, accessors);
         }
     }, {force: true});
-    aa.manufacture              = function (Instancer, blueprint /*, accessors */) {
-        aa.arg.test(blueprint, aa.verifyObject({
-            accessors:          aa.verifyObject({
-                publics:        aa.isObject,
-                privates:       aa.isObject,
-                read:           aa.isObject,
-                execute:        aa.isObject
-            }),
-            construct:          aa.isFunction,
-            startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
-            methods:            aa.verifyObject({
-                publics:        aa.isObjectOfFunctions,
-                setters:        aa.isObjectOfFunctions
-            }),
-            statics:            aa.isObject,
-            verifiers:          aa.isObject,
-        }), `'blueprint'`);
-        blueprint.sprinkle({
-            accessors: {
-                publics: {
-                },
-                privates: {
-                    listeners: {}
-                },
-                read: {},
-                execute: {},
-            },
-            construct: function () {},
-            startHydratingWith: [],
-            methods: {
-                publics: {},
-                setters: {}
-            },
-            statics: {},
-            verifiers: {}
-        });
-        const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
-            get: aa.isFunction,
-            set: aa.isFunction,
-        }));
-        accessors.sprinkle({ get, set });
-
-        const getter = accessors.get;
-        const setter = accessors.set;
-
-        const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
-
-        // Constructor:
-        setter(Instancer, `construct`, function (/* spec */) {
-            const spec = aa.arg.optional(arguments, 0, {});
-
-            // Define setters:
-            Object.keys(blueprint.accessors.publics)
-            .forEach(key => {
-                if (blueprint.accessors.publics.hasOwnProperty(key)) {
-                    const method = `set${key.firstToUpper()}`;
-                    Instancer.prototype[method] = function (value) {
-                        aa.arg.test(
-                            value,
-                            value =>
-                                blueprint.verifiers
-                                && blueprint.verifiers.hasOwnProperty(key)
-                                && blueprint.verifiers[key].call(this, value),
-                            `'${key}' setter`
-                        );
-                        const isDifferent = (value !== getter(this, key));
-
-                        if (isDifferent) { emit.call(this, `${key}change`, value); }
-                        if (blueprint.methods.setters[key]) {
-                            blueprint.methods.setters[key].call(this, value);
-                        } else {
-                            setter(this, key, value);
-                        }
-                        if (isDifferent) { emit.call(this, `${key}changed`, value); }
-                    }
-                }
-            });
-            
-            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
-
-            blueprint.construct.apply(this, arguments);
-            
-            this.hydrate(spec, blueprint.startHydratingWith);
-        });
-
-        // Public:
-        aa.deploy(Instancer.prototype, Object.assign({
-            hydrate:    function (spec /*, order */) {
-                aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
-                const order = aa.arg.optional(arguments, 1, [], list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
-
-
-                // First assign with starting keys:
-                order.forEach((key) => {
-                    if (spec.hasOwnProperty(key)) {
-                        const method = `set${key.firstToUpper()}`;
-                        if (isFunction(this[method])) {
-                            this[method](spec[key]);
-                        }
-                    }
-                });
-
-                // Then assign remaining keys:
-                Object.keys(spec)
-                .filter(key => !order.has(key))
-                .forEach(key => {
-                    const method = `set${key.firstToUpper()}`;
-                    if (isFunction(this[method])) {
-                        this[method](spec[key]);
-                    }
-                });
-            },
-            on:         aa.prototypes.events.getListener(getter, `listeners`),
-        }, blueprint.methods.publics), {force: true});
-
-        // Static:
-        aa.deploy(Instancer, blueprint.statics, {force: true});
-
-        return Instancer;
-    };
     aa.newID                    = (function () {
         let x = 0;
         return function () {

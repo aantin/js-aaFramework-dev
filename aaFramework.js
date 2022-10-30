@@ -194,7 +194,7 @@
                      * @param {string} eventName
                      * @param {function} callback
                      * 
-                     * @return {void}
+                     * @return {object} this, for chaining
                      */
 
                     const listeners = getter(this, key);
@@ -216,6 +216,7 @@
                         listeners[eventName] = [];
                     }
                     listeners[eventName].push(callback);
+                    return this;
                 };
                 return on;
             },

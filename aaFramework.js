@@ -9833,9 +9833,9 @@
 
         // Public:
         aa.deploy(Instancer.prototype, Object.assign({
-            hydrate:    function (spec, order) {
+            hydrate:    function (spec /*, order */) {
                 aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
-                aa.arg.test(order, list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)), `'order'`);
+                const order = aa.arg.optional(arguments, 1, [], list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
 
 
                 // First assign with starting keys:

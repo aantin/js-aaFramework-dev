@@ -8925,30 +8925,32 @@
                 "download",
                 "enctype",
                 "for",
+                "height",
                 "href",
                 "id",
+                "kind",
                 "label",
                 "method",
                 "name",
                 "orient",
                 "placeholder",
                 "src",
+                "srclang",
                 "style",
                 "title",
                 "type",
                 "value",
                 "width",
-                "height",
                 
                 // Attributes to transform before including:
                 // "css",
                 "colspan",
-                "rowspan",
-                "dataset",
-                "draggable",
                 "checked",
                 "class",
+                "dataset",
+                "default",
                 "disabled",
+                "draggable",
                 "legend",
                 "max",
                 "min",
@@ -8960,6 +8962,7 @@
                 "prefix",
                 "readonly",
                 "required",
+                "rowspan",
                 "selected",
                 "step",
                 "suffix",
@@ -9260,6 +9263,7 @@
                                                 }
                                                 break;
                                             
+                                            case "default":
                                             case "disabled":
                                             case "multiple":
                                             case "readonly":

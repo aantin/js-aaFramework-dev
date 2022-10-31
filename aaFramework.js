@@ -256,14 +256,11 @@
         },
         getPrivateAccessor: function (keys /*, spec */) {
             aa.arg.test(keys, aa.isArrayOfStrings, `'keys'`);
-            const spec      = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
+            const spec = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
                 get: aa.isFunction,
                 set: aa.isFunction
             }));
-            spec.sprinkle({
-                get: get,
-                set: set
-            });
+            spec.sprinkle({get, set});
             
             const that = {};
             keys.forEach(key => {
@@ -1472,6 +1469,17 @@
 
         // Static:
         aa.deploy(Collection, {
+            fromArray: function (list /* spec */) {
+                aa.arg.test(list, aa.isArray, `'list'`);
+                const spec = aa.arg.optional(arguments, 1, {});
+
+                const collection = new aa.Collection(spec);
+                list.forEach(item => {
+                    collection.push(item);
+                });
+
+                return collection;
+            }
         }, {force: true});
 
         return Collection;

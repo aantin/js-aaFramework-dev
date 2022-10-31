@@ -81,6 +81,36 @@
         });
     });
     // ----------------------------------------------------------------
+    // Commons:
+    const commons = (() => {
+        const commons = {
+            accessors: {
+                verifiers: {
+                    publics:        aa.isObject,
+                    privates:       aa.isObject,
+                    read:           aa.isObject,
+                    execute:        aa.isObject
+                }
+            }
+        };
+        Object.defineProperties(commons.accessors, {
+            defaultValue: {
+                get: () => {
+                    return {
+                        publics: {
+                        },
+                        privates: {
+                            listeners: {}
+                        },
+                        read: {},
+                        execute: {},
+                    };
+                }
+            }
+        });
+        return commons;
+    })();
+    // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
         defineAccessors: function (publics, mode) {
@@ -223,6 +253,26 @@
             specs: {
                 verbose: value => typeof value === "boolean"
             }
+        },
+        getPrivateAccessor: function (keys /*, spec */) {
+            aa.arg.test(keys, aa.isArrayOfStrings, `'keys'`);
+            const spec      = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
+                get: aa.isFunction,
+                set: aa.isFunction
+            }));
+            spec.sprinkle({
+                get: get,
+                set: set
+            });
+            
+            const that = {};
+            keys.forEach(key => {
+                Object.defineProperty(that, key, {
+                    get: () => spec.get(this, key),
+                    set: value => { spec.set(this, key, value); }
+                });
+            });
+            return Object.freeze(that);
         },
         hydrate:        function (spec /*, startWith */) {
             /**
@@ -8550,12 +8600,7 @@
     });
     aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
         aa.arg.test(blueprint, aa.verifyObject({
-            accessors:          aa.verifyObject({
-                publics:        aa.isObject,
-                privates:       aa.isObject,
-                read:           aa.isObject,
-                execute:        aa.isObject
-            }),
+            accessors:          aa.verifyObject(commons.accessors.verifiers),
             construct:          aa.isFunction,
             startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
             methods:            aa.verifyObject({
@@ -8566,15 +8611,7 @@
             verifiers:          aa.isObject,
         }), `'blueprint'`);
         blueprint.sprinkle({
-            accessors: {
-                publics: {
-                },
-                privates: {
-                    listeners: {}
-                },
-                read: {},
-                execute: {},
-            },
+            accessors: commons.accessors.defaultValue,
             construct: function () {},
             startHydratingWith: [],
             methods: {

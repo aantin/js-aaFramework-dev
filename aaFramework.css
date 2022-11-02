@@ -74,9 +74,6 @@
     --dark-color-orange: #c40;
     --dark-color-red: #c00;
     --dark-color-cyan: #1ed;
-
-    --color-bg-controls: rgba(0,0,0,0.4);
-    --color-bg-controls-over: rgba(0,0,0,0.6);
 }
 body.aaFrameworkFreeze{
     overflow: hidden;

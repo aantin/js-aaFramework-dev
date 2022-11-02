@@ -81,6 +81,8 @@
 body.aaFrameworkFreeze{
     overflow: hidden;
 }
+@charset "utf-8";
+/* -------------------------------- */
 @font-face {
     font-family: 'Fira UL';
     src: url('vendors/fonts/fira-sans/FiraSans-UltraLight.ttf');
@@ -105,6 +107,19 @@ body.aaFrameworkFreeze{
     font-family: 'Fira-i';
     src: url('vendors/fonts/fira-sans/FiraSans-RegularItalic.ttf');
 }
+@font-face {
+    font-family: 'pencilkaisho';
+    src: url('./vendors/fonts/pencilkaisho/080/g_pencilkaisho_JISlimit_R.ttf');
+}
+@font-face {
+    font-family: 'aoyagi';
+    src: url('./vendors/fonts/aoyagireisyosimo_ttf_2_01/aoyagireisyosimo_ttf_2_01.ttf');
+}
+@font-face {
+    font-family: 'katyou';
+    src: url('./vendors/fonts/katyou/katyou-p.ttf');
+}
+/* -------------------------------- */
 /**/
 *{
     outline: 0;

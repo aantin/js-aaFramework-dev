@@ -8669,13 +8669,13 @@
                         );
                         const isDifferent = (value !== getter(this, key));
 
-                        if (isDifferent) { emit.call(this, `${key}change`, value); }
+                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
                         if (blueprint.methods.setters[key]) {
                             blueprint.methods.setters[key].call(this, value);
                         } else {
                             setter(this, key, value);
                         }
-                        if (isDifferent) { emit.call(this, `${key}changed`, value); }
+                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
                     }
                 }
             });

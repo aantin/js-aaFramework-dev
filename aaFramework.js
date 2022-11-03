@@ -1386,6 +1386,7 @@
                     data.remove(data[data.length - 1]);
                 }
                 privates.emit.call(this, `clear`);
+                privates.emit.call(this, `datamodified`);
             },
             has:                function (value) {
                 return (get(this, "data").indexOf(value) > -1);
@@ -1425,6 +1426,7 @@
                         });
                     }
                     privates.emit.call(this, `added`, item);
+                    privates.emit.call(this, `datamodified`);
                 });
             },
             remove:             function (...items) {
@@ -1436,6 +1438,7 @@
                         const removedItem = data.splice(index, 1);
                         if (removedItem.length) {
                             privates.emit.call(this, `removed`, removedItem[0]);
+                            privates.emit.call(this, `datamodified`);
                             removedItems.push(removedItem[0]);
                         }
                     }

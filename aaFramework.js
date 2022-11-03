@@ -8311,10 +8311,11 @@
 
                 // Display window:
                 dialog = aa.gui.window({
-                    buttons: false,
-                    width: 720,
-                    title: "Edit shortcuts",
-                    text: gui.getNode(appName),
+                    escape:     true,
+                    buttons:    false,
+                    width:      720,
+                    title:      "Edit shortcuts",
+                    text:       gui.getNode(appName),
                     on: {
                         resize: () => {
                         },

@@ -4208,6 +4208,10 @@
                     this.details = p.trim();
                     return (!!this.details);
                 },
+                setEscape:          function (escape) {
+                    aa.arg.test(escape, aa.isBool, `'escape'`);
+                    this.escape = escape;
+                },
                 setFullscreen:      function (b) {
 
                     this.fullscreen = (b === true);
@@ -5194,6 +5198,8 @@
                                 case "critical":
                                     if (get(this, "btn-submit")) {
                                         get(this, "btn-submit").click();
+                                    } else if (this.escape) {
+                                        this.hide();
                                     }
                                     break;
                                 case "confirm":
@@ -5201,6 +5207,8 @@
                                 case "win":
                                     if (get(this, "btn-cancel")) {
                                         get(this, "btn-cancel").click();
+                                    } else if (this.escape) {
+                                        this.hide();
                                     }
                                     break;
                                 default:

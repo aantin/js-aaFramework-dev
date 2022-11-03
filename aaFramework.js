@@ -1321,6 +1321,7 @@
                 authenticate: aa.isFunction,
                 on: aa.verifyObject({
                     added:    aa.isFunction,
+                    clear:    aa.isFunction,
                     removed:  aa.isFunction
                 }),
                 parent: () => true
@@ -1379,7 +1380,12 @@
 
             // General:
             clear:              function () {
-                get(this, `data`).clear();
+                // get(this, `data`).clear();
+                const data = get(this, `data`);
+                while (data.length > 0) {
+                    data.remove(data[data.length - 1]);
+                }
+                privates.emit.call(this, `clear`);
             },
             has:                function (value) {
                 return (get(this, "data").indexOf(value) > -1);

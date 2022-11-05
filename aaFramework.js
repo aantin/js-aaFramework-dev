@@ -8221,7 +8221,9 @@
                         tr.classList[!search || count ? "add" : "remove"]("hidden");
                     }, () => {
                         if (search && !count) {
-                            node.appendChild(aa.html("tr#aaShortcuts-actionNotFound", aa.html("td.gris", "<i>No action matches the request.</i>")));
+                            if (node) {
+                                node.appendChild(aa.html("tr#aaShortcuts-actionNotFound", aa.html("td.gris", "<i>No action matches the request.</i>")));
+                            }
                         }
                     });
                 } else if (searchNode) {

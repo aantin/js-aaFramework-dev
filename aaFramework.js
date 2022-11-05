@@ -5870,14 +5870,8 @@
         this.window = this.win;
         this.notif  = this.notification;
     })());
-    aa.icon                     = Object.freeze(function (which, ...args) {
-        /**
-         * @param {string} which
-         *
-         * @return {DOMElement}
-         */
-
-        const FontAwesome4 = function () {
+    aa.icon                     = (() => {
+        function FontAwesome4 () {
             this.data = [
                 "glass",
                 "music",
@@ -6709,11 +6703,9 @@
 
                 return Object.freeze(this.data);
             }
-        }, {
-            condition: FontAwesome4.prototype.format === undefined,
-            force: true
-        });
-        const GoogleIconfont = function () {
+        }, {force: true});
+
+        function GoogleIconfont () {
             this.data = {
                 "3d_rotation": "e84d",
                 ac_unit: "eb3b",
@@ -7692,99 +7684,113 @@
 
                 return Object.freeze(this.data.keys());
             }
-        }, {
-            condition: GoogleIconfont.prototype.format === undefined,
-            force: true
-        });
-        const fonts = [FontAwesome4, GoogleIconfont /* */];
+        }, {force: true});
 
-        // Display GUI:
-        if (which === "gui" && !aa.settings.production) {
-            let searchValue = '';
-            let win;
-            const spec = {
-                onglets: []
-            };
-            aa.gui.loading(() => {
-                fonts.forEach((font) => {
-                    const filter = (e) => {
-                        const value = e.target.value;
-                        searchValue = value;
-                        const regex = new RegExp(value);
-                        grid.children.forEach((row) => {
-                            row.classList[((row.dataset && row.dataset.key.match(regex)) ? "remove" : "add")]("hidden");
-                        });
-                        let found = false;
-                        grid.childNodes.forEach((row) => {
-                            if (row.dataset && row.dataset.key.match(regex)) {
-                                found = true;
-                            }
-                        })
-                        noMatch.classList[(found ? "add" : "remove")]("hidden");
-                    };
-                    const obj = new font();
-                    const grid = $$("div.grid");
-                    const noMatch = $$("div.row.grey.italic.hidden", "No match");
-                    const search = $$("input", {
-                        placeholder: "Search for a class name...",
-                        on: {
-                            input: aa.debounce(filter, 200),
-                            click: filter
-                        }
-                    });
-                    spec.onglets.push({
-                        name: "aafw-fonts",
-                        label: obj.constructor.name,
-                        text: (() => {
-                            obj.keys().forEach((key) => {
-                                grid.appendChild($$("div.row", {dataset: {key: key}},
-                                    $$("div.cell", {style: "min-width: fit-content;"},
-                                        $$("icon.fa-fw."+key, {style: "margin: 2px;", title: key}),
-                                    ),
-                                    $$("div.cell",
-                                        $$("span", key),
-                                    ),
-                                ));
+        const func = function (which, ...args) {
+            /**
+             * @param {string} which
+             *
+             * @return {DOMElement}
+             */
+
+            const fonts = [FontAwesome4, GoogleIconfont /* */];
+
+            // Display GUI:
+            if (which === "gui" && !aa.settings.production) {
+                let searchValue = '';
+                let win;
+                const spec = {
+                    onglets: []
+                };
+                aa.gui.loading(() => {
+                    fonts.forEach((font) => {
+                        const filter = (e) => {
+                            const value = e.target.value;
+                            searchValue = value;
+                            const regex = new RegExp(value);
+                            grid.children.forEach((row) => {
+                                row.classList[((row.dataset && row.dataset.key.match(regex)) ? "remove" : "add")]("hidden");
                             });
-                            const div = $$("fieldset.scrollable",
-                                grid,
-                                noMatch
-                            );
-                            return $$("div",
-                                search,
-                                div
-                            );
-                        })(),
-                        on: {
-                            check: () => {
-                                search.value = searchValue;
-                                search.click()
-                                search.select();
-                            },
-                        }
+                            let found = false;
+                            grid.childNodes.forEach((row) => {
+                                if (row.dataset && row.dataset.key.match(regex)) {
+                                    found = true;
+                                }
+                            })
+                            noMatch.classList[(found ? "add" : "remove")]("hidden");
+                        };
+                        const obj = new font();
+                        const grid = $$("div.grid");
+                        const noMatch = $$("div.row.grey.italic.hidden", "No match");
+                        const search = $$("input", {
+                            placeholder: "Search for a class name...",
+                            on: {
+                                input: aa.debounce(filter, 200),
+                                click: filter
+                            }
+                        });
+                        spec.onglets.push({
+                            name: "aafw-fonts",
+                            label: obj.constructor.name,
+                            text: (() => {
+                                obj.keys().forEach((key) => {
+                                    grid.appendChild($$("div.row", {dataset: {key: key}},
+                                        $$("div.cell", {style: "min-width: fit-content;"},
+                                            $$("icon.fa-fw."+key, {style: "margin: 2px;", title: key}),
+                                        ),
+                                        $$("div.cell",
+                                            $$("span", key),
+                                        ),
+                                    ));
+                                });
+                                const div = $$("fieldset.scrollable",
+                                    grid,
+                                    noMatch
+                                );
+                                return $$("div",
+                                    search,
+                                    div
+                                );
+                            })(),
+                            on: {
+                                check: () => {
+                                    search.value = searchValue;
+                                    search.click()
+                                    search.select();
+                                },
+                            }
+                        });
                     });
+                    win = aa.gui.win({
+                        title: "Fonts",
+                        text: $$("div", spec)
+                    });
+                }, () => {
                 });
-                win = aa.gui.win({
-                    title: "Fonts",
-                    text: $$("div", spec)
-                });
-            }, () => {
-            });
-            return;
-        }
-        const extracts = aa.extractClassNameAndID(which);
-        const {id, tagName} = extracts;
-        let {classes} = extracts;
-        let node = undefined;
-        fonts.forEach((font) => {
-            const obj = new font();
-            const result = obj.getNode(id, classes, args);
-            if (result && !node) {
-                node = result;
+                return;
             }
-        });
-        return node;
-    });
+            const extracts = aa.extractClassNameAndID(which);
+            const {id, tagName} = extracts;
+            let {classes} = extracts;
+            let node = undefined;
+            fonts.forEach((Font) => {
+                const font = new Font();
+                const result = font.getNode(id, classes, args);
+                if (result && !node) {
+                    node = result;
+                }
+            });
+            return node;
+        };
+        Object.defineProperty(func, `gui`, {
+            get: () => {
+                return () => {
+                    func(`gui`);
+                };
+            }
+        })
+        return Object.freeze(func);
+    })();
     /* aa.Selectable */ (() => {
         aa.Selectable               = function (/* dimensions */) {
             const dimensions = aa.arg.optional(arguments, 0, 1, isInt);

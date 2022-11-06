@@ -9204,6 +9204,7 @@
             htmlAttributes = [
                 // Attributes to include as themselves:
                 "action",
+                "alt",
                 "charset",
                 "download",
                 "enctype",

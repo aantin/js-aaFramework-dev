@@ -166,9 +166,9 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, isFunction, `'getter'`);
-                aa.arg.test(key, nonEmptyString, `'key'`);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
+                aa.arg.test(getter, aa.isFunction, `'getter'`);
+                aa.arg.test(key, aa.nonEmptyString, `'key'`);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
                 return function emit (eventName, data) {
                     /**
@@ -180,15 +180,15 @@
                      * 
                      * @return {void}
                      */
-                    aa.arg.test(eventName, nonEmptyString, `'eventName'`);
+                    aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, isObject, `'listeners'`);
+                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
 
                     eventName = eventName.trim();
                     if (listeners.hasOwnProperty(eventName)) {
                         listeners[eventName].forEach(callback => {
                             const event = null; // A future event, some day...
-                            callback(event, data);
+                            callback(event, data, this);
                         });
                     }
                 };
@@ -204,9 +204,9 @@
                  * 
                  * @return {function}
                  */
-                aa.arg.test(getter, isFunction, `'getter'`);
-                aa.arg.test(key, nonEmptyString, `'key'`);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => isObject(arg) && arg.verify(aa.prototypes.events.specs));
+                aa.arg.test(getter, aa.isFunction, `'getter'`);
+                aa.arg.test(key, aa.nonEmptyString, `'key'`);
+                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
                 const on = function (eventName, callback) {
                     /**
@@ -228,18 +228,18 @@
                      */
 
                     const listeners = getter(this, key);
-                    aa.arg.test(listeners, isObject, `'listeners'`);
+                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
 
-                    if (isObject(eventName)) {
-                        aa.arg.test(eventName, isObjectOfFunctions, `'eventName'`);
+                    if (aa.isObject(eventName)) {
+                        aa.arg.test(eventName, aa.isObjectOfFunctions, `'eventName'`);
                         eventName.forEach((callback, name) => {
                             on.call(this, name, callback);
                         });
                         return;
                     }
 
-                    aa.arg.test(eventName, nonEmptyString, `'eventName'`);
-                    aa.arg.test(callback, isFunction, `'callback'`);
+                    aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
+                    aa.arg.test(callback, aa.isFunction, `'callback'`);
 
                     eventName = eventName.trim();
                     if (!listeners.hasOwnProperty(eventName)) {
@@ -1416,6 +1416,7 @@
                         }
                     }
                     data.push(item);
+                    
                     const index = data.length - 1;
                     if (!this.hasOwnProperty(index)) {
                         Object.defineProperty(this, index, {
@@ -1425,6 +1426,23 @@
                             }
                         });
                     }
+                    const attributes = {
+                        nextItem: () => {
+                            const index = this.indexOf(item);
+                            return index === this.length - 1 ? undefined : this[index + 1];
+                        },
+                        previousItem: () => {
+                            const index = this.indexOf(item);
+                            return index === 0 ? undefined : this[index - 1];
+                        }
+                    };
+                    Object.keys(attributes).forEach(key => {
+                        if (aa.isObject(item) && !item.hasOwnProperty(key)) {
+                            Object.defineProperty(item, key, {
+                                get: attributes[key]
+                            });
+                        }
+                    });
                     privates.emit.call(this, `added`, item);
                     privates.emit.call(this, `datamodified`);
                 });

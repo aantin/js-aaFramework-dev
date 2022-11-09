@@ -1936,43 +1936,58 @@
         // Init:
         return construct.apply(this, arguments);
     };
-    aa.EventResponse            = function (/* name */) {
+    aa.EventResponse            = (() => {
+        function EventResponse (/* type */) {
+            privates.construct.apply(this, arguments);
+        }
+        const privates = {
+            construct: function (/* type */) {
+                const type = aa.arg.optional(arguments, 0, undefined, privates.verifiers.type);
 
-        this.type = undefined;
-        this._preventDefault = false;
-        
-        // Methods:
-        if (this.construct === undefined) {
+                aa.defineAccessors.call(this, {
+                    publics: {
+                        type: null
+                    },
+                    privates: {
+                        isPreventDefault: false,
+                        isStopPropagation: false,
+                    },
+                }, {getter: get, setter: set});
 
-            // Magic:
-            aa.EventResponse.prototype.construct        = function (/* name */) {
-                const name = arguments && arguments.length ? arguments[0] : undefined;
-                if (name) {
-                    this.setEvenement(name);
-                }
-            };
-
+                this.type = type;
+            },
+            verifiers: {
+                type: aa.isNullOrNonEmptyString
+            }
+        };
+        aa.deploy(EventResponse.prototype, {
             // Methods:
-            aa.EventResponse.prototype.preventDefault   = function () {
+            preventDefault:     function () {
             
-                this._preventDefault = true;
-            };
-            aa.EventResponse.prototype.isPreventDefault = function () {
+                set(this, "isPreventDefault", true);
+            },
+            isPreventDefault:   function () {
             
-                return this._preventDefault;
-            };
+                return get(this, "isPreventDefault");
+            },
+            stopPropagation:    function () {
+            
+                set(this, "isStopPropagation", true);
+            },
+            isStopPropagation:   function () {
+            
+                return get(this, "isStopPropagation");
+            },
 
             // Setters:
-            aa.EventResponse.prototype.setEvenement = function (name) {
-                if (nonEmptyString(name)) {
-                    this.type = name.trim();
-                }
-            };
-        }
+            setType:   function (type) {
+                aa.arg.test(type, privates.verifiers.type, `'type'`);
+                set(this, "type", type ? type.trim() : null);
+            },
+        }, {force: true});
 
-        // Init:
-        this.construct.apply(this, arguments);
-    };
+        return EventResponse;
+    })();
     aa.Parser                   = function () {
         this.content = null;
 
@@ -2875,7 +2890,7 @@
             const e = arguments && arguments.length>1 && arguments[1] instanceof Event ? arguments[1] : undefined;
 
             let app, evt, evts;
-            let response = new aa.EventResponse((e ? e.type : undefined));
+            let response = new aa.EventResponse(e ? e.type : null);
             let returnValues = null;
 
             evtName = aa.shortcut.cmdOrCtrl(evtName);

@@ -29,18 +29,21 @@
     --critical-color: #f66;
     --confirm-color: #49f;
 
-    --color-blue-lighter: #acf;
     --color-blue: #49f;
     --color-blue-darker: #248;
     --color-blue-fade: rgba(64,128,255,0.2);
+    --color-blue-lighter: #acf;
     --color-orange: #fa0;
     --color-gold: #ba8e4d;
     --color-green: #6c8;
-    --color-green-lighter: #aea;
     --color-green-darker: #4a7;
+    --color-green-lighter: #aea;
     --color-purple: #80f;
+    --color-magenta: #f0f;
+    --color-magenta-lighter: #f8f;
     --color-grey: #ccc;
     --color-grey-darker: #888;
+    --color-grey-lighter: #ddd;
     --color-red: #f88;
     --color-white: #fff;
     --color-black: #000;

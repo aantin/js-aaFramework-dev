@@ -1204,18 +1204,19 @@
 
         aa.Action.build = function (appName, builder) {
             /**
-             * @param {String} appName
-             * @param {Object|Array} builder
-             *
-             * @return {void}
-             *
-             * How to use:
+             * Usage:
                 aa.Action.build(appName, {
                     app: <String>,
                     name: <String>,
                     description: <String>, // optional
                     <shortcut>: <Function>
                 });
+             *
+             * @param {String} appName
+             * @param {Object|Array} builder
+             *
+             * @return {bool}
+             *
              */
             verify("appName", appName);
 
@@ -1348,8 +1349,20 @@
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const data = get(this, "data");
-                return data.filter(callback, thisArg);
+                const spec = {};
+                if (this.authenticate) {
+                    spec.authenticate = this.authenticate;
+                }
+                const collection = new aa.Collection(spec);
+                get(this, "data").forEach((item, i) => {
+                    const isVerified = callback.call(thisArg, item, i, this);
+                    aa.throwErrorIf(!aa.isBool(isVerified), `Callback function must return a boolean.`);
+                    if (isVerified) {
+                        collection.push(item);
+                    }
+                });
+                set(collection, `listeners`, get(this, `listeners`));
+                return collection;
             },
             find:               function (callback /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
@@ -8832,6 +8845,7 @@
                                 if (now >= previousTime + delay) {
                                     previousTime = now;
                                     get(this, `callback`).call(this);
+                                    emit.call(this, 'step');
                                 }
                             }
                             set(this, `id`, requestAnimationFrame(step));
@@ -8848,6 +8862,12 @@
                         if (get(this, `id`)) {
                             set(this, `isPlaying`, true);
                             emit.call(this, 'resume');
+                        }
+                    },
+                    step:   function () {
+                        if (get(this, `id`)) {
+                            get(this, `callback`).call(this);
+                            emit.call(this, 'step');
                         }
                     },
                     stop:   function () {

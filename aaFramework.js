@@ -13,17 +13,17 @@
     if (aa === undefined) { throw new Error("'"+ENV.MODULE_NAME+"' needs 'aaJS' to be called first."); }
     // ----------------------------------------------------------------
     // Style:
-    addStyleToScript(ENV.MODULE_NAME+".js", ENV.MODULE_NAME+".css");
-    addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css");
-    addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont/material-icons.css");
-    addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont-aa.css");
+    aa.addStyleToScript(ENV.MODULE_NAME+".js", ENV.MODULE_NAME+".css");
+    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css");
+    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont/material-icons.css");
+    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont-aa.css");
     // ----------------------------------------------------------------
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "2.0",
+        version: "3.0",
         dependencies: {
-            aaJS: "^2.0"
+            aaJS: "^3.0"
         }
     }, null, (err) => {
         document.body.appendChild(aa.html("div.dependencyError","Invalid dependencies",{
@@ -114,11 +114,11 @@
     // Prototypes:
     aa.prototypes = Object.freeze({
         defineAccessors: function (publics, mode) {
-            if (!isObject(publics)) { throw new TypeError("Argument must be an Object."); }
+            if (!aa.isObject(publics)) { throw new TypeError("Argument must be an Object."); }
             if (mode && mode.verify({
-                accessor:   o => isArrayOfStrings(o),
-                reader:     o => isArrayOfStrings(o),
-                writer:     o => isArrayOfStrings(o),
+                accessor:   o => aa.isArrayOfStrings(o),
+                reader:     o => aa.isArrayOfStrings(o),
+                writer:     o => aa.isArrayOfStrings(o),
             })) {
                 if (mode.accessor) {
                     mode.accessor.forEach((key) => {
@@ -154,106 +154,135 @@
                 }
             }
         },
-        events: {
-            getEmitter:     function (getter, key /*, spec */) {
-                /**
-                 *  Usage:
-                 *      const emit = getEmitter(get, "listeners");
-                 * 
-                 * @param {function} getter
-                 * @param {string} key
-                 * @param {object} spec (optional)
-                 * 
-                 * @return {function}
-                 */
-                aa.arg.test(getter, aa.isFunction, `'getter'`);
-                aa.arg.test(key, aa.nonEmptyString, `'key'`);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
-
-                return function emit (eventName, data) {
+        events: (() => {
+            const id = aa.uid();
+            return {
+                getEmitter:     function (accessor /*, key, spec */) {
                     /**
                      *  Usage:
-                     *      emit.call(this, "eventname", data);
+                     *      const emit = getEmitter(get, "listeners");
                      * 
-                     * @param {string} eventName
-                     * @param {any} data
+                     * @param {function|object} accessor
+                     * @param {string} key (optional)
+                     * @param {object} spec (optional)
                      * 
-                     * @return {void}
+                     * @return {function}
                      */
-                    aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
-                    const listeners = getter(this, key);
-                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
+                    aa.arg.test(accessor, arg => (aa.isFunction(arg) || aa.verifyObject({
+                        get: aa.isFunction,
+                        set: aa.isFunction,
+                    })(arg)), `'accessor'`);
+                    const key = aa.arg.optional(arguments, 1, `listeners-${id}`, aa.nonEmptyString);
+                    const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
-                    eventName = eventName.trim();
-                    if (listeners.hasOwnProperty(eventName)) {
-                        listeners[eventName].forEach(callback => {
-                            const event = null; // A future event, some day...
-                            callback(event, data, this);
-                        });
+                    if (aa.isObject(accessor)) {
+                        accessor.sprinkle({get, set});
                     }
-                };
-            },
-            getListener:    function (getter, key /*, spec */) {
-                /**
-                 * Usage:
-                 *      MyClass.prototype.on = getListener(get, "listeners");
-                 * 
-                 * @param {function} getter
-                 * @param {string} key
-                 * @param {object} spec (optional)
-                 * 
-                 * @return {function}
-                 */
-                aa.arg.test(getter, aa.isFunction, `'getter'`);
-                aa.arg.test(key, aa.nonEmptyString, `'key'`);
-                const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
+                    const getter = aa.isFunction(accessor) ? accessor : accessor.get;
+                    const setter = aa.isObject(accessor) ? accessor.set : set;
 
-                const on = function (eventName, callback) {
+                    return function emit (eventName, data) {
+                        /**
+                         *  Usage:
+                         *      emit.call(this, "eventname", data);
+                         * 
+                         * @param {string} eventName
+                         * @param {any} data
+                         * 
+                         * @return {void}
+                         */
+                        aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
+                        let listeners = getter(this, key);
+                        if (listeners === undefined) {
+                            setter(this, key, {});
+                            listeners = getter(this, key);
+                        }
+                        aa.arg.test(listeners, aa.isObject, `'listeners'`);
+
+                        eventName = eventName.trim();
+                        if (listeners.hasOwnProperty(eventName)) {
+                            listeners[eventName].forEach(callback => {
+                                const event = null; // A future event, some day...
+                                callback(event, data, this);
+                            });
+                        }
+                    };
+                },
+                getListener:    function (accessor /*, key, spec */) {
                     /**
-                     *  Usage:
-                     *      this.on("eventname", (data) => {
-                     *          // do stuff with data...
-                     *      }));
-                     *  or
-                     *      this.on({
-                     *          eventname: data => {
-                     *              // do stuff with data...
-                     *          }
-                     *      });
+                     * Usage:
+                     *      MyClass.prototype.on = getListener(get, "listeners");
                      * 
-                     * @param {string} eventName
-                     * @param {function} callback
+                     * @param {function|object} accessor (if accessor is a function, accessor defines the getter; else if accessor is an object)
+                     * @param {string} key (optional)
+                     * @param {object} spec (optional)
                      * 
-                     * @return {object} this, for chaining
+                     * @return {function}
                      */
+                    aa.arg.test(accessor, arg => (aa.isFunction(arg) || aa.verifyObject({
+                        get: aa.isFunction,
+                        set: aa.isFunction,
+                    })(arg)), `'accessor'`);
+                    const key = aa.arg.optional(arguments, 1, `listeners-${id}`, aa.nonEmptyString);
+                    const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
 
-                    const listeners = getter(this, key);
-                    aa.arg.test(listeners, aa.isObject, `'listeners'`);
-
-                    if (aa.isObject(eventName)) {
-                        aa.arg.test(eventName, aa.isObjectOfFunctions, `'eventName'`);
-                        eventName.forEach((callback, name) => {
-                            on.call(this, name, callback);
-                        });
-                        return;
+                    if (aa.isObject(accessor)) {
+                        accessor.sprinkle({get, set});
                     }
+                    const getter = aa.isFunction(accessor) ? accessor : accessor.get;
+                    const setter = aa.isObject(accessor) ? accessor.set : set;
 
-                    aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
-                    aa.arg.test(callback, aa.isFunction, `'callback'`);
+                    const on = function (eventName, callback) {
+                        /**
+                         *  Usage:
+                         *      this.on("eventname", (data) => {
+                         *          // do stuff with data...
+                         *      }));
+                         *  or
+                         *      this.on({
+                         *          eventname: data => {
+                         *              // do stuff with data...
+                         *          }
+                         *      });
+                         * 
+                         * @param {string} eventName
+                         * @param {function} callback
+                         * 
+                         * @return {object} this, for chaining
+                         */
 
-                    eventName = eventName.trim();
-                    if (!listeners.hasOwnProperty(eventName)) {
-                        listeners[eventName] = [];
-                    }
-                    listeners[eventName].push(callback);
-                    return this;
-                };
-                return on;
-            },
-            specs: {
-                verbose: value => typeof value === "boolean"
-            }
-        },
+                        let listeners = getter(this, key);
+                        if (listeners === undefined) {
+                            setter(this, key, {});
+                            listeners = getter(this, key);
+                        }
+                        aa.arg.test(listeners, aa.isObject, `'listeners'`);
+
+                        if (aa.isObject(eventName)) {
+                            aa.arg.test(eventName, aa.isObjectOfFunctions, `'eventName'`);
+                            eventName.forEach((callback, name) => {
+                                on.call(this, name, callback);
+                            });
+                            return;
+                        }
+
+                        aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
+                        aa.arg.test(callback, aa.isFunction, `'callback'`);
+
+                        eventName = eventName.trim();
+                        if (!listeners.hasOwnProperty(eventName)) {
+                            listeners[eventName] = [];
+                        }
+                        listeners[eventName].push(callback);
+                        return this;
+                    };
+                    return on;
+                },
+                specs: {
+                    verbose: value => typeof value === "boolean"
+                }
+            };
+        })(),
         getPrivateAccessor: function (keys /*, spec */) {
             aa.arg.test(keys, aa.isArrayOfStrings, `'keys'`);
             const spec = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
@@ -278,8 +307,8 @@
              *
              * @return {void}
              */
-            spec = arguments && arguments.length > 0 && isObject(arguments[0]) ? arguments[0] : {};
-            const startWith = arguments && arguments.length > 1 && isArray(arguments[1]) ? arguments[1] : [];
+            spec = arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : {};
+            const startWith = arguments && arguments.length > 1 && aa.isArray(arguments[1]) ? arguments[1] : [];
 
             const set = (k, v) => {
                 const method = "set"+k.firstToUpper();
@@ -311,12 +340,12 @@
                  * @return {any}
                  */
                 get: function (that, key) {
-                    aa.prototypes.verify({ key: nonEmptyString })("key", key);
-                    const results = privates.get(that, "data");
-                    if (!results) {
+                    aa.prototypes.verify({ key: aa.nonEmptyString })("key", key);
+                    const data = privates.get(that, "data");
+                    if (!data) {
                         return undefined;
                     }
-                    return results[key];
+                    return data[key];
                 },
 
                 /**
@@ -327,7 +356,7 @@
                  * @return {void}
                  */
                 set: function (that, key, value) {
-                    aa.prototypes.verify({ key: nonEmptyString })("key", key);
+                    aa.prototypes.verify({ key: aa.nonEmptyString })("key", key);
                     let data = privates.get(that, "data");
                     if (!data) {
                         data = {};
@@ -343,11 +372,11 @@
              */
             
             // Verify argument integrity:
-            aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
+            aa.prototypes.verify({ param: (key) => { return (aa.nonEmptyString(key) || aa.isArrayOfStrings(key)); } })("param", param);
 
-            if (isString(param)) {
+            if (aa.isString(param)) {
                 this.getters([param.trim()]);
-            } else if (isArray(param)) {
+            } else if (aa.isArray(param)) {
                 param.forEach((key) => {
                     Object.defineProperty(this, key, {get: () => { return get(this, key); }})
                 });
@@ -357,19 +386,19 @@
             /**
              * @param {Array} list
              */
-            aa.prototypes.verify({list: (arr) => { return (isArray(arr) && arr.reduce((ok, item) => { return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
+            aa.prototypes.verify({list: (arr) => { return (aa.isArray(arr) && arr.reduce((ok, item) => { return (aa.nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
             list.forEach((key) => {
                 Object.defineProperty(this, key, {get: () => { return get(this, key); }});
             });
         },
         dispatcher:     function (listeners) {
-            aa.arg.test(listeners, isObject(listeners) && listeners.verify({
-                root: nonEmptyString,
-                names: isArrayOfStrings,
+            aa.arg.test(listeners, aa.isObject(listeners) && listeners.verify({
+                root: aa.nonEmptyString,
+                names: aa.isArrayOfStrings,
             }, true), 0);
 
             return (eventName, data) => {
-                aa.arg.test(eventName, nonEmptyString, 0);
+                aa.arg.test(eventName, aa.nonEmptyString, 0);
 
                 if (!listeners.names.has(eventName)) {
                     warn(`Event '${eventName}' not known.`);
@@ -379,14 +408,14 @@
             };
         },
         listener:       function (listeners) {
-            aa.arg.test(listeners, isObject(listeners) && listeners.verify({
-                root: nonEmptyString,
-                names: isArrayOfStrings
+            aa.arg.test(listeners, aa.isObject(listeners) && listeners.verify({
+                root: aa.nonEmptyString,
+                names: aa.isArrayOfStrings
             }, true), 0);
 
             return (eventName, callback) => {
-                aa.arg.test(eventName, nonEmptyString, 0);
-                aa.arg.test(callback, isFunction, 1);
+                aa.arg.test(eventName, aa.nonEmptyString, 0);
+                aa.arg.test(callback, aa.isFunction, 1);
 
                 if (listeners.names.has(eventName)) {
                     aa.events.on(`${listeners.root}:${this.id}:${eventName}`, callback);
@@ -399,7 +428,7 @@
             /**
              * @param {Array} list
              */
-            aa.prototypes.verify({list: (arr) => { return (isArray(arr) && arr.reduce((ok, item) => { return (nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
+            aa.prototypes.verify({list: (arr) => { return (aa.isArray(arr) && arr.reduce((ok, item) => { return (aa.nonEmptyString(item) ? ok : false); }, true)); }})("list", list);
             list.forEach((key) => {
                 Object.defineProperty(this, key, {set: (value) => { set(this, key, value); }});
             });
@@ -416,19 +445,19 @@
              */
             
             // Verify argument integrity:
-            aa.arg.test(param, key => nonEmptyString(key) || isArrayOfStrings(key), `'param'`);
-            // aa.prototypes.verify({ param: (key) => { return (nonEmptyString(key) || isArrayOfStrings(key)); } })("param", param);
+            aa.arg.test(param, key => aa.nonEmptyString(key) || aa.isArrayOfStrings(key), `'param'`);
+            // aa.prototypes.verify({ param: (key) => { return (aa.nonEmptyString(key) || aa.isArrayOfStrings(key)); } })("param", param);
 
-            if (isString(param)) {
+            if (aa.isString(param)) {
                 this.setters([param.trim()]);
-            } else if (isArray(param)) {
+            } else if (aa.isArray(param)) {
                 param.forEach((key) => {
                     Object.defineProperty(this, key.trim(), {set: (value) => { set(this, key, value); }});
                 });
             }
         },
         toObjectMaker:  function (keys) {
-            if (!isArray(keys)) { throw new TypeError("Argument must be an Object."); }
+            if (!aa.isArray(keys)) { throw new TypeError("Argument must be an Object."); }
 
             return function () {
                 return Object.freeze(keys.reduce((o, key) => {
@@ -449,10 +478,10 @@
             return JSON.stringify(this.toObject());
         },
         verify:         function (o) {
-            if (!isObject(o)) { throw new TypeError("Argument must be an Object."); }
+            if (!aa.isObject(o)) { throw new TypeError("Argument must be an Object."); }
             return function (key, value) {
-                if (!nonEmptyString(key) || !o.hasOwnProperty(key)) { throw new TypeError("First argument must be a non-empty String."); }
-                if (!isFunction(o[key])) { throw new TypeError("Verifier must be a Function."); }
+                if (!aa.nonEmptyString(key) || !o.hasOwnProperty(key)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isFunction(o[key])) { throw new TypeError("Verifier must be a Function."); }
                 if (!o[key](value)) { log({o : o, key: key, value: value}); throw new TypeError("'"+key.trim()+"' argument not verified."); }
                 return true;
             };
@@ -464,12 +493,12 @@
     aa.definePublics        = function (keyValues /*, spec */) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
-        if (!isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
-        if (!isObject(spec)) { throw new TypeError("second argument must be an Object."); }
+        if (!aa.isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
+        if (!aa.isObject(spec)) { throw new TypeError("second argument must be an Object."); }
 
         aa.arg.test(spec, aa.verifyObject({
-            getter: isFunction,
-            setter: isFunction,
+            getter: aa.isFunction,
+            setter: aa.isFunction,
         }), `'spec'`);
         spec.sprinkle({ get, set });
 
@@ -496,12 +525,12 @@
     aa.definePrivates       = function (keyValues /*, spec */) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
-        if (!isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
-        if (!isObject(spec)) { throw new TypeError("second argument must be an Object."); }
+        if (!aa.isObject(keyValues)) { throw new TypeError('First argument must be an Object.'); }
+        if (!aa.isObject(spec)) { throw new TypeError("second argument must be an Object."); }
 
         spec.verify({
-            getter: isFunction,
-            setter: isFunction,
+            getter: aa.isFunction,
+            setter: aa.isFunction,
         });
 
         const getter = spec.getter || get;
@@ -514,19 +543,19 @@
     aa.defineAccessors      = function (accessors /*, spec */) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
-        if (!isObject(accessors)) { throw new TypeError('First argument must be an Object.'); }
-        if (!isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
+        if (!aa.isObject(accessors)) { throw new TypeError('First argument must be an Object.'); }
+        if (!aa.isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
 
         accessors.verify({
-            execute: isObject,
-            privates: isObject,
-            publics: isObject,
-            read: isObject,
-            write: isObject
+            execute: aa.isObject,
+            privates: aa.isObject,
+            publics: aa.isObject,
+            read: aa.isObject,
+            write: aa.isObject
         });
         spec.verify({
-            getter: isFunction,
-            setter: isFunction,
+            getter: aa.isFunction,
+            setter: aa.isFunction,
         });
 
         const getter = spec.getter || get;
@@ -629,7 +658,7 @@
             aa.ActionGroup.prototype.setCollection  = function (arr) {
                 const errors = [];
                 const parse = (arr) => {
-                    if(!isArray(arr)) { throw new TypeError("Argument must be an Array."); }
+                    if(!aa.isArray(arr)) { throw new TypeError("Argument must be an Array."); }
 
                     const list = [];
                     arr.forEach((item) => {
@@ -637,12 +666,12 @@
                             list.push(item);
                         } else if (item instanceof aa.Action && item.isValid()) {
                             list.push(item.name);
-                        } else if (nonEmptyString(item)) {
+                        } else if (aa.nonEmptyString(item)) {
                             list.push(item.trim());
                         } else if (item === null) {
                             list.push(null);
                         } else if (item === undefined) {
-                            deprecated("undefined as separator");
+                            aa.deprecated("undefined as separator");
                             list.push(null);
                         } else { throw new TypeError("Argument not valid."); }
                     });
@@ -656,7 +685,7 @@
                 }
             };
             aa.ActionGroup.prototype.setLabel       = function (str) {
-                if (!nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
                 set(this, "label", str.trim());
             };
 
@@ -700,7 +729,7 @@
             type:           null,
 
             // Lists:
-            callbacks: [], // deprecated
+            callbacks: [], // aa.deprecated
             listeners: {}
         };
         const privates = {
@@ -725,21 +754,21 @@
         const priorities = ["low", "normal", "high"];
         const types = ["information", "warning", "critical", "confirm", "reset"];
         const verifier = {
-            accessible: isBool,
-            addToManager: isBool,
-            app: nonEmptyString,
-            checked: isBool,
-            callback: isFunction,
-            callbacks: isArrayOfFunctions,
-            description: nonEmptyString,
-            evtName: nonEmptyString,
-            disabled: isBool,
-            icon: nonEmptyString,
-            name: nonEmptyString,
-            on: isObject,
-            priority: nonEmptyString,
-            text: nonEmptyString,
-            tooltip: nonEmptyString,
+            accessible: aa.isBool,
+            addToManager: aa.isBool,
+            app: aa.nonEmptyString,
+            checked: aa.isBool,
+            callback: aa.isFunction,
+            callbacks: aa.isArrayOfFunctions,
+            description: aa.nonEmptyString,
+            evtName: aa.nonEmptyString,
+            disabled: aa.isBool,
+            icon: aa.nonEmptyString,
+            name: aa.nonEmptyString,
+            on: aa.isObject,
+            priority: aa.nonEmptyString,
+            text: aa.nonEmptyString,
+            tooltip: aa.nonEmptyString,
             type: type => types.has(type)
         };
         const verify = aa.prototypes.verify(verifier);
@@ -760,11 +789,11 @@
             initListeners.call(this);
 
             // Add to manager:
-            const addToManager = (arguments && arguments.length > 1 && isBool(arguments[1]) ? arguments[1] : get(this, "addToManager"));
+            const addToManager = (arguments && arguments.length > 1 && aa.isBool(arguments[1]) ? arguments[1] : get(this, "addToManager"));
             this.setAddToManager(addToManager);
             
             // Hydrate:
-            const spec = (arguments && arguments.length > 0 && isObject(arguments[0]) ? arguments[0] : undefined);
+            const spec = (arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : undefined);
             this.hydrate(spec, ["checkable"]);
 
             initAnonymous.call(this);
@@ -785,7 +814,7 @@
                     if (!privates.get(aa.Action, "onceExecuteDeprecated")) {
                         const onceExecuteDeprecated = true;
                         privates.set(aa.Action, onceExecuteDeprecated);
-                        deprecated("aa.Action.callbacks");
+                        aa.deprecated("aa.Action.callbacks");
                     }
                     callback(param);
                 });
@@ -798,7 +827,7 @@
              * return void
              */
             const disabled = (
-                arguments && arguments.length && isBool(arguments[0])
+                arguments && arguments.length && aa.isBool(arguments[0])
                 ? !arguments[0]
                 : false
             );
@@ -811,7 +840,7 @@
              * return void
              */
             const disabled = (
-                arguments && arguments.length && isBool(arguments[0])
+                arguments && arguments.length && aa.isBool(arguments[0])
                 ? arguments[0]
                 : true
             );
@@ -910,11 +939,11 @@
             aa.Action.prototype.fire            = function (/* evtName, param */) {
                 let evtName = arguments && arguments.length > 0 ? arguments[0] : "execute";
                 const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
-                if (!nonEmptyString(evtName)) { throw new TypeError("First Argument must be a non-empty String."); }
+                aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
 
                 evtName = "on"+evtName.trim();
                 const listeners = get(this, "listeners");
-                if (listeners.hasOwnProperty(evtName) && isArray(listeners[evtName])) {
+                if (listeners.hasOwnProperty(evtName) && aa.isArray(listeners[evtName])) {
                     if (!(evtName === "onexecute" && get(this, "disabled"))) {
                         listeners[evtName].forEach(function (callback) {
                             callback(param);
@@ -937,9 +966,9 @@
                  *
                  * @return {void}
                  */
-                if (!isElement(node)) { throw new TypeError("First argument must be an Element node."); }
+                if (!aa.isElement(node)) { throw new TypeError("First argument must be an Element node."); }
                 if (!allowedEvents.has(evtName)) { throw new TypeError("Second argument not valid."); }
-                if (!isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
+                if (!aa.isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
 
                 const list = get(this, "nodesToListen");
                 if (!list.hasOwnProperty(evtName)) {
@@ -963,8 +992,8 @@
                 
                 let res = false;
                 
-                if (!nonEmptyString(evtName)) {   throw new TypeError("First argument must be a non-empty String."); }
-                if (!isFunction(callback)) {      throw new TypeError("Second argument must be a Function."); }
+                if (!aa.nonEmptyString(evtName)) {   throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isFunction(callback)) {      throw new TypeError("Second argument must be a Function."); }
                 
                 evtName = "on"+evtName.trim();
                 const listeners = get(this, "listeners");
@@ -988,7 +1017,7 @@
                 set(this, "accessible", bool);
             };
             aa.Action.prototype.setAddToManager = function (bool) {
-                if (!isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
+                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
                 
                 set(this, "addToManager", bool);
                 return bool;
@@ -999,7 +1028,7 @@
                 return true;
             };
             aa.Action.prototype.setCheckable    = function (bool) {
-                if (!isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
+                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
                 
                 const change = (get(this, "checkable") !== bool);
                 set(this, "checkable", bool);
@@ -1008,7 +1037,7 @@
                 }
             };
             aa.Action.prototype.setChecked      = function (bool) {
-                if (!isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
+                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
 
                 if (get(this, "checkable")) {
                     const change = (get(this, "checked") !== bool);
@@ -1045,7 +1074,7 @@
                 return get(this, "disabled");
             };
             aa.Action.prototype.setCallback     = function (f) {
-                deprecated("aa.Action.callbacks");
+                aa.deprecated("aa.Action.callbacks");
                 verify("callback", f);
 
                 get(this, "listeners")["onexecute"].push(f); // now in 'onexecute' instead of in 'callbacks'
@@ -1082,7 +1111,7 @@
                 const verifier = {};
                 allowedEvents.forEach((evtName) => {
                     evtName = evtName.replace(/^on/, "");
-                    verifier[evtName] = isFunction
+                    verifier[evtName] = aa.isFunction
                 });
                 if (!o.verify(verifier)) { throw new TypeError("'on' argument is not compliant."); }
 
@@ -1198,7 +1227,7 @@
     };
     (function () { /* aa.Action static */
         const verifier = {
-            appName: nonEmptyString
+            appName: aa.nonEmptyString
         };
         const verify = aa.prototypes.verify(verifier);
 
@@ -1220,7 +1249,7 @@
              */
             verify("appName", appName);
 
-            if (isObject(builder)) {
+            if (aa.isObject(builder)) {
                 const shortcuts = [];
                 const spec = {
                     app: appName,
@@ -1230,7 +1259,7 @@
                 Object.keys(builder).forEach((k) => {
                     if (builder.hasOwnProperty(k)) {
                         const v = builder[k];
-                        if (isFunction(v)) {
+                        if (aa.isFunction(v)) {
                             // Assume to be a shortcut/callback couple:
                             k = aa.shortcut.cmdOrCtrl(k);
                             shortcuts.push(k);
@@ -1241,7 +1270,7 @@
                                     shortcuts.push(v);
                                 break;
                                 case "shortcuts":
-                                    if (isArray(v)) {
+                                    if (aa.isArray(v)) {
                                         v.forEach((s) => {
                                             shortcuts.push(s);
                                         });
@@ -1266,7 +1295,7 @@
                     return true;
                 }
                 return false;
-            } else if (isArray(builder)) {
+            } else if (aa.isArray(builder)) {
                 return builder.reduce((ok, spec) => {
                     if (spec.app === undefined) {
                         spec.app = appName;
@@ -1524,74 +1553,76 @@
 
         return Collection;
     })();
-    aa.Event                    = function (actionOrCallback, options /* , spec */) {
-        /*
-            aa.Event = function (Function callback[, Array options(String)]);
-        */
+    aa.Event = (() => {
         /**
+         * aa.Event = function (Function callback[, Array options(String)]);
+         * 
          * @param {Function|aa.Action} actionOrCallback
          * @param {Array} options
          * @param {Object} spec (optional)
          */
+        
+        const privates = {
+            construct: function (actionOrCallback /* , options, spec */) {
+                const options = (arguments && arguments.length > 1 && privates.verify("options", arguments[1]) ? arguments[1] : undefined);
+                const spec = (arguments && arguments.length > 2 ? arguments[2] : {});
+                if (!aa.isObject(spec)) { throw new TypeError("Third argument must be an Object."); }
 
-        // Attributes:
-        this.action     = null;
-        this.app        = null;
-        this.module     = null;
-        this.callback   = null;
-        this.options    = {
-            always:         false,  // always execute this Event on the LAST App added
-            forever:        false,  // always execute this Event on EVERY Apps added
-            // suspended:      false,
-            preventDefault: false   // prevent default browser's execution
-        };
+                const {app} = spec;
 
-        // static:
-        let displayOnce = false;
-        const verify = aa.prototypes.verify({
-            options: isArrayOfStrings
-        });
-
-        // Private:
-        const construct = function (actionOrCallback /* , options, spec */) {
-            const options = (arguments && arguments.length > 1 && verify("options", arguments[1]) ? arguments[1] : undefined);
-            const spec = (arguments && arguments.length > 2 ? arguments[2] : {});
-            if (!isObject(spec)) { throw new TypeError("Third argument must be an Object."); }
-
-            const {app} = spec;
-
-            if (app) {
-                this.setApp(app);
-            }
-            if (actionOrCallback) {
-                if (this.setActionOrCallback(actionOrCallback)) {
-                    if (options) {
-                        return this.setOptions(options);
-                    }
-                    return true;
+                if (app) {
+                    this.setApp(app);
                 }
-            }
+                if (actionOrCallback) {
+                    if (this.setActionOrCallback(actionOrCallback)) {
+                        if (options) {
+                            return this.setOptions(options);
+                        }
+                        return true;
+                    }
+                }
+            },
+            verify: aa.prototypes.verify({
+                options: aa.isArrayOfStrings
+            })
         };
+        function Event(actionOrCallback, options /* , spec */) {
+            // Attributes:
+            this.action     = null;
+            this.app        = null;
+            this.module     = null;
+            this.callback   = null;
+            this.options    = {
+                always:         false,  // always execute this Event on the LAST App added
+                forever:        false,  // always execute this Event on EVERY Apps added
+                // suspended:      false,
+                preventDefault: false   // prevent default browser's execution
+            };
 
-        if (this.isValid === undefined) {
+            // static:
+            let displayOnce = false;
+
+            privates.construct.apply(this, arguments);
+        }
+        aa.deploy(Event.prototype, {
 
             // Methods:
-            aa.Event.prototype.isValid              = function () {
+            isValid:                function () {
 
                 return (typeof this.callback === "function" || this.action instanceof aa.Action);
-            };
-            aa.Event.prototype.hasOption            = function (s) {
-                if (!nonEmptyString(s)) {
+            },
+            hasOption:              function (s) {
+                if (!aa.nonEmptyString(s)) {
                     throw new TypeError("Argument must be a non-empty String.");
                 }
                 s = s.trim();
                 return (this.options.hasOwnProperty(s) && this.options[s]);
-            };
-            aa.Event.prototype.run                  = function () {
+            },
+            run:                    function () {
 
                 // this.suspended = false;
-            };
-            aa.Event.prototype.execute              = function () {
+            },
+            execute:                function () {
                 if (this.isValid()) {
                     if (this.action) {
                         this.action.execute.apply(this.action, arguments);
@@ -1602,101 +1633,89 @@
                     aa.gui.warn("Event not valid.");
                     warn("Event not valid:", this);
                 }
-            };
-            aa.Event.prototype.isModule             = function (s) {
-                if (s !== null && !nonEmptyString(s)) {
-                    throw new TypeError("Argument must be null or non-empty String.");
-                    return false;
+            },
+            isModule:               function (name) {
+                aa.arg.test(name, aa.isNullOrNonEmptyString, `'name'`);
+                if (aa.isString(name)) {
+                    name = name.trim();
                 }
-                if (isString(s)) {
-                    s = s.trim();
-                }
-                return (s === this.module);
-            };
+                return (name === this.module);
+            },
             
             // Setters:
-            aa.Event.prototype.setApp               = function (s) {
-                if (!nonEmptyString(s)) {
-                    throw new TypeError("Argument must be a non-empty string.");
-                    return false;
-                }
-                this.app = s.trim();
-            };
-            aa.Event.prototype.setActionOrCallback = function (p) {
-                if (isFunction(p)) {
-                    deprecated('aa.Event.callback');
-                    this.setActionOrCallback(new aa.Action({ on: {execute: p}}));
+            setApp:                 function (name) {
+                aa.arg.test(name, aa.nonEmptyString, `'name'`);
+                this.app = name.trim();
+            },
+            setActionOrCallback:    function (param) {
+                if (aa.isFunction(param)) {
+                    aa.deprecated('aa.Event.callback');
+                    this.setActionOrCallback(new aa.Action({ on: {execute: param}}));
                     return true;
-                } else if (p instanceof aa.Action && p.isValid) {
-                    this.action = p;
+                } else if (param instanceof aa.Action && param.isValid) {
+                    this.action = param;
                     return true;
                 }
                 return false;
-            };
-            aa.Event.prototype.setModule            = function (s) {
-                if (s !== null && !nonEmptyString(s)) {
-                    throw new TypeError("Argument must be null or non-empty String.");
-                    return false;
+            },
+            setModule:              function (name) {
+                aa.arg.test(name, aa.isNullOrNonEmptyString, `'name'`);
+                if (aa.isString(name)) {
+                    name = name.trim();
                 }
-                if (isString(s)) {
-                    s = s.trim();
-                }
-                this.module = s;
-            };
-            aa.Event.prototype.setOptions           = function (a) {
-                if (!isArray(a)) { throw new TypeError("Argument must be an Array."); }
+                this.module = name;
+            },
+            setOptions:             function (options) {
+                aa.arg.test(options, aa.isArrayOf(aa.nonEmptyString), `'options'`);
 
-                a.forEach((s) => {
-                    if (!nonEmptyString(s)) { throw new TypeError("Options need to be non-empty Strings."); }
-
-                    s = s.trim();
-                    if (this.options.hasOwnProperty(s)) {
-                        this.options[s] = true;
-                        if (s === "forever") {
+                options.forEach((option) => {
+                    option = option.trim();
+                    if (this.options.hasOwnProperty(option)) {
+                        this.options[option] = true;
+                        if (option === "forever") {
                             this.options.always = true;
                         }
                     }
-                    return true;
                 });
                 return true;
-            };
+            },
+        }, {force: true});
+        return Event;
+    })();
+    aa.EventApp = (() => {
+        const privates = {
+            construct: function (app) {
+                aa.prototypes.initGetters.call(this, ['events']);
+                return this.setApp(app);
+            },
+            verify: aa.prototypes.verify({
+                appName: aa.nonEmptyString,
+                callback: aa.isFunction,
+                associableParam: (p) => { return (aa.isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || aa.nonEmptyString(p)); },
+                callbackOrUndefined: (f) => { return (aa.isFunction(f) || f === undefined); },
+                evtName: aa.nonEmptyString
+            }),
+        };
+        function EventApp (app) {
+            
+            // Attributes:
+            aa.defineAccessors.call(this, {
+                privates: {
+                    app: null,
+                    module: null,
+                    events: {},
+                },
+            }, {getter: get, setter: set});
+
+
+            // Init:
+            return privates.construct.apply(this, arguments);
         }
 
-        // Construct:
-        construct.apply(this, arguments);
-    };
-    aa.EventApp                 = function (app) {
-
-        // Attributes:
-        set(this, "app",     null);
-        set(this, "module",  null);
-
-        // Lists:
-        set(this, "events", {});
-
-        const db = new aa.Storage("custom");
-
-        const verify = aa.prototypes.verify({
-            appName: nonEmptyString,
-            callback: isFunction,
-            associableParam: (p) => { return (isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || nonEmptyString(p)); },
-            callbackOrUndefined: (f) => { return (isFunction(f) || f === undefined); },
-            evtName: nonEmptyString
-        });
-        const construct = function (app) {
-            defineProperties.call(this);
-            return this.setApp(app);
-        };
-        const defineProperties = function () {
-
-            aa.prototypes.initGetters.call(this, ['events']);
-        };
-
-        // Construct:
-        if (this.listen === undefined) {
-
+        // Public:
+        aa.deploy(EventApp.prototype, {
             // Methods:
-            aa.EventApp.prototype.associate     = function (evtName, param) {
+            associate:      function (evtName, param) {
                 /**
                  * @param {String} evtName
                  * @param {aa.Action|Function|String} param
@@ -1704,8 +1723,8 @@
                  * @return {void}
                  */
 
-                verify('evtName', evtName);
-                verify('associableParam', param)
+                privates.verify('evtName', evtName);
+                privates.verify('associableParam', param)
 
                 const o = {};
 
@@ -1716,23 +1735,23 @@
                 }
                 
                 // Other syntax:
-                else if (isFunction(param)) {
+                else if (aa.isFunction(param)) {
                     this.associate(evtName, new aa.Action({on: {execute: param}}));
                 } else if (param instanceof aa.Action) {
                     this.associate(evtName, new aa.Event(param))
-                } else if (isString(param)) {
+                } else if (aa.isString(param)) {
                     this.associate(evtName, aa.actionManager.get(evtName));
                 }
-            };
-            aa.EventApp.prototype.dissociate    = function (evtName /*, param */) {
+            },
+            dissociate:     function (evtName /*, param */) {
                 /**
                  * @param {String} evtName
                  * @param {aa.Action|Function|String} param
                  *
                  * @return {void}
                  */
-                verify("evtName", evtName);
-                const param = (arguments && arguments.length>1 && verify("associableParam", arguments[1])) ? arguments[1] : undefined;
+                privates.verify("evtName", evtName);
+                const param = (arguments && arguments.length > 1 && privates.verify("associableParam", arguments[1])) ? arguments[1] : undefined;
 
                 const list = [];
                 const events = this.getEvents(evtName);
@@ -1747,20 +1766,20 @@
                             }
 
                             // Other syntax:
-                            else if (isFunction(param)) {
-                                deprecated("aa.Event.callback");
+                            else if (aa.isFunction(param)) {
+                                aa.deprecated("aa.Event.callback");
                                 if (evt.callback === param) {
                                 } else {
                                     list.push(evt);
                                 }
                             } else if (param instanceof aa.Action) {
                                 if (evt.callback === param.execute) {
-                                    deprecated("aa.Event.callback");
+                                    aa.deprecated("aa.Event.callback");
                                 } else if (evt.action === param) {
                                 } else {
                                     list.push(evt.callback);
                                 }
-                            } else if (isString(param)) {
+                            } else if (aa.isString(param)) {
                                 aa.gui.todo("Dissociate with String", true);
                             }
                         });
@@ -1768,20 +1787,20 @@
                     // this._events[evtName] = list;
                     get(this, "events")[evtName] = list;
                 }
-            };
-            aa.EventApp.prototype.listen        = function (spec) {
-                if (!isObject(spec)) { throw new TypeError("Argument must be an object."); }
+            },
+            listen:         function (spec) {
+                if (!aa.isObject(spec)) { throw new TypeError("Argument must be an object."); }
 
                 spec.forEach((evt, evtName) => {
                     evtName = aa.shortcut.rename(evtName);
-                    if (!nonEmptyString(evtName)) { throw new TypeError("Event name must be a non-empty String."); }
+                    aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
 
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let pile = [];
                     if (evt instanceof aa.Event) {
                         pile.push(evt);
-                    } else if(isArray(evt)) {
-                        if (!evt.verify((e) => { return (e instanceof aa.Event); })) { throw new TypeError("Every item must be instance of 'aa.Event'."); }
+                    } else if(aa.isArray(evt)) {
+                        aa.arg.test(evt, evt => evt.every(e => e instanceof aa.Event), `'evt'`);
                         evt.forEach((e) => {
                             pile.push(e);
                         });
@@ -1790,7 +1809,7 @@
                         const events = get(this, "events");
 
                         if (event.callback) {
-                            deprecated("aa.Event.callback");
+                            aa.deprecated("aa.Event.callback");
                         }
                         event.setModule(get(this, "module"));
                         event.setApp(get(this, "app"));
@@ -1802,8 +1821,8 @@
                     });
                 });
                 return true;
-            };
-            aa.EventApp.prototype.on            = function (evtName, callback /*, options */) {
+            },
+            on:             function (evtName, callback /*, options */) {
                 /**
                  * Usage:
                  *      // aa.EventApp.prototype.on(eventName, callback);
@@ -1819,7 +1838,7 @@
                  */
 
                 // Recur in case of signature: aa.EventApp.prototype.on({eventName: callback} /*, options */);
-                if (isObject(evtName)) {
+                if (aa.isObject(evtName)) {
                     const options = callback || [];
                     evtName.forEach((func, name) => {
                         this.on(name, func, options);
@@ -1828,7 +1847,7 @@
                 }
 
                 // else:
-                if (arguments.length === 1 && isObject(arguments[0])) {
+                if (arguments.length === 1 && aa.isObject(arguments[0])) {
                     arguments[0].forEach((func, name) => {
                         this.on(name, func);
                     });
@@ -1836,51 +1855,51 @@
                 }
 
                 const spec = {}
-                const options = (arguments && arguments.length > 2 && isArray(arguments[2]) ?
+                const options = (arguments && arguments.length > 2 && aa.isArray(arguments[2]) ?
                     arguments[2].filter((opt) => {
-                        return nonEmptyString(opt);
+                        return aa.nonEmptyString(opt);
                     })
                     : ["preventDefault"]
                 );
                 evtName = aa.shortcut.cmdOrCtrl(evtName);
-                if (isFunction(callback)) {
+                if (aa.isFunction(callback)) {
                     spec[evtName] = new aa.Event((new aa.Action({
                         on: {execute: callback}
                     })), options);
                 } else if (callback instanceof aa.Action) {
                     const action = callback;
                     spec[evtName] = new aa.Event(action, options);
-                } else { throw new TypeError("Second argument must be a Function or an instance of 'aa.Action'."); }
+                } else { throw new TypeError("Second argument must be a Function or an instance of <aa.Action>."); }
                 this.listen(spec);
                 return this;
-            };
-            aa.EventApp.prototype.module        = function (m) {
-                if (m !== null && !nonEmptyString(m)) {
+            },
+            module:         function (m) {
+                if (m !== null && !aa.nonEmptyString(m)) {
                     throw new TypeError("Argument must be null or a non-empty String.");
                     return undefined;
                 }
-                if (isString(m)) {
+                if (aa.isString(m)) {
                     set(this, "module", m.trim());
                 }
                 return this;
-            };
-            aa.EventApp.prototype.pop           = function (evt) {
+            },
+            pop:            function (evt) {
                 const events = get(this, "events");
-                if (isString(evt) && events.hasOwnProperty(evt)) {
+                if (aa.isString(evt) && events.hasOwnProperty(evt)) {
                     events[evt].pop();
                 }
-            };
-            aa.EventApp.prototype.run           = function (evt) {};
-            aa.EventApp.prototype.suspend       = function (p) {
+            },
+            run:            function (evt) {},
+            suspend:        function (param) {
                 const o = {toSuspend: []};
-                if (!isArray(p) && !nonEmptyString(p)) { throw new TypeError("Argument must be a non-empty String or an Array of non-empty Strings."); }
+                aa.arg.test(param, arg => aa.isArray(arg) || aa.nonEmptyString(arg), 'param');
 
-                if (nonEmptyString(p)) {
-                    p = p.trim();
-                    o.toSuspend.push(p);
-                } else if(isArray(p)) {
-                    p.forEach((s) => {
-                        if (!nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (aa.nonEmptyString(param)) {
+                    param = param.trim();
+                    o.toSuspend.push(param);
+                } else if(aa.isArray(param)) {
+                    param.forEach((s) => {
+                        if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
 
                         o.toSuspend.push(s);
                     });
@@ -1893,37 +1912,38 @@
                 });
                 delete o.toSuspend;
                 return this;
-            };
+            },
 
             // Setters:
-            aa.EventApp.prototype.setApp        = function (name) {
-                verify("appName", name);
-                if (isString(name)) {
+            setApp:         function (name) {
+                privates.verify("appName", name);
+                if (aa.isString(name)) {
                     set(this, "app", name.trim());
                 }
                 set(this, "module", null);
                 return this;
-            };
+            },
 
             // Getters:
-            aa.EventApp.prototype.getEvents     = function (evtName) {
-                if (evtName !== undefined && !nonEmptyString(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
+            getEvents:      function (evtName) {
+                if (evtName !== undefined && !aa.nonEmptyString(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
 
                 const events = get(this, "events");
 
-                if (isString(evtName)) {
+                if (aa.isString(evtName)) {
                     evtName = evtName.trim();
                     // return this._events.hasOwnProperty(evtName) ? this._events[evtName] : undefined;
                     return events.hasOwnProperty(evtName) ? events[evtName] : undefined;
                 } else {
                     return events;
                 }
-            };
-            aa.EventApp.prototype.getShortcutOf = function (obj) {
+            },
+            getShortcutOf:  function (obj) {
 
                 return this.getShortcutsOf(obj).first;
-            };
-            aa.EventApp.prototype.getShortcutsOf = function (obj) {
+            },
+            getShortcutsOf: function (obj) {
+                const db = new aa.Storage("custom");
                 const shortcuts = [];
 
                 // action's shortcut saved in DB:
@@ -1933,7 +1953,7 @@
                     if (data) {
                         const app = data.find((list, name)=> name === get(this, "app"));
                         if (app && obj instanceof aa.Action) {
-                            if (app[obj.name] && isArray(app[obj.name])) {
+                            if (app[obj.name] && aa.isArray(app[obj.name])) {
                                 return app[obj.name];
                             }
                         }
@@ -1957,16 +1977,15 @@
                     }
                 });
                 return shortcuts;
-            };
+            },
 
             // Aliases:
-            aa.EventApp.prototype.resume        = aa.EventApp.prototype.run;
-            aa.EventApp.prototype.pause         = aa.EventApp.prototype.suspend;
-        }
+            resume:         EventApp.prototype.run,
+            pause:          EventApp.prototype.suspend,
+        }, {force: true});
 
-        // Init:
-        return construct.apply(this, arguments);
-    };
+        return EventApp;
+    })();
     aa.EventResponse            = (() => {
         function EventResponse (/* type */) {
             privates.construct.apply(this, arguments);
@@ -2038,7 +2057,7 @@
             };
             // Setters:
             aa.Parser.prototype.setContent  = function (content) {
-                if (isString(content)) {
+                if (aa.isString(content)) {
                     this.content = content;
                 }
                 return this;
@@ -2090,7 +2109,7 @@
             set(this, "table", null);
         };
         const setTable      = function (table) {
-            if (!nonEmptyString(table)) { throw new TypeError("Argument must be a non-empty String.");}
+            if (!aa.nonEmptyString(table)) { throw new TypeError("Argument must be a non-empty String.");}
             set(this, "table", table.trim());
         };
 
@@ -2112,7 +2131,7 @@
                 }
             };
             aa.Storage.prototype.insert      = function (key, value) {
-                if (!nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
                 
                 key = key.trim();
@@ -2132,7 +2151,7 @@
                 }
             };
             aa.Storage.prototype.remove      = function (key) {
-                if (!nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 key = key.trim();
@@ -2142,7 +2161,7 @@
                 }
             };
             aa.Storage.prototype.select      = function (key) {
-                if (!nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 key = key.trim();
@@ -2203,8 +2222,8 @@
 
             // General:
             Builder.prototype.set         = function (name, myClass) {
-                if (!nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
-                if (!isFunction(myClass)) { throw new TypeError("Second argument must be a Class."); }
+                if (!aa.nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isFunction(myClass)) { throw new TypeError("Second argument must be a Class."); }
 
                 name = name.trim();
                 collection[name] = myClass;
@@ -2235,12 +2254,12 @@
         let appName = 'aaFramework';
         const verifier = {
             action: (a) => { return (a instanceof aa.Action && a.isValid()); },
-            actionName: nonEmptyString,
-            appName: nonEmptyString,
+            actionName: aa.nonEmptyString,
+            appName: aa.nonEmptyString,
             add: (a) => { return (verifier.action(a) || verifier.arrayOfActions(a)); },
-            arrayOfActions: (arr) => { return (isArray(arr) && arr.reduce((ok, a) => { return (!verifier.action(a) ? false : ok); }, true)); },
+            arrayOfActions: (arr) => { return (aa.isArray(arr) && arr.reduce((ok, a) => { return (!verifier.action(a) ? false : ok); }, true)); },
             remove: (p) => { return (verifier.actionName(p) || verifier.action(p)); },
-            spec: isObject
+            spec: aa.isObject
         };
         const verify = aa.prototypes.verify(verifier);
 
@@ -2256,7 +2275,7 @@
                     return true;
                 }
                 return false;
-            } else if(isArray(a)) {
+            } else if(aa.isArray(a)) {
                 let res = true;
                 a.forEach(function (action) {
                     if (!this.add(action)) {
@@ -2269,7 +2288,7 @@
         this.remove = function (p) {
             verify('remove', p);
 
-            if (isString(p)) {
+            if (aa.isString(p)) {
                 p = p.trim();
             } else if(p instanceof aa.Action) {
                 p = p.name;
@@ -2376,9 +2395,9 @@
             const timers = {};
             
             return function (node /*, resolve, reject */) {
-                if (!isNode(node)) { throw new TypeError("First argument must be a Node."); }
-                const resolve = (arguments && arguments.length > 1 && isFunction(arguments[1]) ? arguments[1] : undefined);
-                const reject = (arguments && arguments.length > 2 && isFunction(arguments[2]) ? arguments[2] : undefined);
+                if (!aa.isNode(node)) { throw new TypeError("First argument must be a Node."); }
+                const resolve = (arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined);
+                const reject = (arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined);
 
                 const id = node.dataset.aafadeid || node.id || aa.uid();
                 node.dataset.aafadeid = id;
@@ -2411,7 +2430,7 @@
         const instance = {
             // Methods:
             is: function (s) {
-                if (!nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
                 return (that.os === s);
             },
             fadeIn: fade(true),
@@ -2433,8 +2452,8 @@
                  * @param DOMElement node
                  * @param Number value (0~1)
                  */
-                if (!isNode(node)) { throw new TypeError("First argument must be a Node."); }
-                if (!isNumber(value)) { throw new TypeError("Second argument must be a Number."); }
+                if (!aa.isNode(node)) { throw new TypeError("First argument must be a Node."); }
+                if (!aa.isNumber(value)) { throw new TypeError("Second argument must be a Number."); }
 
                 if (instance.is("ie")) {
                     node.style.filter = "alpha(opacity="+parseInt(value*100)+')';
@@ -2462,7 +2481,7 @@
                     }
                 }
                 else {
-                    if (isNumber(window.innerHeight)) {
+                    if (aa.isNumber(window.innerHeight)) {
                         height = window.innerHeight;
                     }
                     else if( document.documentElement && document.documentElement.clientHeight ) {
@@ -2492,7 +2511,7 @@
                     }
                 }
                 else {
-                    if (isNumber(window.innerWidth)) {
+                    if (aa.isNumber(window.innerWidth)) {
                         width = window.innerWidth;
                     }
                     else if( document.documentElement && document.documentElement.clientWidth ) {
@@ -2597,14 +2616,9 @@
                 
                 chaine[1] = "click.Left";
                 chaine[3] = "click.Right";
-                
-                switch (e.which) {
-                    case 1: // clic gauche
-                    case 3: // clic droit
-                        result = aa.events.execute(chaine[e.which], e);
-                        break;
-                    default:
-                        break;
+
+                if ([1, 3].has(e.which)) {
+                    result = aa.events.execute(chaine[e.which], e);
                 }
                 
                 if (result && result.isPreventDefault()) {
@@ -2619,26 +2633,14 @@
                 const allowKeyCodeLog   = false;
                 let result = new aa.EventResponse("keyboard");
 
-                // log(window.event);
-                
                 e = window.event || e;
-                // let mouseWheel = e.wheelDelta || -e.detail;
-                
-                //let touche=(window.Event)?_event_.which:_event_.keyCode;//pour savoir s'il s'agit de Msie ou de Netscape
-                // test("Vous avez appuyé la touche "+"\" "+(touche)+" \"");
-                
-                // --- Retrieve event object from current web explorer
-                //let winObj = checkEventObj(_event_);
-                
-                // log(e.keyCode);
+
                 this.which          = e.which;
                 this.intKeyCode     = e.keyCode;
                 this.intAltKey      = e.altKey;
                 this.intCtrlKey     = e.ctrlKey;
                 this.intShiftKey    = e.shiftKey;
                 this.intCmdKey      = e.metaKey;
-
-                // log(String.fromCharCode(this.intKeyCode));
 
                 // Methods:
                 // --------------------------
@@ -2691,7 +2693,7 @@
                                     break;
                             }
                         }
-                        if (inbetween(this.intKeyCode,65,90)) {
+                        if (aa.inbetween(this.intKeyCode,65,90)) {
                             switch (aa.browser.os) {
                                 case "mac":
                                     txt += String.fromCharCode(this.intKeyCode);
@@ -2730,7 +2732,7 @@
                                 style: "position: fixed; bottom: 0; right: 0; margin: 2px; padding: 4px 8px; background: #222; color: #0f8; border-radius: 4px;"
                             });
                             document.body.appendChild(div);
-                            div.innerHTML = aa.shortcut.format(combinaison, ["htmlEncode", "simple"])
+                            div.innerHTML = aa.shortcut.format(combinaison, ["aa.htmlEncode", "simple"])
                                 // .replace(/\</g,"&lt;")
                                 // .replace(/\>/g,"&gt;")
                             ;
@@ -2760,7 +2762,6 @@
                     })(allowLog);
                     result = aa.events.execute(combinaison, e);
                 }
-                // log('preventDefault:',result.isPreventDefault());
                 if (result && result.isPreventDefault()) {
                     e.preventDefault();
                 }
@@ -2865,28 +2866,28 @@
         });
 
         // Methods:
-        this.fire = function (eventName /*, *args */) {
+        this.fire               = function (eventName /*, *args */) {
             const args = arguments.reduce((args, arg, i) => {
                 if (i > 0) {
                     args.push(arg);
                 }
                 return args;
             }, []);
-            if (!nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+            if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
 
             eventName = eventName.trim();
             const event = new CustomEvent(eventName, {detail: args});
             document.dispatchEvent(event);
         };
-        this.on = function (eventName, callback) {
-            if (isObject(eventName)) {
+        this.on                 = function (eventName, callback) {
+            if (aa.isObject(eventName)) {
                 eventName.forEach((callback, evtName) => {
                     this.on(evtName, callback);
                 });
                 return this;
             }
-            if (!nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
-            if (!isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
+            if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+            if (!aa.isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
 
             document.on(eventName.trim(), function (e) {
                 const args = e.detail || undefined;
@@ -2898,7 +2899,7 @@
 
             let app = "";
             if (arguments && arguments.length) {
-                if (nonEmptyString(arguments[0])) {
+                if (aa.nonEmptyString(arguments[0])) {
                     app = arguments[0].trim();
                 }
             }
@@ -2917,16 +2918,18 @@
              * @param {String} evtName
              * @param {aa.Event} e=undefined (optional)
              */
-            if (!nonEmptyString(evtName)) { throw new TypeError("First argument must be a non-empty String."); }
+            if (!aa.nonEmptyString(evtName)) { throw new TypeError("First argument must be a non-empty String."); }
             const e = arguments && arguments.length>1 && arguments[1] instanceof Event ? arguments[1] : undefined;
 
-            let app, evt, evts;
+            let app, evts;
             let response = new aa.EventResponse(e ? e.type : null);
             let returnValues = null;
 
             evtName = aa.shortcut.cmdOrCtrl(evtName);
 
             if (this.appNames.length) {
+
+                // Execute 'forever' events:
                 this.appNames.forEach((appName, i) => {
                     if (i < this.appNames.length-1) {
                         let app = this.apps[appName];
@@ -2945,6 +2948,8 @@
                         }
                     }
                 });
+
+                // Execute current app events:
                 app = this.apps[this.appNames.getLast()];
                 if (app instanceof aa.EventApp) {
                     evts = app.getEvents(evtName);
@@ -2955,14 +2960,17 @@
                                 response.preventDefault();
                             }
                         };
-                        evts.forEach(function (evt,i) {
-                            if (i < evts.length-1) {
+
+                        // Execute every 'always' event:
+                        evts.filter((evt, i) => i < evts.length-1)
+                            .forEach(evt => {
                                 if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("always")) {
                                     getReturnValues(evt, e);
                                 }
-                            }
-                        });
-                        evt = evts.getLast();
+                            });
+
+                        // Then execute top event:
+                        let evt = evts.last;
                         if (evt instanceof aa.Event && evt.isValid()) {
                             getReturnValues(evt, e);
                         }
@@ -2989,7 +2997,7 @@
             return response;
         };
         this.removeApp          = function (app) {
-            if (!nonEmptyString(app)) {
+            if (!aa.nonEmptyString(app)) {
                 throw new TypeError("Argument must be a non-empty String.");
                 return false;
             }
@@ -3030,24 +3038,24 @@
 
         // Getters
         this.getShortcut        = function (e) { // abstract
-            deprecated("aa.events.getShortcut");
+            aa.deprecated("aa.events.getShortcut");
             return aa.shortcut.get(e);
         };
         this.shortcutToString   = function (s) { // abstract 
-            deprecated("aa.events.shortcutToString");
+            aa.deprecated("aa.events.shortcutToString");
             return aa.shortcut.format(s);
         };
     })();
     aa.file                     = Object.freeze(new (function () {
         const verifier = {
-            content:        p => (isObject(p) || isString(p)),
-            lastModified:   p => isInt(p),
-            name:           p => isString(p),
-            size:           p => isInt(p),
-            type:           p => isString(p)
+            content:        p => (aa.isObject(p) || aa.isString(p)),
+            lastModified:   p => aa.isInt(p),
+            name:           p => aa.isString(p),
+            size:           p => aa.isInt(p),
+            type:           p => aa.isString(p)
         };
         this.isValid    = function (file) {
-            if (!isObject(file)) { throw new TypeError("Argument must be an Object."); }
+            if (!aa.isObject(file)) { throw new TypeError("Argument must be an Object."); }
             const valid = (!file.find((v, k) => {
                 return (
                     !verifier.hasOwnProperty(k)
@@ -3056,8 +3064,8 @@
             }));
             return (valid
                 && (
-                    (file.type === "application/json" && isObject(file.content))
-                    || isString(file.content)
+                    (file.type === "application/json" && aa.isObject(file.content))
+                    || aa.isString(file.content)
                 )
             );
         };
@@ -3095,13 +3103,13 @@
             const functions = [];
             for (i=0; i<arguments.length; i++) {
                 let arg = arguments[i];
-                if (isFunction(arg)) {
+                if (aa.isFunction(arg)) {
                     if (functions.length < 2) {
                         functions.push(arg);
                     } else {
                         throw new TypeError("Reject callback argument has already been given.");
                     }
-                } else if(isObject(arg)) {
+                } else if(aa.isObject(arg)) {
                     if (options === undefined) {
                         options = arg;
                     } else {
@@ -3122,23 +3130,23 @@
                 }
             );
             options = {
-                base64: ((isObject(options)
+                base64: ((aa.isObject(options)
                     && options.base64 !== undefined
-                    && isBool(options.base64)
+                    && aa.isBool(options.base64)
                 ) ?
                     options.base64
                     : false
                 ),
-                json: ((isObject(options)
+                json: ((aa.isObject(options)
                     && options.json !== undefined
-                    && isBool(options.json)
+                    && aa.isBool(options.json)
                 ) ?
                     options.json
                     : false
                 ),
-                multiple: ((isObject(options)
+                multiple: ((aa.isObject(options)
                     && options.multiple !== undefined
-                    && isBool(options.multiple)
+                    && aa.isBool(options.multiple)
                 ) ?
                     options.multiple
                     : false
@@ -3313,12 +3321,12 @@
              * @return {void}
              */
 
-            aa.arg.test(fileName, nonEmptyString, `'fileName'`);
-            aa.arg.test(content, isString, `'content'`);
-            const options = aa.arg.optional(arguments, 2, {}, verifyObject({
-                base64: isBool,
-                mimetype: value => isString(value) && !!value.match(/^[a-z0-9\-]+\/[a-z0-9\-]+$/i),
-                utf8: isBool
+            aa.arg.test(fileName, aa.nonEmptyString, `'fileName'`);
+            aa.arg.test(content, aa.isString, `'content'`);
+            const options = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+                base64: aa.isBool,
+                mimetype: value => aa.isString(value) && !!value.match(/^[a-z0-9\-]+\/[a-z0-9\-]+$/i),
+                utf8: aa.isBool
             }));
             options.sprinkle({
                 mimetype: `text/plain`
@@ -3360,7 +3368,7 @@
                 a.dispatchEvent(event);
             } else if (document.createEvent) {
                 let event = document.createEvent("MouseEvents");
-                event.initEvent("click", true, true); // deprecated
+                event.initEvent("click", true, true); // aa.deprecated
                 a.dispatchEvent(event);
             } else {
                 // Don't know...
@@ -3380,11 +3388,11 @@
         const reminders     = {};
         const transitionDuration = .2; // (s)
         const verify        = aa.prototypes.verify({
-            appName: nonEmptyString,
-            boolean: isBool,
-            dialogType: (type) => { return (nonEmptyString(type) && dialogTypes.has(type.trim().toLowerCase())); },
-            message: nonEmptyString,
-            spec: isObject
+            appName: aa.nonEmptyString,
+            boolean: aa.isBool,
+            dialogType: (type) => { return (aa.nonEmptyString(type) && dialogTypes.has(type.trim().toLowerCase())); },
+            message: aa.nonEmptyString,
+            spec: aa.isObject
         });
 
         const Reminders = function () {
@@ -3397,15 +3405,15 @@
             // Methods:
             aa.deploy(Reminders.prototype, {
                 add:    function (id, message) {
-                    if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!nonEmptyString(message)) { throw new TypeError("Second argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(message)) { throw new TypeError("Second argument must be a non-empty String."); }
 
                     this.app(attr.app);
                     reminders[attr.app][id] = message;
                     return this;
                 },
                 app:    function (app) {
-                    if (!nonEmptyString(app)) { throw new TypeError("Argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(app)) { throw new TypeError("Argument must be a non-empty String."); }
 
                     app = app.trim();
                     attr.app = app;
@@ -3494,11 +3502,11 @@
             };
         };
         const parse = function (arr, shortcut /*, callback */) {
-            aa.arg.test(arr, isArray, 0);
-            aa.arg.test(shortcut, isFunction, 1);
+            aa.arg.test(arr, aa.isArray, 0);
+            aa.arg.test(shortcut, aa.isFunction, 1);
             const callback = aa.arg.optional(arguments, 2, undefined);
 
-            if (callback !== undefined && !isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
+            if (callback !== undefined && !aa.isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
 
             let tops = [];
 
@@ -3520,8 +3528,8 @@
                         } else {
                             item.classList.add("disabled");
                         }
-                    } else if (nonEmptyString(entry) || entry instanceof aa.Action) {
-                        const action = (nonEmptyString(entry) ?
+                    } else if (aa.nonEmptyString(entry) || entry instanceof aa.Action) {
+                        const action = (aa.nonEmptyString(entry) ?
                             aa.action(entry)
                             : entry
                         );
@@ -3558,7 +3566,7 @@
                                 : ''
                             );
                             if (action.callbacks.length > 0) {
-                                deprecated("action.callbacks");
+                                aa.deprecated("action.callbacks");
                             }
                             const span = $$("span"+".icon.fa.fa-fw"+icon+type);
                             const btn = $$("button", span);
@@ -3608,7 +3616,7 @@
         this.Menu           = (function () {
 
             // Private variables:
-            
+            const emit = aa.prototypes.events.getEmitter({get, set});
             const construct = function () {
                 this.setTheme(aa.settings.theme);
                 aa.events.on('themechange', (theme) => {
@@ -3622,207 +3630,294 @@
             const Menu      = function () {
 
                 // Attributes:
-                set(this, "theme", null);
-                set(this, "appName", null);
-
-                // Lists:
-                set(this, "items", []);
+                aa.defineAccessors.call(this, {
+                    publics: {},
+                    privates: {
+                        appName: null,
+                        items: [],
+                        theme: null
+                    },
+                }, {getter: get, setter: set});
 
                 // Instanciate:
                 construct.apply(this, arguments);
             };
 
-            // Public methods:
-            Menu.prototype.hydrate      = aa.prototypes.hydrate;
+            // Public:
+            aa.deploy(Menu.prototype, {
+                hydrate:    aa.prototypes.hydrate,
+                on:         aa.prototypes.events.getListener({get, set}),
 
-            // Setters:
-            Menu.prototype.addActions   = function (list) {
-                if (!isArray(list)) { throw new TypeError("Argument must be a collection of actions."); }
+                // Setters:
+                addActions: function (list) {
+                    if (!aa.isArray(list)) { throw new TypeError("Argument must be a collection of actions."); }
 
-                return list.forEach(function (a) {
-                    return this.addAction(a);
-                }, this);
-            };
-            Menu.prototype.addAction    = function (p) {
-                if (nonEmptyString(p)) {
-                    p = p.trim();
-                    if (p.match(/^[a-zA-Z0-9\_\.\s\-\(\)]+$/)) {
+                    return list.forEach(function (a) {
+                        return this.addAction(a);
+                    }, this);
+                },
+                addAction:  function (p) {
+                    if (aa.nonEmptyString(p)) {
+                        p = p.trim();
+                        if (p.match(/^[a-zA-Z0-9\_\.\s\-\(\)]+$/)) {
+                            get(this, "items").push(p);
+                        }
+                    } else if (p instanceof aa.ActionGroup) {
                         get(this, "items").push(p);
+                    } else if (p instanceof aa.Action && p.isValid()) {
+                        get(this, "items").push(p.name);
+                    } else if (p === null || p === undefined) {
+                        this.addSep();
+                    } else {
+                        throw new TypeError("Invalid Action argument.");
                     }
-                } else if (p instanceof aa.ActionGroup) {
-                    get(this, "items").push(p);
-                } else if (p instanceof aa.Action && p.isValid()) {
-                    get(this, "items").push(p.name);
-                } else if (p === null || p === undefined) {
-                    this.addSep();
-                } else {
-                    throw new TypeError("Invalid Action argument.");
-                }
-            };
-            Menu.prototype.addSep       = function () {
+                },
+                addSep:     function () {
 
-                get(this, "items").push(null);
-            };
-            Menu.prototype.reset        = function () {
+                    get(this, "items").push(null);
+                },
+                reset:      function () {
 
-                set(this, "items", []);
-            };
-            Menu.prototype.setAction    = function (a) {
-                this.reset();
-                this.addAction(a);
-            };
-            Menu.prototype.setActions   = function (list) {
-                this.reset();
-                this.addActions(list);
-            };
-            Menu.prototype.setAppName   = function (str) {
-                verify("appName", str);
-                set(this, "appName", str.trim());
-            };
-            Menu.prototype.setTheme     = function (p) {
-                if (!nonEmptyString(p)) { throw new TypeError("Argument must be a non-empty String."); }
+                    set(this, "items", []);
+                },
+                setAction:  function (a) {
+                    this.reset();
+                    this.addAction(a);
+                },
+                setActions: function (list) {
+                    this.reset();
+                    this.addActions(list);
+                },
+                setAppName: function (str) {
+                    verify("appName", str);
+                    set(this, "appName", str.trim());
+                },
+                setOn:      function (eventName, callback) {
+                    /**
+                     * Usage:
+                     * (new ContextMenu()).on(<string> eventName, <function callback>);
+                     * (new ContextMenu()).on({
+                        * <string> eventName: <function callback>
+                     * });
+                     * 
+                     * @param {string|object} eventName
+                     * @param {function} callback
+                     * 
+                     * @return {void}
+                     */
+                    aa.throwErrorIf(
+                        aa.isObject(eventName) && callback !== undefined,
+                        `Invalid call syntax.`,
+                        TypeError
+                    )
 
-                p = p.trim();
-                if (ENV.THEMES.has(p)) {
-                    set(this, "theme", p);
-                }
-            }
+                    // Call for each entry:
+                    if (aa.isObject(eventName)) {
+                        const listeners = eventName;
+                        listeners.forEach((callback, evtName) => {
+                            this.on(evtName, callback);
+                        });
+                        return;
+                    }
 
-            // Getters:
-            Menu.prototype.getNode      = function () {
-                const shortcut = shortcutMaker(get(this, "appName"));
+                    // Call on single entry:
+                    this.on.apply(this, arguments);
+                },
+                setTheme:   function (p) {
+                    if (!aa.nonEmptyString(p)) { throw new TypeError("Argument must be a non-empty String."); }
 
-                const menu = $$("div.aaMenu", parse(get(this, "items"), shortcut, this.hide));
-                
-                // Theme:
-                menu.classList.add(get(this, "theme"));
-                aa.events.on('themechange', (theme, previous) => {
-                    menu.classList.remove(previous);
-                    menu.classList.add(theme);
-                });
+                    p = p.trim();
+                    if (ENV.THEMES.has(p)) {
+                        set(this, "theme", p);
+                    }
+                },
 
-                menu.children.forEach((ul) => {
-                    ul.children.forEach((li) => {
-                        li.children.forEach((btn) => {
-                            btn.children.forEach((span) => {
-                                if (span.classList.contains("icon")) {
-                                    // span.classList.remove("fa");
-                                    // span.classList.remove("fa-fw");
-                                    span.removeNode();
-                                }
+                // Getters:
+                getNode:    function () {
+                    const shortcut = shortcutMaker(get(this, "appName"));
+
+                    const menu = $$("div.aaMenu", parse(get(this, "items"), shortcut, this.hide));
+                    
+                    // Theme:
+                    menu.classList.add(get(this, "theme"));
+                    aa.events.on('themechange', (theme, previous) => {
+                        menu.classList.remove(previous);
+                        menu.classList.add(theme);
+                    });
+
+                    menu.children.forEach((ul) => {
+                        ul.children.forEach((li) => {
+                            li.children.forEach((btn) => {
+                                btn.children.forEach((span) => {
+                                    if (span.classList.contains("icon")) {
+                                        // span.classList.remove("fa");
+                                        // span.classList.remove("fa-fw");
+                                        span.removeNode();
+                                    }
+                                });
                             });
                         });
                     });
-                });
-                return menu;
-            };
-            Menu.prototype.toObject     = function () {
-                const o = ["appName", "theme", "items"].reduce((o, key) => {
-                    o[key] = get(this, key);
-                    return o;
-                }, {});
-                // o.actions = get(this, "items");
-                return Object.freeze(o);
-            };
+                    return menu;
+                },
+                toObject:   function () {
+                    const o = ["appName", "theme", "items"].reduce((o, key) => {
+                        o[key] = get(this, key);
+                        return o;
+                    }, {});
+                    // o.actions = get(this, "items");
+                    return Object.freeze(o);
+                },
+            }, {force: true});
+
             return Object.freeze(Menu);
         })();
         this.ContextMenu    = (function () {
 
             // Closure private methods:
-            const construct     = function () {
-                set(this, "theme", aa.settings.theme);
-                aa.events.on('themechange', (theme) => {
-                    set(this, "theme", theme);
-                });
-                if (arguments && arguments.length) {
-                    set(this, "menu", new aa.gui.Menu(arguments[0]));
-                }
-                aa.prototypes.initGetters.call(this, ["theme", "appName", "items"]);
+            const privates = {
+                construct: function (/* spec */) {
+                    const spec = aa.arg.optional(arguments, 0, {});
+
+                    set(this, "theme", aa.settings.theme);
+                    aa.events.on('themechange', (theme) => {
+                        set(this, "theme", theme);
+                    });
+                    if (aa.isObject(spec) && spec.hasOwnProperty("on")) {
+                        this.setOn(spec.on);
+                        delete spec.on;
+                    }
+                    set(this, "menu", new aa.gui.Menu(spec));
+                    aa.prototypes.initGetters.call(this, ["theme", "appName", "items"]);
+                },
+                emit: aa.prototypes.events.getEmitter({get, set})
             };
             const ContextMenu   = function () {
 
                 // Attributes:
-                set(this, "menu");
+                aa.defineAccessors.call(this, {
+                    publics: {},
+                    privates: {
+                        onclickout: null,
+                        menu:       null,
+                        theme:      null
+                    },
+                }, {getter: get, setter: set});
 
                 // Instanciate:
-                construct.apply(this, arguments);
+                privates.construct.apply(this, arguments);
             };
 
-            // Methods:
-            ContextMenu.prototype.hide       = function () {
-                aa.events.removeApp("aaContextMenu");
-                let dom = document.getElementById("aaContextMenuBG");
-                if (isDom(dom)) {
-                    dom.parentNode.removeChild(dom);
-                }
-            };
-            ContextMenu.prototype.show       = function () {
-                const menu = get(this, "menu");
-                const shortcut = shortcutMaker(get(this, "appName"));
+            // Public:
+            aa.deploy(ContextMenu.prototype, {
+                on:     aa.prototypes.events.getListener({get, set}),
 
-                const dom = $$("div#aaContextMenuBG.aa.bg");
-                const menuNode = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide));
-                
-                this.hide();
-                dom.on("contextmenu", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!aa.isOver(e,"#aaContextMenu")) {
-                        this.hide();
+                hide:   function () {
+                    const that = aa.prototypes.getPrivateAccessor.call(this, [`onclickout`], {get, set});
+                    aa.events.removeApp("aaContextMenu");
+                    let dom = document.getElementById("aaContextMenu");
+                    if (aa.isDom(dom)) {
+                        dom.parentNode.removeChild(dom);
+                        document.body.cancel(`click`, that.onclickout);
+                        privates.emit.call(this, `hide`);
                     }
-                    return false;
-                });
-                dom.on("click", (e) => {
-                    if (!aa.isOver(e,"#aaContextMenu")) {
-                        e.stopPropagation();
-                        this.hide();
-                    }
-                });
-                dom.style.zIndex = aa.getMaxZIndex();
-                document.body.appendChild(dom);
+                },
+                show:   function () {
+                    const menu = get(this, "menu");
+                    const shortcut = shortcutMaker(get(this, "appName"));
+                    const that = aa.prototypes.getPrivateAccessor.call(this, [`onclickout`], {get, set});
 
-                // Theme:
-                const theme = get(this, 'theme');
-                menuNode.classList.add(theme);
-                aa.events.on('themechange', (theme, previous) => {
-                    menuNode.classList.remove(previous);
+                    // const dom = $$("div#aaContextMenuBG.aa.bg");
+                    const menuNode = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide.bind(this)));
+                    
+                    this.hide();
+
+                    // Theme:
+                    const theme = get(this, 'theme');
                     menuNode.classList.add(theme);
-                });
+                    aa.events.on('themechange', (theme, previous) => {
+                        menuNode.classList.remove(previous);
+                        menuNode.classList.add(theme);
+                    });
 
-                menuNode.style.display = "block";
-                menuNode.style.top = aa.mouse.y+"px";
-                menuNode.style.left = (aa.mouse.x+4)+"px";
-                dom.appendChild(menuNode);
-                
-                aa.events.app("aaContextMenu").listen({"<Esc>": new aa.Event(new aa.Action({on: {execute: (function (that) {return function () {that.hide();};})(this)}}), ["preventDefault"])});
-                aa.events.app("aaContextMenu").suspend([
-                    "<Down>",
-                    "<Up>",
-                    "<Home>",
-                    "<End>",
-                    "moletteBas",
-                    "moletteHaut"
-                ]);
+                    menuNode.style.display = "block";
+                    menuNode.style.top = aa.mouse.y+"px";
+                    menuNode.style.left = (aa.mouse.x+4)+"px";
+                    menuNode.style.zIndex = aa.getMaxZIndex();
+                    document.body.appendChild(menuNode);
 
-                if (aa.mouse.y + menuNode.offsetHeight > aa.browser.height) {
-                    if (menuNode.offsetHeight <= (aa.browser.height-2)) {
-                        menuNode.style.top = (aa.browser.height - menuNode.offsetHeight-2)+"px";
-                        // menuNode.style.top = "auto";
-                        // menuNode.style.bottom = "2px";
-                    } else {
-                        menuNode.style.top = "2px";
+                    that.onclickout = e => {
+                        if (!aa.isOver(e, "#aaContextMenu")) {
+                            e.stopPropagation();
+                            this.hide();
+                        }
+                    };
+                    document.body.on(`click`, that.onclickout);
+                    
+                    aa.events.app("aaContextMenu").listen({"<Esc>": new aa.Event(new aa.Action({on: {execute: this.hide.bind(this)}}), ["preventDefault"])});
+                    aa.events.app("aaContextMenu").suspend([
+                        "<Down>",
+                        "<Up>",
+                        "<Home>",
+                        "<End>",
+                        "moletteBas",
+                        "moletteHaut",
+                        "mousewheel.Up",
+                        "mousewheel.Down",
+                        "<Tab>",
+                        "shift <Tab>",
+                    ]);
+
+                    if (aa.mouse.y + menuNode.offsetHeight > aa.browser.height) {
+                        if (menuNode.offsetHeight <= (aa.browser.height-2)) {
+                            menuNode.style.top = (aa.browser.height - menuNode.offsetHeight-2)+"px";
+                        } else {
+                            menuNode.style.top = "2px";
+                        }
                     }
-                }
-                if (aa.mouse.x + menuNode.offsetWidth > aa.browser.width) {
-                    if (menuNode.offsetWidth <= (aa.browser.width-2)) {
-                        menuNode.style.left = (aa.browser.width-menuNode.offsetWidth-2)+"px";
-                        // menuNode.style.left = "auto";
-                        // menuNode.style.right = "2px";
-                    } else {
-                        menuNode.style.left = "2px";
+                    if (aa.mouse.x + menuNode.offsetWidth > aa.browser.width) {
+                        if (menuNode.offsetWidth <= (aa.browser.width-2)) {
+                            menuNode.style.left = (aa.browser.width-menuNode.offsetWidth-2)+"px";
+                        } else {
+                            menuNode.style.left = "2px";
+                        }
                     }
-                }
-            };
+                    privates.emit.call(this, `show`);
+                },
+
+                // Setters:
+                setOn:      function (eventName, callback) {
+                    /**
+                     * Usage:
+                     * (new ContextMenu()).on(<string> eventName, <function callback>);
+                     * (new ContextMenu()).on({
+                        * <string> eventName: <function callback>
+                     * });
+                     * 
+                     * @param {string|object} eventName
+                     * @param {function} callback
+                     * 
+                     * @return {void}
+                     */
+                    aa.throwErrorIf(
+                        aa.isObject(eventName) && callback !== undefined,
+                        `Invalid call syntax.`,
+                        TypeError
+                    )
+
+                    // Call for each entry:
+                    if (aa.isObject(eventName)) {
+                        const listeners = eventName;
+                        listeners.forEach((callback, evtName) => {
+                            this.on(evtName, callback);
+                        });
+                        return;
+                    }
+
+                    // Call on single entry:
+                    this.on.apply(this, arguments);
+                },
+            }, {force: true});
             return Object.freeze(ContextMenu);
         })();
         this.Dialog         = (function () {
@@ -3896,7 +3991,7 @@
                             const checkElements = () => {
                                 return form.elements.reduce((bool, elt) => {
                                     const validation = get(elt, "validation");
-                                    if (isFunction(validation)) {
+                                    if (aa.isFunction(validation)) {
                                         const result = !!validation(elt);
                                         elt.classList[(result ? "remove" : "add")]("invalid");
                                         return (!result ?
@@ -3978,21 +4073,21 @@
                 },
                 on:                 function (spec) {
                     const verify = aa.prototypes.verify({
-                        spec: isObject,
+                        spec: aa.isObject,
                         listener: (name) => { return get(this, "listeners").keys().has(name); }
                     });
                     verify("spec", spec);
 
                     let ok = undefined;
-                    // "on.ok" is deprecated. Use "submit" instead:
+                    // "on.ok" is aa.deprecated. Use "submit" instead:
                     if (spec.hasOwnProperty("ok")) {
-                        deprecated("aa.gui.Dialog::on.ok");
+                        aa.deprecated("aa.gui.Dialog::on.ok");
                         ok = spec.ok;
                         delete(spec.ok);
                     }
                     spec.forEach((callback, evtName) => {
                         verify("listener", evtName);
-                        if (!isFunction(callback)) { throw new TypeError("Callback argument must be a Function."); }
+                        if (!aa.isFunction(callback)) { throw new TypeError("Callback argument must be a Function."); }
 
                         if (get(this, "listeners").evtName === undefined) {
                             get(this, "listeners")[evtName] = [];
@@ -4011,10 +4106,10 @@
                             let menu, form, buttons;
                             const getPixels = function (elt, dimension) {
                                 if (!["height", "width"].has(dimension)) { throw new TypeError("Invalid dimension."); }
-                                if (!isNode(elt)) { throw new TypeError("Invalid node."); }
+                                if (!aa.isNode(elt)) { throw new TypeError("Invalid node."); }
 
                                 const v = window.getComputedStyle(elt)[dimension];
-                                if (isString(v)) {
+                                if (aa.isString(v)) {
                                     return parseInt(v.replace(/px/,''));
                                 }
                                 return undefined;
@@ -4142,7 +4237,7 @@
                 
                 // Setters:
                 addYes:             function (p) {
-                    deprecated("aa.gui.Dialog::yes");
+                    aa.deprecated("aa.gui.Dialog::yes");
 
                     switch (this.type) {
                         case "information":
@@ -4154,7 +4249,7 @@
                         case "win":
                         case "shortcut":
                             // Action alias:
-                            if (isString(p) && p.trim()) {
+                            if (aa.isString(p) && p.trim()) {
                                 p = p.trim();
                                 let a = aa.actionManager.get(p);
                                 if (a instanceof aa.Action && a.isValid()) {
@@ -4176,7 +4271,7 @@
                             }
 
                             // Function:
-                            else if(isFunction(p)) {
+                            else if(aa.isFunction(p)) {
                                 get(this, "listeners").submit.push(p);
                                 return true;
                             }
@@ -4189,7 +4284,7 @@
                     return false;
                 },
                 addNo:              function (p) {
-                    deprecated("aa.gui.Dialog::no");
+                    aa.deprecated("aa.gui.Dialog::no");
 
                     switch (this.type) {
                         case "confirm":
@@ -4197,7 +4292,7 @@
                         case "win":
                         case "shortcut":
                             // Action alias:
-                            if (isString(p) && p.trim()) {
+                            if (aa.isString(p) && p.trim()) {
                                 p = p.trim();
                                 let a = aa.actionManager.get(p);
                                 if (a instanceof aa.Action && a.isValid()) {
@@ -4211,7 +4306,7 @@
                                 return true;
                             }
                             // Function:
-                            else if(isFunction(p)) {
+                            else if(aa.isFunction(p)) {
                                 get(this, "listeners").cancel.push(p);
                                 return true;
                             }
@@ -4221,21 +4316,21 @@
                     return false;
                 },
                 setApp:             function (app) {
-                    // deprecated("aa.gui.Dialog::app");
+                    // aa.deprecated("aa.gui.Dialog::app");
                     verify("appName", app);
 
                     set(this, "appName", app.trim());
                 },
                 setButtons:         function (b) {
-                    if (!isBool(b)) { throw new TypeError("Argument must be a Boolean."); }
+                    if (!aa.isBool(b)) { throw new TypeError("Argument must be a Boolean."); }
                     set(this, "buttons", b);
                 },
                 setCallback:        function (f) {
 
-                    deprecated("aa.gui.Dialog::callback");
+                    aa.deprecated("aa.gui.Dialog::callback");
                 },
                 setDefaultValue:    function (s) {
-                    if (!nonEmptyString(s)) {
+                    if (!aa.nonEmptyString(s)) {
                         throw new TypeError("Dialog text must be a non-empty String.");
                         return false;
                     }
@@ -4243,11 +4338,11 @@
                     return (!!this.defaultValue);
                 },
                 setDetails:         function (p) {
-                    deprecated("gui.dialog.details");
-                    if (isElement(p)) {
+                    aa.deprecated("gui.dialog.details");
+                    if (aa.isElement(p)) {
                         this.details = p;
                         return true;
-                    } else if(!nonEmptyString(p)) {
+                    } else if(!aa.nonEmptyString(p)) {
                         throw new TypeError("Dialog details must be a non-empty String.");
                         return false;
                     }
@@ -4263,15 +4358,15 @@
                     this.fullscreen = (b === true);
                 },
                 setId:              function (id) {
-                    if (isString(id) && id.trim()) {
+                    if (aa.isString(id) && id.trim()) {
                         this.id = id;
                     }
                 },
                 setMaxWidth:        function (n) {
-                    if (isInt(n) && n>0) {
+                    if (aa.isInt(n) && n>0) {
                         n += '';
                     }
-                    if (isString(n)) {
+                    if (aa.isString(n)) {
                         if (n.match(/^[0-9]+$/)) {
                             n += 'px';
                         }
@@ -4281,10 +4376,10 @@
                     }
                 },
                 setMaxHeight:       function (n) {
-                    if (isInt(n) && n>0) {
+                    if (aa.isInt(n) && n>0) {
                         n += '';
                     }
-                    if (isString(n)) {
+                    if (aa.isString(n)) {
                         if (n.match(/^[0-9]+$/)) {
                             n += 'px';
                         }
@@ -4298,7 +4393,7 @@
                     return this.setText(s);
                 },
                 setNo:              function (p) {
-                    if (isArray(p) && p.length) {
+                    if (aa.isArray(p) && p.length) {
                         p.forEach(function (n) {
                             this.addNo(n);
                         },this);
@@ -4311,7 +4406,7 @@
                     this.on(spec);
                 },
                 setPlaceholder:     function (s) {
-                    if (!nonEmptyString(s)) {
+                    if (!aa.nonEmptyString(s)) {
                         throw new TypeError("Dialog text must be a non-empty String.");
                         return false;
                     }
@@ -4319,14 +4414,14 @@
                     return (!!this.placeholder);
                 },
                 setReminder:        function (reminder) {
-                    if (nonEmptyString(reminder)) {
+                    if (aa.nonEmptyString(reminder)) {
                         set(this, "reminder", reminder.trim());
                     }
                 },
                 setSuspend:         function (s) {
-                    deprecated("aa.gui.Dialog::suspend");
+                    aa.deprecated("aa.gui.Dialog::suspend");
 
-                    if (!nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
 
                     // s = s.trim();
                     // if (this.suspendedModules.has(s)) {
@@ -4336,13 +4431,13 @@
                     // }
                 },
                 setText:            function (p) {
-                    if (isElement(p)) {
+                    if (aa.isElement(p)) {
                         this.text = p;
-                    } else if(nonEmptyString(p)) {
+                    } else if(aa.nonEmptyString(p)) {
                         this.text = p.trim();
-                    } else if (isArray(p)) {
+                    } else if (aa.isArray(p)) {
                         const isOk = p.reduce((bool, elt) => {
-                            return (!nonEmptyString(elt) && !isElement(elt) ?
+                            return (!aa.nonEmptyString(elt) && !aa.isElement(elt) ?
                                 false
                                 : bool
                             );
@@ -4354,7 +4449,7 @@
                     return (!!this.text);
                 },
                 setTheme:           function (s) {
-                    if (!nonEmptyString(s)) {
+                    if (!aa.nonEmptyString(s)) {
                         throw new TypeError("Theme argument must be a non-empty String.");
                         return false;
                     }
@@ -4366,7 +4461,7 @@
                     return false;
                 },
                 setTitle:           function (s) {
-                    if (!nonEmptyString(s)) { throw new TypeError("Dialog title must be a non-empty String."); }
+                    if (!aa.nonEmptyString(s)) { throw new TypeError("Dialog title must be a non-empty String."); }
 
                     this.title = s.trim();
                     return !!this.title;
@@ -4378,27 +4473,27 @@
                     return !!this.type;
                 },
                 setToolbar:         function (item) {
-                    if (isArray(item)) {
+                    if (aa.isArray(item)) {
                         item.forEach((a) => {
                             this.setToolbar(a);
                         });
                     } else {
-                        if (isDom(item) || (item instanceof aa.Action && item.isValid()) || nonEmptyString(item)) {
+                        if (aa.isDom(item) || (item instanceof aa.Action && item.isValid()) || aa.nonEmptyString(item)) {
                             this.toolbar.push(item);
                         }
                     }
                 },
                 setValidate:        function (callback) {
-                    if (!isFunction(callback)) { throw new TypeError("Dialog validation must be a Function."); }
+                    if (!aa.isFunction(callback)) { throw new TypeError("Dialog validation must be a Function."); }
 
                     this.validation = callback;
                     return !!this.validation;
                 },
                 setWidth:           function (n) {
-                    if (isInt(n) && n>0) {
+                    if (aa.isInt(n) && n>0) {
                         n += '';
                     }
-                    if (isString(n)) {
+                    if (aa.isString(n)) {
                         if (n.match(/^[0-9]+$/)) {
                             n += 'px';
                         }
@@ -4408,7 +4503,7 @@
                     }
                 },
                 setYes:             function (p) {
-                    if (isArray(p) && p.length) {
+                    if (aa.isArray(p) && p.length) {
                         p.forEach(function (a) {
                             this.addYes(a);
                         },this);
@@ -4429,8 +4524,8 @@
                      * @param {function} resolve (optional)
                      * @param {function} reject (optional)
                      */
-                    const resolve = (arguments && arguments.length > 0 && isFunction(arguments[0]) ? arguments[0] : undefined);
-                    const reject = (arguments && arguments.length > 1 && isFunction(arguments[1]) ? arguments[1] : undefined);
+                    const resolve = (arguments && arguments.length > 0 && aa.isFunction(arguments[0]) ? arguments[0] : undefined);
+                    const reject = (arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined);
 
                     const node = get(this, "node");
                     if (node) {
@@ -4467,7 +4562,7 @@
                     default: {string} defaultValue, // default value for 'prompt' dialog (alias: 'default','defaultValue','value')
                     height: {number}, // values in pixels only
                     height: {string} height='100%',
-                    no: {string} ActionAlias | Array (String ActionAlias | Function callbacks) | Function callback, // (deprecated)
+                    no: {string} ActionAlias | Array (String ActionAlias | Function callbacks) | Function callback, // (aa.deprecated)
                     on: {object} of functions (submit, cancel),
                     placeholder: {string} placeholder, // for 'prompt' dialog
                     text: {string} message,
@@ -4477,7 +4572,7 @@
                     validation: {function},
                     width: {number}, // values in pixels only
                     width: {string} width='100%',
-                    yes: {string} ActionAlias | Array (String ActionAlias | Function callbacks) | Function callback, // (deprecated)
+                    yes: {string} ActionAlias | Array (String ActionAlias | Function callbacks) | Function callback, // (aa.deprecated)
                 });
                 d.hydrate({
                     id: String id,
@@ -4542,7 +4637,7 @@
                     if (reminder) {
                         initRemindersDB.call(this);
                         const reminders = db.select("reminders");
-                        return isArray(reminders) && reminders.has(reminder);
+                        return aa.isArray(reminders) && reminders.has(reminder);
                     }
                 } else {
                     set(this, "reminder", null);
@@ -4550,7 +4645,7 @@
                 return false;
             };
             const doNotRemind       = function (checked) {
-                if (!isBool(checked)) { throw new TypeError("Argument must be a Boolean."); }
+                if (!aa.isBool(checked)) { throw new TypeError("Argument must be a Boolean."); }
 
                 const reminder = get(this, "reminder");
                 if (this.type === "confirm" && reminder) {
@@ -4578,7 +4673,7 @@
                     ;
 
                     // String:
-                    if (isString(item)) {
+                    if (aa.isString(item)) {
                         aa.action(item, (action) => {
                             action.execute(data);
                         })
@@ -4590,7 +4685,7 @@
                     }
 
                     // Function:
-                    else if (isFunction(item)) {
+                    else if (aa.isFunction(item)) {
                         item(data);
                     }
                 });
@@ -4695,7 +4790,7 @@
                      * @param {Boolean} delay=true (optional)
                      */
                     const shortcut = (arguments && arguments.length ? arguments[0] : undefined);
-                    const delay = ((arguments && arguments.length>1 && isBool(arguments[1]) ? arguments[1] : false) ? 500 : 0);
+                    const delay = ((arguments && arguments.length>1 && aa.isBool(arguments[1]) ? arguments[1] : false) ? 500 : 0);
 
                     btnClear.disabled = true;
                     btnCancel.disabled = true;
@@ -4826,7 +4921,7 @@
                 let form;
                 let name;
                 let post = undefined;
-                if (isDom(el("aaDialog-"+this.id))) {
+                if (aa.isDom(el("aaDialog-"+this.id))) {
                     if (this.type.toLowerCase() === "prompt") {
                         el("aaDialog-"+this.id+"DialogInput", (input) => {
                             post = (input.value.trim() ?
@@ -4985,17 +5080,17 @@
                     }
                 },
                 addTextTo:           function (node) {
-                    if (isArray(this.text)) {
+                    if (aa.isArray(this.text)) {
                         this.text.forEach((txt) => {
-                            if (isString(txt)) {
+                            if (aa.isString(txt)) {
                                 node.appendChild($$("div", txt));
-                            } else if (isElement(txt)) {
+                            } else if (aa.isElement(txt)) {
                                 node.appendChild(txt);
                             }
                         });
-                    } else if (isString(this.text)) {
+                    } else if (aa.isString(this.text)) {
                         node.appendChild($$("div", this.text));
-                    } else if (isElement(this.text)) {
+                    } else if (aa.isElement(this.text)) {
                         node.appendChild(this.text);
                     }
                 },
@@ -5008,9 +5103,9 @@
                     if (this.toolbar.length) {
                         this.toolbar.forEach((item) => {
                             let tool = null;
-                            if (isDom(item)) {
+                            if (aa.isDom(item)) {
                                 tool = item;
-                            } else if (isString(item)) {
+                            } else if (aa.isString(item)) {
                                 item = aa.actionManager.get(item);
                             }
                             if (item instanceof aa.Action && item.isValid()) {
@@ -5032,7 +5127,7 @@
                 },
                 blur:               function () {
                     // return true;
-                    walkChildrenElements(document.body, function (node) {
+                    aa.walkChildrenElements(document.body, function (node) {
                         node.classList.add("aaBlur");
                     }, {except: ["script", "style"]});
                     return true;
@@ -5277,10 +5372,6 @@
                             "ctrlOrCmd <S>",
                             "ctrlOrCmd <O>",
                             "ctrlOrCmd <N>",
-                            // "moletteBas",
-                            // "moletteHaut",
-                            // "<Down>",
-                            // "<Up>",
                             "<Home>",
                             "<End>"
                         ])
@@ -5309,7 +5400,7 @@
                         return false;
                     } else {
                         // return true;
-                        walkChildrenElements(document.body,function (node) {
+                        aa.walkChildrenElements(document.body,function (node) {
                             node.classList.remove("aaBlur");
                         },{except: ["script","style"]});
                     }
@@ -5453,7 +5544,7 @@
 
                     // Setters:
                     addAction:  function (o) {
-                        if (!isObject(o)) {
+                        if (!aa.isObject(o)) {
                             throw new TypeError("Options argument must be an object.");
                             return false;
                         }
@@ -5465,22 +5556,22 @@
                         return false;
                     },
                     setId:      function (p) {
-                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
                         
                         set(this, 'id', p.trim());
                     },
                     setMessage: function (p) {
-                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
 
                         set(this, 'message', p.trim());
                     },
                     setTitle:   function (p) {
-                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
 
                         set(this, 'title', p.trim());
                     },
                     setType:    function (p) {
-                        if (!nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
 
                         p = p.trim().toLowerCase();
                         if (types.has(p)) {
@@ -5540,7 +5631,7 @@
                                 });
                                 if (action.callbacks.length > 0) {
                                     action.callbacks.forEach(function (callback) {
-                                        deprecated("action.callback");
+                                        aa.deprecated("action.callback");
                                         return b.on("click",callback);
                                     });
                                 }
@@ -5615,7 +5706,7 @@
                 };
                 const view = {
                     percent: function (index, value) {
-                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
 
                         index = index.trim();
                         const nodes = get(this, 'nodes').collection;
@@ -5625,7 +5716,7 @@
                     }
                 };
                 const addNode   = function (index) {
-                    if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
 
                     index = index.trim();
                     const container = get(this, 'nodes').container;
@@ -5661,8 +5752,8 @@
                     }
                 };
                 const moveRange = function (index, value) {
-                    if (!nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
 
                     const nodes = get(this, 'nodes');
                     if (nodes.collection[index]) {
@@ -5676,7 +5767,7 @@
                     // Methods:
                     hydrate: aa.prototypes.hydrate,
                     add:        function (index) {
-                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
 
                         index = index.trim();
                         set(this, 'tasks', 1+get(this, 'tasks'));
@@ -5684,7 +5775,7 @@
                         addNode.call(this, index);
                     },
                     complete:   function (index) {
-                        if (!nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
 
                         index = index.trim();
                         const indexes = get(this, 'indexes');
@@ -5741,8 +5832,8 @@
                     // Getters:
                     // Setters:
                     move:       function (index, value) {
-                        if (!nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
-                        if (!isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+                        if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                        if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
 
                         index = index.trim();
                         const indexes = get(this, 'indexes');
@@ -5752,12 +5843,12 @@
                         moveRange.call(this, index, value);
                     },
                     setTitle:   function (title) {
-                        if (!nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
+                        if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
 
                         set(this, 'title', title.trim());
                     },
                     setVisible: function (visible) {
-                        if (!isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
+                        if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
 
                         set(this, 'visible', visible);
                         el('aaProgress-'+get(this, 'id'), (node) => {
@@ -5799,11 +5890,11 @@
              *
              * @return void
              */
-            if (!isFunction(callback)) { throw new TypeError("First argument must be a Function."); }
+            if (!aa.isFunction(callback)) { throw new TypeError("First argument must be a Function."); }
 
-            const resolve = arguments && arguments.length > 1 && isFunction(arguments[1]) ? arguments[1] : undefined;
-            const reject = arguments && arguments.length > 2 && isFunction(arguments[2]) ? arguments[2] : undefined;
-            const spec = arguments && arguments.length && isObject(arguments.last) ? arguments.last : {};
+            const resolve = arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined;
+            const reject = arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined;
+            const spec = arguments && arguments.length && aa.isObject(arguments.last) ? arguments.last : {};
 
             const gui = new aa.gui.Dialog("loading", spec);
             gui.show();
@@ -5838,7 +5929,7 @@
                     action: { // action builder...
                         text:   'Oui',
                         name:   'action1_name',
-                        // callback: function(){}, // deprecated
+                        // callback: function(){}, // aa.deprecated
                         on: {
                             execute: () => {}
                         }
@@ -5848,7 +5939,7 @@
                             text:   'Non',
                             name:   'action2_name',
                             type:   'reset', // optional
-                            // callback: function(){}, // deprecated
+                            // callback: function(){}, // aa.deprecated
                             on: {
                                 execute: () => {}
                             }
@@ -5857,7 +5948,7 @@
                             text:   'Annuler',
                             name:   'action3_name',
                             type:   'reset', // optional
-                            // callback: function(){}, // deprecated
+                            // callback: function(){}, // aa.deprecated
                             on: {
                                 execute: () => {}
                             }
@@ -5867,7 +5958,7 @@
                 // ----------------------------
              */
              const spec = (arguments && arguments.length>1 ? arguments[1] : {});
-            if (!isObject(spec)) {
+            if (!aa.isObject(spec)) {
                 throw new Error("Options argument should be an Object.");
             }
 
@@ -5875,7 +5966,7 @@
             if (spec.action !== undefined) {
                 notif.addAction(spec.action);
             }
-            if (spec.actions !== undefined && isArray(spec.actions)) {
+            if (spec.actions !== undefined && aa.isArray(spec.actions)) {
                 spec.actions.forEach(function (action) {
                     notif.addAction(action);
                 });
@@ -6709,7 +6800,7 @@
         };
         aa.deploy(FontAwesome4.prototype, {
             format:     function (className) {
-                if (!nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 return 'fa-'+className.trim();
             },
             getNode:    function (id, classes, args) {
@@ -6718,7 +6809,7 @@
                  *
                  * @return {array}
                  */
-                if (!isArray(classes)) { throw new TypeError("Argument must be an Array."); }
+                if (!aa.isArray(classes)) { throw new TypeError("Argument must be an Array."); }
 
                 let nodeName = undefined;
                 let suffix = '';
@@ -6740,7 +6831,7 @@
             gui:        function () {
             },
             has:        function (className) {
-                if (!nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 className = className.trim();
 
                 return this.data.has(className);
@@ -7689,7 +7780,7 @@
         };
         aa.deploy(GoogleIconfont.prototype, {
             format:     function (className) {
-                if (!nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 className = className.trim();
             },
             getNode:    function (id, classes, args) {
@@ -7698,7 +7789,7 @@
                  *
                  * @return {array}
                  */
-                if (!isArray(classes)) { throw new TypeError("Argument must be an Array."); }
+                if (!aa.isArray(classes)) { throw new TypeError("Argument must be an Array."); }
 
                 let span = undefined;
                 let suffix = '';
@@ -7721,7 +7812,7 @@
             gui:        function () {
             },
             has:        function (className) {
-                if (!nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 className = className.trim();
 
                 return this.data.hasOwnProperty(className);
@@ -7839,7 +7930,7 @@
     })();
     /* aa.Selectable */ (() => {
         aa.Selectable               = function (/* dimensions */) {
-            const dimensions = aa.arg.optional(arguments, 0, 1, isInt);
+            const dimensions = aa.arg.optional(arguments, 0, 1, aa.isInt);
             aa.defineAccessors.call(this, {
                 privates: {
                     collection: []
@@ -7861,12 +7952,12 @@
             getter: get,
             setter: set
         };
-        const spec = arguments && arguments.length && isObject(arguments[0]) ? Object.assign(defaultSpec, arguments[0]) : defaultSpec;
-        if (!isObject(spec)) { throw new TypeError("Argument must be an Object."); }
+        const spec = arguments && arguments.length && aa.isObject(arguments[0]) ? Object.assign(defaultSpec, arguments[0]) : defaultSpec;
+        if (!aa.isObject(spec)) { throw new TypeError("Argument must be an Object."); }
 
         spec.verify({
-            getter: isFunction,
-            setter: isFunction
+            getter: aa.isFunction,
+            setter: aa.isFunction
         });
         // spec.getter = spec.getter || get;
         // spec.setter = spec.setter || set;
@@ -7901,9 +7992,9 @@
                 return id;
             };
             const newInstance   = function (id, className, args) {
-                if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
-                if (!nonEmptyString(className)) { throw new TypeError("Second argument must be a non-empty String."); }
-                if (!isArray(args)) { throw new TypeError("Third argument must be an Array."); }
+                if (!aa.nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(className)) { throw new TypeError("Second argument must be a non-empty String."); }
+                if (!aa.isArray(args)) { throw new TypeError("Third argument must be an Array."); }
 
                 const classes = getter(this, 'classes');
                 if (!classes.hasOwnProperty(className)) { throw new TypeError("Class '"+className+"' not indexed."); }
@@ -7919,7 +8010,7 @@
                 return instance;
             };
             const updateIndex   = function (id, instance) {
-                if (!nonEmptyString(id)) { throw new TypeError("ID must be a non-empty String."); }
+                if (!aa.nonEmptyString(id)) { throw new TypeError("ID must be a non-empty String."); }
 
                 const index = getter(this, 'index');
                 index[id] = instance;
@@ -7929,8 +8020,8 @@
             // Public methods:
             aa.deploy(Instancer.prototype, {
                 declare:    function (className, cls) {
-                    if (!nonEmptyString(className)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!isFunction(cls)) { throw new TypeError("Second argument must be a Function or a Class."); }
+                    if (!aa.nonEmptyString(className)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.isFunction(cls)) { throw new TypeError("Second argument must be a Function or a Class."); }
 
                     const classes = getter(this, 'classes');
                     classes[className.trim()] = cls;
@@ -7946,13 +8037,13 @@
                     return instance;
                 },
                 get:        function (id) {
-                    if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
 
                     id = id.trim();
                     return getter(this, 'index')[id];
                 },
                 remove:     function (id) {
-                    if (!nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
 
                     id = id.trim();
                     const instance = getter(this, 'index')[id];
@@ -8070,13 +8161,13 @@
 
         // Functions:
         set: function (p) {
-            if (!nonEmptyString(p)) {
+            if (!aa.nonEmptyString(p)) {
                 throw new TypeError("Lang argument must be a non-empty String.");
                 return false;
             }
         },
         get: function (p) {
-            if (!nonEmptyString(p)) {
+            if (!aa.nonEmptyString(p)) {
                 throw new TypeError("Word argument must be a non-empty String.");
                 return undefined;
             }
@@ -8097,7 +8188,7 @@
                         lang = undefined;
                         return false;
                     });
-                    if (isString(lang)) {
+                    if (aa.isString(lang)) {
                         return lang;
                     }
                 }
@@ -8209,11 +8300,11 @@
             up: { symbol: "↑" }
         };
         const verify = aa.prototypes.verify({
-            appName: nonEmptyString,
-            callback: isFunction,
-            defaultValue: (v) => { return (!v || nonEmptyString(v)); },
-            evtName: nonEmptyString,
-            shortcut: (str) => { return (nonEmptyString(str) && str.match(re)); }
+            appName: aa.nonEmptyString,
+            callback: aa.isFunction,
+            defaultValue: (v) => { return (!v || aa.nonEmptyString(v)); },
+            evtName: aa.nonEmptyString,
+            shortcut: (str) => { return (aa.nonEmptyString(str) && str.match(re)); }
         });
         const btnText = "add a shortcut";
 
@@ -8495,12 +8586,12 @@
              *
              * @return {String}
              */
-            const allowedOptions = ["htmlEncode", "simple", "css"];
+            const allowedOptions = ["aa.htmlEncode", "simple", "css"];
 
             // Verify arguments integrity:
             verify("shortcut", str);
             if (arguments && arguments.length>1) {
-                if (!isArray(arguments[1])) { throw new TypeError("Second argument must be an Array."); }
+                if (!aa.isArray(arguments[1])) { throw new TypeError("Second argument must be an Array."); }
                 if (arguments[1].verify((v) => { return allowedOptions.has(v); })) { throw new TypeError("Invalid items found in second argument."); }
             }
             const options = (arguments && arguments.length>1 ? arguments[1] : []);
@@ -8582,10 +8673,10 @@
         };
         this.isValid    = function (str) {
 
-            return (nonEmptyString(str) ? !!this.cmdOrCtrl(str).match(re) : false);
+            return (aa.nonEmptyString(str) ? !!this.cmdOrCtrl(str).match(re) : false);
         };
         this.rename     = function (str) {
-            if (!nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
+            if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
 
             let res = re.exec(str);
             if (res) {
@@ -8612,10 +8703,10 @@
                             return event[special+"Key"];
                         })).join('+');
                         
-                        if (inbetween(event.keyCode, 65, 90)) {
+                        if (aa.inbetween(event.keyCode, 65, 90)) {
                             key = String.fromCharCode(event.keyCode).toUpperCase();
                         } else
-                        if(inbetween(event.keyCode, 112, 123)) {
+                        if(aa.inbetween(event.keyCode, 112, 123)) {
                             key = 'F'+(event.keyCode-111);
                         } else if(keyCodes.hasOwnProperty(event.keyCode)) {
                             key = keyCodes[event.keyCode];
@@ -8627,7 +8718,11 @@
                         const str = (prefix ? prefix+' ' : '')+'<'+key+'>';
                         return str;
                     }
-                } else if (event.constructor.name === "MouseEvent" || event.constructor.name === "Event") {
+                } else if (
+                    event.constructor.name === "MouseEvent"
+                    || event.constructor.name === "PointerEvent"
+                    || event.constructor.name === "Event"
+                ) {
                     const parts = [];
                     const prefix = (specialKeys.filter((specialKey) => {
                         const special = (specialKey === "cmd" ? "meta" : specialKey);
@@ -8660,9 +8755,9 @@
          *
          * @return {aa.Action}
          */
-        if (!nonEmptyString(name)) { throw new TypeError("Argument must be a non-empty String."); }
-        const resolve = arguments && arguments.length > 1 && isFunction(arguments[1]) ? arguments[1] : undefined;
-        const reject = arguments && arguments.length > 2 && isFunction(arguments[2]) ? arguments[2] : undefined;
+        if (!aa.nonEmptyString(name)) { throw new TypeError("Argument must be a non-empty String."); }
+        const resolve = arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined;
+        const reject = arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined;
 
         const action = aa.actionManager.get(name);
 
@@ -8755,14 +8850,14 @@
             hydrate:    function (/* spec, order */) {
                 const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
                 // aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
-                const order = aa.arg.optional(arguments, 1, [], list => isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
+                const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
 
 
                 // First assign with starting keys:
                 order.forEach((key) => {
                     if (spec.hasOwnProperty(key)) {
                         const method = `set${key.firstToUpper()}`;
-                        if (isFunction(this[method])) {
+                        if (aa.isFunction(this[method])) {
                             this[method](spec[key]);
                         }
                     }
@@ -8773,7 +8868,7 @@
                 .filter(key => !order.has(key))
                 .forEach(key => {
                     const method = `set${key.firstToUpper()}`;
-                    if (isFunction(this[method])) {
+                    if (aa.isFunction(this[method])) {
                         this[method](spec[key]);
                     }
                 });
@@ -8906,11 +9001,11 @@
                 }
             });
          */
-        if (!nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
+        if (!aa.nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
         const spec = (arguments && arguments.length > 1 ? arguments[1] : {});
-        if (!isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
-        if (spec.mixed !== undefined && !isBool(spec.mixed)) { throw new TypeError("Spec 'mixed' must be a Boolean."); }
-        if (spec.mixable !== undefined && !isBool(spec.mixable)) { throw new TypeError("Spec 'mixable' must be a Boolean."); }
+        if (!aa.isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
+        if (spec.mixed !== undefined && !aa.isBool(spec.mixed)) { throw new TypeError("Spec 'mixed' must be a Boolean."); }
+        if (spec.mixable !== undefined && !aa.isBool(spec.mixable)) { throw new TypeError("Spec 'mixable' must be a Boolean."); }
 
         const {tagName, id, classes} = aa.extractClassNameAndID(name);
 
@@ -8932,7 +9027,7 @@
                 if (!node) {
                     let span = null;
                     node = $$("label");
-                    if (spec.label && isString(spec.label)) {
+                    if (spec.label && aa.isString(spec.label)) {
                         span = $$("text", spec.label);
                     }
                     input = $$(tagName,
@@ -9017,9 +9112,9 @@
 
                     const getTxt = () => {
                         let txt;
-                        if (spec.label && isString(spec.label)) {
+                        if (spec.label && aa.isString(spec.label)) {
                             txt = $$("span", spec.label);
-                        } else if (spec.value && isString(spec.value)) {
+                        } else if (spec.value && aa.isString(spec.value)) {
                             txt = $$("span", spec.value);
                         }
                         return txt;
@@ -9071,7 +9166,7 @@
                         return node;
                     };
                     const getMixed = () => {
-                        if (spec.hasOwnProperty("on") && spec.on.some((callback, evtName)=> !isFunction(callback))) { throw new TypeError("Spec 'on' must be an Array of Functions."); }
+                        if (spec.hasOwnProperty("on") && spec.on.some((callback, evtName)=> !aa.isFunction(callback))) { throw new TypeError("Spec 'on' must be an Array of Functions."); }
 
                         if (!mixed) {
                             mixed = $$("button.text.mixed",
@@ -9144,7 +9239,7 @@
         return elt;
     });
     aa.extractClassNameAndID    = Object.freeze(function (str) {
-        if (!nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
+        if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
 
         let id = null,
             classes = [];
@@ -9307,7 +9402,7 @@
                 "validation"
             ];
 
-        if (nonEmptyString(nodeName)) {
+        if (aa.nonEmptyString(nodeName)) {
             const extracts = aa.extractClassNameAndID(nodeName);
             nodeName = extracts.tagName;
 
@@ -9316,7 +9411,7 @@
                     return aa.icon.apply(undefined, arguments);
                     break;
                 case "text":
-                    return (arguments && arguments.length > 1 && isString(arguments[1]) ?
+                    return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
                         document.createTextNode(arguments[1])
                         : undefined
                     );
@@ -9370,9 +9465,9 @@
                     let option,resID,resClass;
 
                     if (i > 0) {
-                        if (isDom(param) || isNode(param)) {
+                        if (aa.isDom(param) || aa.isNode(param)) {
                             elt.appendChild(param);
-                        } else if(isString(param)) {
+                        } else if(aa.isString(param)) {
                             option = param.trim();
 
                             resID = option.match(/^\#(.*)$/);
@@ -9402,32 +9497,32 @@
                                         break;
                                 }
                             }
-                        } else if(isObject(param)) {
+                        } else if(aa.isObject(param)) {
                             param.forEach(function (option, key) {
                                 let classes;
-                                if (isString(key)) {
+                                if (aa.isString(key)) {
                                     key = key.trim();
                                     if (htmlAttributes.has(key.toLowerCase())) {
                                         switch (key.toLowerCase()) {
                                             case "onglets":
-                                                if (!isArray(option)) { throw new TypeError("'onglets' option must be an Array."); }
+                                                if (!aa.isArray(option)) { throw new TypeError("'onglets' option must be an Array."); }
                                                 const onglets = aa.html("legend.onglets");
                                                 const container = aa.html("fieldset.onglets", onglets);
                                                 let checkedRadio = null;
                                                 elt.appendChild(container);
 
                                                 option.forEach((spec, i) => {
-                                                    if (!isObject(spec)) { throw new TypeError("'onglets' option must be an Array of spec Object."); }
+                                                    if (!aa.isObject(spec)) { throw new TypeError("'onglets' option must be an Array of spec Object."); }
                                                     if (!spec.verify({
-                                                        checked:    p => isBool(p),
-                                                        disabled:   p => isBool(p),
-                                                        id:         p => nonEmptyString(p),
-                                                        label:      p => nonEmptyString(p),
-                                                        name:       p => nonEmptyString(p),
-                                                        on:         p => isObject(p),
-                                                        text:       p => (nonEmptyString(p) || isElement(p)),
-                                                        title:      p => nonEmptyString(p),
-                                                        value:      p => nonEmptyString(p)
+                                                        checked:    p => aa.isBool(p),
+                                                        disabled:   p => aa.isBool(p),
+                                                        id:         p => aa.nonEmptyString(p),
+                                                        label:      p => aa.nonEmptyString(p),
+                                                        name:       p => aa.nonEmptyString(p),
+                                                        on:         p => aa.isObject(p),
+                                                        text:       p => (aa.nonEmptyString(p) || aa.isElement(p)),
+                                                        title:      p => aa.nonEmptyString(p),
+                                                        value:      p => aa.nonEmptyString(p)
                                                     })) { throw new TypeError("'onglets' spec not valid."); }
                                                     spec.checked = !!spec.checked;
 
@@ -9457,7 +9552,7 @@
                                                     }
                                                     if (spec.on) {
                                                         spec.on.forEach((callback, evtName) => {
-                                                            if (!isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
+                                                            if (!aa.isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
                                                             evtName = evtName.toLowerCase();
                                                             switch (evtName) {
                                                                 case "check":
@@ -9496,7 +9591,7 @@
                                                 });
                                                 option.forEach((spec, i) => {
                                                     if (spec.text) {
-                                                        spec.text = isString(spec.text) ? spec.label.trim() : spec.text;
+                                                        spec.text = aa.isString(spec.text) ? spec.label.trim() : spec.text;
                                                         const content = aa.html("div#"+spec.id+".aaDialogOngletContent", spec.text);
                                                         content.classList.add("hidden");
                                                         container.appendChild(content);
@@ -9526,7 +9621,7 @@
                                             
                                             case "legend":
                                                 if (nodeName === "fieldset") {
-                                                    if (nonEmptyString(option)) {
+                                                    if (aa.nonEmptyString(option)) {
                                                         const legend = aa.html("legend", option.trim());
                                                         elt.insertAtFirst(legend);
                                                     }
@@ -9534,9 +9629,9 @@
                                                 break;
                                             
                                             case "dataset":
-                                                if (isObject(option)) {
+                                                if (aa.isObject(option)) {
                                                     option.forEach((v, k) => {
-                                                        if (nonEmptyString(v)) {
+                                                        if (aa.nonEmptyString(v)) {
                                                             elt.dataset[k] = v;
                                                         } else {
                                                             warn("Dataset argument should be an Object of non-empty Strings only.");
@@ -9562,14 +9657,14 @@
                                             
                                             case "draggable":
                                                 elt.draggable = (
-                                                    isBool(option)
+                                                    aa.isBool(option)
                                                     ? option
                                                     : false
                                                 );
                                                 break;
                                             
                                             case "checked":
-                                                elt.defaultChecked = ((isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
+                                                elt.defaultChecked = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
                                                 elt[key] = elt.defaultChecked;
                                                 break;
                                             
@@ -9606,11 +9701,11 @@
                                             case "readonly":
                                             case "required":
                                             case "selected":
-                                                elt[key] = ((isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
+                                                elt[key] = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
                                                 break;
                                             
                                             case "class":
-                                                if (isString(option) && option.trim()) {
+                                                if (aa.isString(option) && option.trim()) {
                                                     option = option.trim().replace(/\s+/,' ');
                                                     classes = option.split(' ');
                                                     classes.forEach(function (classe) {
@@ -9621,8 +9716,8 @@
                                             
                                             case "on":
                                                 // log(nodeName);
-                                                if (isArray(option)) {
-                                                    if (option.length > 1 && !isArray(option[0])) {
+                                                if (aa.isArray(option)) {
+                                                    if (option.length > 1 && !aa.isArray(option[0])) {
                                                         let evt =       option[0];
                                                         let callback =  option[1];
 
@@ -9634,7 +9729,7 @@
                                                         }
                                                     } else {
                                                         option.forEach(function (listener) {
-                                                            if (isArray(listener) && listener.length > 1) {
+                                                            if (aa.isArray(listener) && listener.length > 1) {
                                                                 let evt = listener[0];
                                                                 let callback = listener[1];
 
@@ -9646,11 +9741,11 @@
                                                             }
                                                         });
                                                     }
-                                                } else if (isObject(option)) {
+                                                } else if (aa.isObject(option)) {
                                                     option.forEach(function (callback,evt) {
                                                         if (typeof callback === 'function') {
                                                             return elt.on(evt,callback);
-                                                        } else if(isArray(callback)) {
+                                                        } else if(aa.isArray(callback)) {
                                                             callback.forEach(function (func) {
                                                                 return elt.on(evt,func);
                                                             });
@@ -9660,11 +9755,11 @@
                                                 break;
                                             
                                             case "options":
-                                                if (!isArray(option)) {
+                                                if (!aa.isArray(option)) {
                                                     throw new Error("'Options' argument should be an Array.");
                                                 }
                                                 option.forEach(function (opt) {
-                                                    if (!isDom(opt)) {
+                                                    if (!aa.isDom(opt)) {
                                                         throw new Error("<option> should be a DOM Element.");
                                                     }
                                                     elt.appendChild(opt);
@@ -9696,7 +9791,7 @@
                                                     case "button":
                                                     case "textarea":
                                                     case "select":
-                                                        if (!isFunction(option)) { throw new TypeError("Option must be a Function."); }
+                                                        if (!aa.isFunction(option)) { throw new TypeError("Option must be a Function."); }
                                                         set(elt, "validation", option);
                                                         break;
                                                 }
@@ -9711,9 +9806,9 @@
                                                 break;
                                             
                                             default:
-                                                if (isString(option)) {
+                                                if (aa.isString(option)) {
                                                     return (elt.setAttribute(key,option.trim()));
-                                                } else if(isNumber(option)) {
+                                                } else if(aa.isNumber(option)) {
                                                     return (elt.setAttribute(key,option));
                                                 }
                                                 break;
@@ -9736,10 +9831,10 @@
     aa.img                      = Object.freeze(new (function () {
         const o = {
             convertUriToJpg: (uri, resolve /*, reject */) => {
-                if (!nonEmptyString(uri)) { throw new TypeError("First argument must be a non-empty String."); }
-                if (!isFunction(resolve)) { throw new TypeError("Second argument must be a Function."); }
+                if (!aa.nonEmptyString(uri)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isFunction(resolve)) { throw new TypeError("Second argument must be a Function."); }
                 const reject = (arguments && arguments.length > 2 ? arguments[2] : undefined);
-                if (reject !== undefined && !isFunction(reject)) { throw new TypeError("Third argument must be a Function."); }
+                if (reject !== undefined && !aa.isFunction(reject)) { throw new TypeError("Third argument must be a Function."); }
 
                 const canvas = $$("canvas");
                 const ctx = canvas.getContext('2d');
@@ -9774,14 +9869,14 @@
     };
     aa.isTheme                  = function (str) {
 
-        return (isString(str) && ENV.THEMES.has(str));
+        return (aa.isString(str) && ENV.THEMES.has(str));
     }
     aa.ClassFactory             = function () {
         aa.ClassFactory.group("Classify");
         if (this["__abstract"]) {
             aa.ClassFactory.continueIfEmpty(this["__abstract"]);
         }
-        if (this.construct && isFunction(this.construct)) {
+        if (this.construct && aa.isFunction(this.construct)) {
             this.construct.apply(this,arguments);
         }
         aa.ClassFactory.groupEnd("Classify");
@@ -9821,7 +9916,7 @@
             }
         };
         aa.ClassFactory.continueIfEmpty = function (list) {
-            if (list && isArray(list) && list.length) {
+            if (list && aa.isArray(list) && list.length) {
                 let replace = (list.length === 1 ? ["","is"] : ["s","are"]);
                 let values = list.join("', '");
                 throw new Error("Method"+replace[0]+" '"+values+"' "+replace[1]+" not implemented.");
@@ -9871,7 +9966,7 @@
             let Parent = this;
 
             let getNS = function (ns,methodName=null) {
-                if (isString(ns) && ns.trim()) {
+                if (aa.isString(ns) && ns.trim()) {
                     let arrays = [
                         '__abstract'
                     ];
@@ -9897,7 +9992,7 @@
 
                     if (methodName === null) {
                         return aaClass.prototype[ns];
-                    } else if(isString(methodName) && methodName.trim()) {
+                    } else if(aa.isString(methodName) && methodName.trim()) {
                         if (arrays.has(ns)) {
                             return aaClass.prototype[ns].has(methodName);
                         } else if(objects.has(ns)) {
@@ -9913,10 +10008,10 @@
                 return undefined;
             };
             let addToNS = function (ns,methodName,callback=null) {
-                if (methodName && isString(methodName) && methodName.trim()) {
-                    if (isArray(getNS(ns,methodName)) && isFunction(callback)) {
+                if (methodName && aa.isString(methodName) && methodName.trim()) {
+                    if (aa.isArray(getNS(ns,methodName)) && aa.isFunction(callback)) {
                         getNS(ns,methodName).push(callback);
-                    } else if(isArray(getNS(ns))) {
+                    } else if(aa.isArray(getNS(ns))) {
                         // Append method:
                         getNS(ns).push(methodName);
                         
@@ -9951,9 +10046,9 @@
 
                 // Attributes.self:
                 aa.ClassFactory.group('self');
-                if (options.attributes && isObject(options.attributes)) {
+                if (options.attributes && aa.isObject(options.attributes)) {
                     if (options.attributes.self) {
-                        if (isFunction(options.attributes.self)) {
+                        if (aa.isFunction(options.attributes.self)) {
                             // options.attributes.self.apply(this);
                             let Temp = function () {};
                             Temp.prototype.self = options.attributes.self;
@@ -9961,16 +10056,16 @@
                             temp.self();
                             aa.ClassFactory.log(temp);
                             temp.forEach(function (v,k) {
-                                if (!isFunction(v)) {
+                                if (!aa.isFunction(v)) {
                                     if (!this.hasOwnProperty(k)) {
                                         this[k] = v;
                                     }
                                 }
                             },this);
-                        } else if(isObject(options.attributes.self)) {
+                        } else if(aa.isObject(options.attributes.self)) {
                             aa.ClassFactory.log("(object) self");
                             options.attributes.self.forEach(function (v,k) {
-                                if (!isFunction(v)) {
+                                if (!aa.isFunction(v)) {
                                     if (!this.hasOwnProperty(k)) {
                                         this[k] = v;
                                     }
@@ -9979,11 +10074,11 @@
                         }
                     }
                     if (options.attributes.get) {
-                        if (!isObject(options.attributes.get)) {
+                        if (!aa.isObject(options.attributes.get)) {
                             throw new TypeError("GET argument should be an Object.");
                         }
                         options.attributes.get.forEach(function (f,k) {
-                            if (!isFunction(f)) {
+                            if (!aa.isFunction(f)) {
                                 throw new TypeError("'"+k+"' Getter's value should be a Function.")
                             }
                             Object.defineProperty(this,k,f);
@@ -10003,8 +10098,8 @@
             aaClass.prototype = new Surrogate();
             aaClass.infants = Parent.infants;
 
-            if (options.attributes && isObject(options.attributes)
-            && options.attributes.proto && isObject(options.attributes.proto)) {
+            if (options.attributes && aa.isObject(options.attributes)
+            && options.attributes.proto && aa.isObject(options.attributes.proto)) {
 
                 options.attributes.proto.forEach(function (value,key) {
                     aaClass.prototype[key] = value;
@@ -10012,11 +10107,11 @@
             }
 
             // Methods:
-            if (options.methods && isObject(options.methods)) {
+            if (options.methods && aa.isObject(options.methods)) {
                 options.methods.forEach(function (value,key) {
                     switch (key) {
                         case '__abstract':
-                            if (isArray(value)) {
+                            if (aa.isArray(value)) {
                                 value.forEach(function (methodName,i) {
                                     // aa.ClassFactory.log({abstract:methodName});
                                     addToNS('__abstract',methodName);
@@ -10024,9 +10119,9 @@
                             }
                             break;
                         case '__static':
-                            if (isObject(value)) {
+                            if (aa.isObject(value)) {
                                 value.forEach(function (callback,methodName) {
-                                    if (isFunction(callback)) {
+                                    if (aa.isFunction(callback)) {
                                         // aa.ClassFactory.log({static:methodName});
                                         addToNS('__static',methodName,callback);
                                     }
@@ -10034,7 +10129,7 @@
                             }
                             break;
                         default:
-                            if (isFunction(value)) {
+                            if (aa.isFunction(value)) {
                                 addToNS('__methods',key,value);
                                 if (getNS('__abstract',key)) {
                                     // let o = {}; o['__abstract.'+key] = true; aa.ClassFactory.log(o);
@@ -10056,9 +10151,9 @@
             }
 
             // Retrieve 'static':
-            if (typeof aaClass.prototype['__static'] !== 'undefined' && isObject(aaClass.prototype['__static'])) {
+            if (typeof aaClass.prototype['__static'] !== 'undefined' && aa.isObject(aaClass.prototype['__static'])) {
                 aaClass.prototype['__static'].forEach(function (list,methodName) {
-                    if (isArray(list) && list.length && isFunction(list.getLast())) {
+                    if (aa.isArray(list) && list.length && aa.isFunction(list.getLast())) {
                         Object.defineProperty(aaClass,methodName,{
                             get: (function (methodName) {
                                 return function () {
@@ -10114,25 +10209,25 @@
         // Public methods:
         aa.deploy(Settings.prototype, {
             setProduction:  function (isProd) {
-                if (!isBool(isProd)) { throw new TypeError("Argument must be a Boolean."); }
+                if (!aa.isBool(isProd)) { throw new TypeError("Argument must be a Boolean."); }
                 set(this, 'production', isProd);
             },
             setScript:      function (path) {
-                if (!nonEmptyString(path)) { throw new TypeError("Argument must be a non-empty String."); }
+                if (!aa.nonEmptyString(path)) { throw new TypeError("Argument must be a non-empty String."); }
                 path = path.trim();
                 if (!get(this, 'scripts').has(path)) {
                     get(this, 'scripts').push(path);
-                    addScriptToDOM(path);
+                    aa.addScriptToDOM(path);
                 }
             },
             setScripts:     function (scripts) {
-                if (!isArray(scripts) || scripts.find(path => !nonEmptyString(path))) { throw new TypeError("Argument must be an Array of non-empty Strings."); }
+                if (!aa.isArray(scripts) || scripts.find(path => !aa.nonEmptyString(path))) { throw new TypeError("Argument must be an Array of non-empty Strings."); }
                 scripts.forEach((path) => {
                     this.setScript(path);
                 });
             },
             setTheme:       function (theme) {
-                if (theme !== undefined && !nonEmptyString(theme)) { throw new TypeError("'theme' spec must be a non-empty String."); }
+                if (theme !== undefined && !aa.nonEmptyString(theme)) { throw new TypeError("'theme' spec must be a non-empty String."); }
                 if (ENV.THEMES.has(theme)) {
                     const previous = get(this, 'theme');
                     set(this, 'theme', theme);
@@ -10148,9 +10243,9 @@
         return Object.freeze(new Settings());
     })();
     aa.xhr                      = function (method='GET', src, options={}) {
-        if (isObject(options)
-        && isString(method) && method.trim()
-        && isString(src) && src.trim()) {
+        if (aa.isObject(options)
+        && aa.isString(method) && method.trim()
+        && aa.isString(src) && src.trim()) {
             
             // Default options:
             if (typeof options.callback === 'undefined') {
@@ -10163,10 +10258,10 @@
             // Test options:
             if (typeof options.callback !== 'function') { throw new Error("Invalid callback in 'aa.XHR'."); }
             if (typeof options.resolve !== 'function') { throw new Error("Invalid callback in 'aa.XHR'."); }
-            if (!isBool(options.default)) { throw new Error("Invalid default in 'aa.XHR'."); }
+            if (!aa.isBool(options.default)) { throw new Error("Invalid default in 'aa.XHR'."); }
 
             if (options.callback) {
-                deprecated("options.callback");
+                aa.deprecated("options.callback");
                 // console.warn("Deprecated")
                 options.resolve = options.callback;
             }
@@ -10230,7 +10325,7 @@
                 }
                 case 'POST':{
                     if (options.form !== undefined
-                    && isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
+                    && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
                         let xhr,data;
 
                         if (false) {
@@ -10339,7 +10434,7 @@
                 }
                 case 'FILE':{
                     if (typeof options.form !== 'undefined'
-                    && isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
+                    && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
                         let xhr,data;
 
                         data = new FormData(options.form);
@@ -10426,7 +10521,7 @@
         if (html && html.length) {
             html = html[0];
             lang = html.getAttribute('lang') || html.getAttribute('xml:lang') || undefined;
-            if (nonEmptyString(lang)) {
+            if (aa.nonEmptyString(lang)) {
                 return lang.trim().toLowerCase();
             }
         }
@@ -10436,7 +10531,7 @@
         let i,
             times = [],
             lorem = 'Lorem ipsum <b><i>dolor</i> sit</b> amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
-        if (arguments && arguments.length && isInt(arguments[0]) && arguments[0]>0) {
+        if (arguments && arguments.length && aa.isInt(arguments[0]) && arguments[0]>0) {
             for(i=0; i<arguments[0]; i++) {
                 times.push(lorem);
             }
@@ -10451,7 +10546,7 @@
         let i = 0;
 
         if (arguments && arguments.length) {
-            if (isElement(arguments[0])) {
+            if (aa.isElement(arguments[0])) {
                 dom = arguments[0];
             } else {
                 throw new TypeError("First argument must be a DOM element.");
@@ -10459,7 +10554,7 @@
             }
         }
 
-        walkTheDOM(dom, function (node) {
+        aa.walkTheDOM(dom, function (node) {
             // log(i,node);
             // i++;
             switch (node.nodeName.toLowerCase()) {
@@ -10469,7 +10564,7 @@
                     // log(node.nodeName);
                     break;
                 default:
-                    if (isElement(node)) {
+                    if (aa.isElement(node)) {
                         // let zIndex = document.defaultView.getComputedStyle(node,null).getPropertyValue("z-index");
                         let zIndex = window.getComputedStyle(node,null).getPropertyValue("z-index");
                         if (zIndex !== 'auto') {
@@ -10514,7 +10609,7 @@
     };
     // ----------------------------------------------------------------
     // Overwrite:
-    window.deprecated = function (txt) {
+    aa.deprecated = function (txt) {
         txt = "Deprecated: '"+txt+"'. This feature is no longer recommended. Avoid using it, and update existing code if possible.";
         aa.gui.notif(txt, {type: "warning"});
         console.warn(txt);

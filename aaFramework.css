@@ -961,11 +961,11 @@ div.aaTable.fullscreen div.td{
 /****************/
 /* Context menu */
 /****************/
-#aaContextMenuBG{
+#aaContextMenuBG {
     background: rgba(128,128,128,0.1);
 }
-#aaContextMenu{
-    position: absolute;
+#aaContextMenu {
+    position: fixed;
     top: 1px;
     left: 1px;
 }

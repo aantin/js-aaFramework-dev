@@ -1489,6 +1489,14 @@
                     privates.emit.call(this, `datamodified`);
                 });
             },
+            pushUnique:         function (...items) {
+                const data = get(this, "data");
+                items.forEach(item => {
+                    if (!data.has(item)) {
+                        this.push(item);
+                    }
+                });
+            },
             remove:             function (...items) {
                 const removedItems = [];
                 const data = get(this, "data");
@@ -3818,7 +3826,9 @@
                     let dom = document.getElementById("aaContextMenu");
                     if (aa.isDom(dom)) {
                         dom.parentNode.removeChild(dom);
-                        document.body.cancel(`click`, that.onclickout);
+                        if (that.onclickout) {
+                            document.body.cancel(`click`, that.onclickout);
+                        }
                         privates.emit.call(this, `hide`);
                     }
                 },
@@ -3848,7 +3858,7 @@
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {
-                            e.stopPropagation();
+                            // e.stopPropagation();
                             this.hide();
                         }
                     };

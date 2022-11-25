@@ -5691,6 +5691,71 @@
                 } while (collection.hasOwnProperty(id));
                 return id;
             };
+            const construct = function () {
+                const id = get(this, 'id');
+                collection[id] = this;
+                this.hydrate.apply(this, arguments);
+            };
+            const view = {
+                percent: function (index, value) {
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                    const that = aa.getAccessor.call(this);
+
+                    index = index.trim();
+                    const nodes = that.nodes.collection;
+                    if (nodes.hasOwnProperty(index)) {
+                        nodes[index].percent.innerHTML = value*100;
+                    }
+                }
+            };
+            const addNode   = function (index) {
+                if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                const that = aa.getAccessor.call(this);
+
+                index = index.trim();
+                const container = that.nodes.container;
+                if (container) {
+                    const nodes = that.nodes.collection;
+                    if (!nodes.hasOwnProperty(index)) {
+                        nodes[index] = {
+                            label: $$('div', index.getFilename()),
+                            range: $$('range', {
+                                min: 0,
+                                max: 100,
+                                step: 1,
+                                disabled: true,
+                                value: that.indexes[index]+''
+                            }),
+                            percent: $$('span', )
+                        };
+                        nodes[index].container = $$('div.item',
+                            $$('div'),
+                            $$('div', nodes[index].range),
+                            $$('div.percent',
+                                nodes[index].percent
+                            ),
+                            // $$('label',
+                            //     $$('div',
+                            //         nodes[index].label
+                            //     )
+                            // )
+                        );
+                        container.appendChild(nodes[index].container);
+                    }
+                    view.percent.call(this, index, 0);
+                }
+            };
+            const moveRange = function (index, value) {
+                if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+                const that = aa.getAccessor.call(this);
+
+                const nodes = that.nodes;
+                if (nodes.collection[index]) {
+                    nodes.collection[index].range.value = value*100;
+                    nodes.collection[index].percent.innerHTML = Math.floor(value*100);
+                }
+            };
             const Progress = function () {
 
                 // Attributes:
@@ -5707,173 +5772,114 @@
                         nodes: {
                             container: null,
                             collection: {}
-                        }
+                        },
+                        tasks: 0
                     }
-                });
-
-                const construct = function () {
-                    const id = get(this, 'id');
-                    collection[id] = this;
-                    this.hydrate.apply(this, arguments);
-                };
-                const view = {
-                    percent: function (index, value) {
-                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-
-                        index = index.trim();
-                        const nodes = get(this, 'nodes').collection;
-                        if (nodes.hasOwnProperty(index)) {
-                            nodes[index].percent.innerHTML = value*100;
-                        }
-                    }
-                };
-                const addNode   = function (index) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-
-                    index = index.trim();
-                    const container = get(this, 'nodes').container;
-                    if (container) {
-                        const nodes = get(this, 'nodes').collection;
-                        if (!nodes.hasOwnProperty(index)) {
-                            nodes[index] = {
-                                label: $$('div', index.getFilename()),
-                                range: $$('range', {
-                                    min: 0,
-                                    max: 100,
-                                    step: 1,
-                                    disabled: true,
-                                    value: get(this, 'indexes')[index]+''
-                                }),
-                                percent: $$('span', )
-                            };
-                            nodes[index].container = $$('div.item',
-                                $$('div'),
-                                $$('div', nodes[index].range),
-                                $$('div.percent',
-                                    nodes[index].percent
-                                ),
-                                // $$('label',
-                                //     $$('div',
-                                //         nodes[index].label
-                                //     )
-                                // )
-                            );
-                            container.appendChild(nodes[index].container);
-                        }
-                        view.percent.call(this, index, 0);
-                    }
-                };
-                const moveRange = function (index, value) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-
-                    const nodes = get(this, 'nodes');
-                    if (nodes.collection[index]) {
-                        nodes.collection[index].range.value = value*100;
-                        nodes.collection[index].percent.innerHTML = Math.floor(value*100);
-                    }
-                };
-
-                aa.deploy(Progress.prototype, {
-                    
-                    // Methods:
-                    hydrate: aa.prototypes.hydrate,
-                    add:        function (index) {
-                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-
-                        index = index.trim();
-                        set(this, 'tasks', 1+get(this, 'tasks'));
-                        get(this, 'indexes')[index] = 0;
-                        addNode.call(this, index);
-                    },
-                    complete:   function (index) {
-                        if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-
-                        index = index.trim();
-                        const indexes = get(this, 'indexes');
-                        const nodes = get(this, 'nodes').collection;
-                        if (indexes.hasOwnProperty(index)) {
-                            delete indexes[index];
-                        }
-                        if (nodes.hasOwnProperty(index)) {
-                            nodes[index].range.value = 100;
-                            nodes[index].range.classList.add('complete');
-                            nodes[index].container.removeNode();
-                            delete nodes[index];
-                        }
-                        if (indexes.keys().length <= 0) {
-                            this.hide();
-                        }
-                    },
-                    hide:       function () {
-                        el('aaProgress-'+get(this, 'id'), (node) => {
-                            node.removeNode();
-                        });
-                        delete collection[this.id];
-                    },
-                    show:       function () {
-                        el('aaProgress', () => {}, () => {
-                            const nodes = get(this, 'nodes');
-                            nodes.container = $$('div.message');
-                            if (this.title) {
-                                nodes.container.appendChild($$('h2.title', this.title));
-                            }
-                            const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
-                                nodes.container
-                            );
-                            const node = $$('div#aaProgress-'+get(this, 'id')+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
-                                $$('div.aaTable.fullscreen',
-                                    $$('div.td',
-                                        dialog
-                                    )
-                                )
-                            );
-                            document.body.appendChild(node);
-                            node.style.zIndex = aa.getMaxZIndex()+1;
-                            aa.events.on('themechange', (theme, previous) => {
-                                dialog.classList.remove(previous);
-                                dialog.classList.add(theme);
-                            });
-
-                            get(this, 'indexes').forEach((value, index) => {
-                                addNode.call(this, index);
-                            });
-                        });
-                    },
-
-                    // Getters:
-                    // Setters:
-                    move:       function (index, value) {
-                        if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
-                        if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-
-                        index = index.trim();
-                        const indexes = get(this, 'indexes');
-                        if (indexes.hasOwnProperty(index)) {
-                            indexes[index] = value;
-                        }
-                        moveRange.call(this, index, value);
-                    },
-                    setTitle:   function (title) {
-                        if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
-
-                        set(this, 'title', title.trim());
-                    },
-                    setVisible: function (visible) {
-                        if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
-
-                        set(this, 'visible', visible);
-                        el('aaProgress-'+get(this, 'id'), (node) => {
-                            node.classList[visible ? 'remove' : 'add']('hidden');
-                        })
-                    }
-                }, {
-                    force: true,
-                    condition: Progress.prototype.hydrate === undefined
                 });
 
                 construct.apply(this, arguments);
             };
+
+            aa.deploy(Progress.prototype, {
+                
+                // Methods:
+                hydrate: aa.prototypes.hydrate,
+                add:        function (index) {
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                    const that = aa.getAccessor.call(this);
+
+                    index = index.trim();
+                    that.tasks += 1;
+                    that.indexes[index] = 0;
+                    addNode.call(this, index);
+                },
+                complete:   function (index) {
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                    const that = aa.getAccessor.call(this);
+
+                    index = index.trim();
+                    const indexes = that.indexes;
+                    const nodes = that.nodes.collection;
+                    if (indexes.hasOwnProperty(index)) {
+                        delete indexes[index];
+                    }
+                    if (nodes.hasOwnProperty(index)) {
+                        nodes[index].range.value = 100;
+                        nodes[index].range.classList.add('complete');
+                        nodes[index].container.removeNode();
+                        delete nodes[index];
+                    }
+                    if (indexes.keys().length <= 0) {
+                        this.hide();
+                    }
+                },
+                hide:       function () {
+                    const that = aa.getAccessor.call(this);
+                    el('aaProgress-'+that.id, node => {
+                        node.removeNode();
+                    });
+                    delete collection[this.id];
+                },
+                show:       function () {
+                    const that = aa.getAccessor.call(this);
+                    el('aaProgress', () => {}, () => {
+                        const nodes = that.nodes;
+                        nodes.container = $$('div.message');
+                        if (this.title) {
+                            nodes.container.appendChild($$('h2.title', this.title));
+                        }
+                        const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
+                            nodes.container
+                        );
+                        const node = $$('div#aaProgress-'+that.id+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                            $$('div.aaTable.fullscreen',
+                                $$('div.td',
+                                    dialog
+                                )
+                            )
+                        );
+                        document.body.appendChild(node);
+                        node.style.zIndex = aa.getMaxZIndex()+1;
+                        aa.events.on('themechange', (theme, previous) => {
+                            dialog.classList.remove(previous);
+                            dialog.classList.add(theme);
+                        });
+
+                        that.indexes.forEach((value, index) => {
+                            addNode.call(this, index);
+                        });
+                    });
+                },
+
+                // Getters:
+                // Setters:
+                move:       function (index, value) {
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
+                    if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+                    const that = aa.getAccessor.call(this);
+
+                    index = index.trim();
+                    if (that.indexes.hasOwnProperty(index)) {
+                        that.indexes[index] = value;
+                    }
+                    moveRange.call(this, index, value);
+                },
+                setTitle:   function (title) {
+                    if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
+                    const that = aa.getAccessor.call(this);
+
+                    that.title = title.trim();
+                },
+                setVisible: function (visible) {
+                    if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
+                    const that = aa.getAccessor.call(this);
+
+                    that.visible = visible;
+                    el('aaProgress-'+that.id, (node) => {
+                        node.classList[visible ? 'remove' : 'add']('hidden');
+                    })
+                }
+            }, {force: true});
             return Object.freeze(Progress);
         })();
 

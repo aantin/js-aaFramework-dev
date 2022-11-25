@@ -113,7 +113,7 @@
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
-        defineAccessors: function (publics, mode) {
+        defineAccessors_X: function (publics, mode) {
             if (!aa.isObject(publics)) { throw new TypeError("Argument must be an Object."); }
             if (mode && mode.verify({
                 accessor:   o => aa.isArrayOfStrings(o),
@@ -283,7 +283,7 @@
                 }
             };
         })(),
-        getPrivateAccessor: function (keys /*, spec */) {
+        getPrivateAccessor_X: function (keys /*, spec */) {
             aa.arg.test(keys, aa.isArrayOfStrings, `'keys'`);
             const spec = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
                 get: aa.isFunction,
@@ -540,7 +540,7 @@
             setter(this, key, value);
         });
     };
-    aa.defineAccessors      = function (accessors /*, spec */) {
+    /* aa.defineAccessors      = function (accessors, spec={}) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
         if (!aa.isObject(accessors)) { throw new TypeError('First argument must be an Object.'); }
@@ -608,7 +608,7 @@
                 }
             });
         });
-    };
+    }; */
     // ----------------------------------------------------------------
 
     // Classes:
@@ -1325,21 +1325,21 @@
        */
       function Collection (/* spec */) {
             aa.defineAccessors.call(this, {
-            publics: {
-                authenticate: null
-            },
-            privates: {
-                data: [],
-                listeners: {},
-            },
-            read: {
-                parent: null
-            },
-            execute: {
-                first:  () => get(this, "data").first,
-                last:   () => get(this, "data").last,
-                length: () => get(this, "data").length
-            }
+                publics: {
+                    authenticate: null
+                },
+                privates: {
+                    data: [],
+                    listeners: {},
+                },
+                read: {
+                    parent: null
+                },
+                execute: {
+                    first:  () => get(this, "data").first,
+                    last:   () => get(this, "data").last,
+                    length: () => get(this, "data").length
+                }
             }, { getter: get, setter: set });
             privates.construct.apply(this, arguments);
         }
@@ -1781,11 +1781,13 @@
                                     list.push(evt);
                                 }
                             } else if (param instanceof aa.Action) {
-                                if (evt.callback === param.execute) {
-                                    aa.deprecated("aa.Event.callback");
-                                } else if (evt.action === param) {
-                                } else {
-                                    list.push(evt.callback);
+                                if (evt) {
+                                    if (evt.callback === param.execute) {
+                                        aa.deprecated("aa.Event.callback");
+                                    } else if (evt.action === param) {
+                                    } else {
+                                        list.push(evt.callback);
+                                    }
                                 }
                             } else if (aa.isString(param)) {
                                 aa.gui.todo("Dissociate with String", true);
@@ -1845,6 +1847,11 @@
                  * @return {object} this (=> chainable 'on' functions)
                  */
 
+                const options = (arguments && arguments.length > 2 && aa.isArray(arguments[2]) ?
+                    arguments[2].filter(aa.nonEmptyString)
+                    : ["preventDefault"]
+                );
+
                 // Recur in case of signature: aa.EventApp.prototype.on({eventName: callback} /*, options */);
                 if (aa.isObject(evtName)) {
                     const options = callback || [];
@@ -1857,18 +1864,12 @@
                 // else:
                 if (arguments.length === 1 && aa.isObject(arguments[0])) {
                     arguments[0].forEach((func, name) => {
-                        this.on(name, func);
+                        this.on(name, func, options);
                     });
                     return this;
                 }
 
                 const spec = {}
-                const options = (arguments && arguments.length > 2 && aa.isArray(arguments[2]) ?
-                    arguments[2].filter((opt) => {
-                        return aa.nonEmptyString(opt);
-                    })
-                    : ["preventDefault"]
-                );
                 evtName = aa.shortcut.cmdOrCtrl(evtName);
                 if (aa.isFunction(callback)) {
                     spec[evtName] = new aa.Event((new aa.Action({
@@ -1878,6 +1879,7 @@
                     const action = callback;
                     spec[evtName] = new aa.Event(action, options);
                 } else { throw new TypeError("Second argument must be a Function or an instance of <aa.Action>."); }
+                // if (evtName === "<Esc>") { log("framework:", evtName, spec[evtName].action.name, options); }
                 this.listen(spec);
                 return this;
             },
@@ -3821,7 +3823,7 @@
                 on:     aa.prototypes.events.getListener({get, set}),
 
                 hide:   function () {
-                    const that = aa.prototypes.getPrivateAccessor.call(this, [`onclickout`], {get, set});
+                    const that = aa.getAccessor.call(this, {get, set});
                     aa.events.removeApp("aaContextMenu");
                     let dom = document.getElementById("aaContextMenu");
                     if (aa.isDom(dom)) {
@@ -3835,7 +3837,7 @@
                 show:   function () {
                     const menu = get(this, "menu");
                     const shortcut = shortcutMaker(get(this, "appName"));
-                    const that = aa.prototypes.getPrivateAccessor.call(this, [`onclickout`], {get, set});
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     // const dom = $$("div#aaContextMenuBG.aa.bg");
                     const menuNode = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide.bind(this)));
@@ -8931,6 +8933,12 @@
             startHydratingWith: [],
             methods: {
                 publics: {
+                    draw:   function () {
+                        if (get(this, `id`)) {
+                            get(this, `callback`).call(this);
+                            emit.call(this, 'drawn');
+                        }
+                    },
                     start:  function () {
                         if (get(this, `id`)) {
                             this.resume();
@@ -8942,7 +8950,7 @@
                         let previousTime = Date.now();
                         
                         emit.call(this, 'start');
-                        const step = () => {
+                        const draw = () => {
                             const isPlaying = get(this, `isPlaying`);
                             const now = Date.now();
                             
@@ -8950,12 +8958,12 @@
                                 if (now >= previousTime + delay) {
                                     previousTime = now;
                                     get(this, `callback`).call(this);
-                                    emit.call(this, 'step');
+                                    emit.call(this, 'drawn');
                                 }
                             }
-                            set(this, `id`, requestAnimationFrame(step));
+                            set(this, `id`, requestAnimationFrame(draw));
                         }
-                        set(this, `id`, requestAnimationFrame(step));
+                        set(this, `id`, requestAnimationFrame(draw));
                     },
                     pause:  function () {
                         if (get(this, `id`)) {
@@ -8967,12 +8975,6 @@
                         if (get(this, `id`)) {
                             set(this, `isPlaying`, true);
                             emit.call(this, 'resume');
-                        }
-                    },
-                    step:   function () {
-                        if (get(this, `id`)) {
-                            get(this, `callback`).call(this);
-                            emit.call(this, 'step');
                         }
                     },
                     stop:   function () {
@@ -9471,43 +9473,23 @@
             });
 
             if (arguments) {
-                arguments.forEach(function (param,i) {
-                    let option,resID,resClass;
+                Array.from(arguments).forEach(function (param,i) {
+                    let option;
 
                     if (i > 0) {
                         if (aa.isDom(param) || aa.isNode(param)) {
                             elt.appendChild(param);
-                        } else if(aa.isString(param)) {
+                        } else if (aa.isString(param)) {
                             option = param.trim();
-
-                            resID = option.match(/^\#(.*)$/);
-                            resClass = option.match(/^\.(.*)$/);
-                            
-                            if (resID) {
-                                option = resID[1].trim();
-                                elt.id = option;
-                                return true;
-                            } else if(resClass) {
-                                option = resClass[1].trim();
-                                try{
-                                    elt.classList.add(option);
-                                    return true;
-                                }
-                                catch(e) {
-                                    throw new Error("className doesn't allow space caracter.");
-                                    return false;
-                                }
-                            } else {
-                                switch (nodeName) {
-                                    case "textarea":
-                                        elt.innerText += option;
-                                        break;
-                                    default:
-                                        elt.innerHTML += option;
-                                        break;
-                                }
+                            switch (nodeName) {
+                                case "textarea":
+                                    elt.innerText += option;
+                                    break;
+                                default:
+                                    elt.innerHTML += option;
+                                    break;
                             }
-                        } else if(aa.isObject(param)) {
+                        } else if (aa.isObject(param)) {
                             param.forEach(function (option, key) {
                                 let classes;
                                 if (aa.isString(key)) {
@@ -10197,23 +10179,22 @@
             return 'AAID_'+(Date.now())+'_'+x;
         };
     })();
-    aa.settings                 = (function () {
+    aa.settings                 = (() => {
 
         // Class:
-        const Settings  = function () {
-
+        function Settings () {
             aa.defineAccessors.call(this, {
                 publics: {
                     production: ENV.PRODUCTION,
                     theme:      ENV.DEFAULT_THEME
                 },
                 write: {
-                    script: null,
-                    scripts: []
+                    script:     null,
+                    scripts:    [],
                 },
                 privates: {
                 }
-            });
+            }, {getter: get, setter: set});
         };
 
         // Public methods:

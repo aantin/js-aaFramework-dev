@@ -1407,7 +1407,7 @@
             },
             reduce:             function (callback, accumulator /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+                const thisArg = aa.arg.optional(arguments, 2, undefined);
 
                 const data = get(this, "data");
                 return data.reduce(callback, accumulator, thisArg);
@@ -10240,272 +10240,261 @@
         return Object.freeze(new Settings());
     })();
     aa.xhr                      = function (method='GET', src, options={}) {
-        if (aa.isObject(options)
-        && aa.isString(method) && method.trim()
-        && aa.isString(src) && src.trim()) {
-            
-            // Default options:
-            if (typeof options.callback === 'undefined') {
-                options.callback = function () {};
-            }
-            if (typeof options.default === 'undefined') {
-                options.default = true;
-            }
-            
-            // Test options:
-            if (typeof options.callback !== 'function') { throw new Error("Invalid callback in 'aa.XHR'."); }
-            if (typeof options.resolve !== 'function') { throw new Error("Invalid callback in 'aa.XHR'."); }
-            if (!aa.isBool(options.default)) { throw new Error("Invalid default in 'aa.XHR'."); }
+        aa.arg.test(method, aa.nonEmptyString, `'method'`);
+        aa.arg.test(src, aa.nonEmptyString, `'src'`);
+        aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            default: aa.isBool,
+            reject: aa.isFunction,
+            resolve: aa.isFunction
+        }), `'options'`);
 
-            if (options.callback) {
-                aa.deprecated("options.callback");
-                // console.warn("Deprecated")
-                options.resolve = options.callback;
-            }
-
-            // Execute:
-            switch (method.toUpperCase()) {
-                case 'GET':{
-                    let xhr = new XMLHttpRequest();
-                    xhr.open('GET', src);
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState === 4) {
-                            switch (xhr.status) {
-                                case 200:{
-                                    let json;
-                                    try{
-                                        json = JSON.parse(xhr.response);
-                                    }
-                                    catch(e) {
-                                        console.warn(xhr.response);
-                                        throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
-                                        return;
-                                    }
-                                    if (json) {
-                                        if (options.default) {
-                                            if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
-                                                (new aa.gui.Dialog('critical',{
-                                                    text: "- "+json.dialog.critical.join('<br>- ')
-                                                })).show();
-                                                options.callback.call(null, undefined, json.dialog);
-                                            }
-                                            else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
-                                                (new aa.gui.Dialog('warning',{
-                                                    text: "- "+json.dialog.warning.join('<br>- ')
-                                                })).show();
-                                                options.callback.call(null, json.response, json.dialog);
-                                            }
-                                            else if(json.dialog && json.dialog.information && json.dialog.information.length) {
-                                                (new aa.gui.Dialog('information',{
-                                                    text: "- "+json.dialog.information.join('<br>- ')
-                                                })).show();
-                                                options.callback.call(null,json.response);
-                                            } else if(typeof json.response !== 'undefined') {
-                                                options.callback.call(null, json.response, json.dialog);
-                                            }
-                                        } else if(json.response && json.dialog) {
-                                            options.callback.call(null, json.response, json.dialog);
-                                        }
-                                        return;
-                                    }
-                                    throw new Error("Invalid XHR response from Server.");
-                                    return;
-                                    break;
+        // Default options if undefined:
+        options.sprinkle({
+            default: true,
+            reject: () => {},
+            resolve: () => {}
+        });
+        
+        // Execute:
+        switch (method.toUpperCase()) {
+            case 'GET':{
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', src);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        switch (xhr.status) {
+                            case 200:{
+                                let json;
+                                try{
+                                    json = JSON.parse(xhr.response);
                                 }
+                                catch(e) {
+                                    console.warn(xhr.response);
+                                    throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
+                                    return;
+                                }
+                                if (json) {
+                                    if (options.default) {
+                                        if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
+                                            (new aa.gui.Dialog('critical',{
+                                                text: "- "+json.dialog.critical.join('<br>- ')
+                                            })).show();
+                                            options.resolve.call(null, undefined, json.dialog);
+                                        }
+                                        else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
+                                            (new aa.gui.Dialog('warning',{
+                                                text: "- "+json.dialog.warning.join('<br>- ')
+                                            })).show();
+                                            options.resolve.call(null, json.response, json.dialog);
+                                        }
+                                        else if(json.dialog && json.dialog.information && json.dialog.information.length) {
+                                            (new aa.gui.Dialog('information',{
+                                                text: "- "+json.dialog.information.join('<br>- ')
+                                            })).show();
+                                            options.resolve.call(null, json.response);
+                                        } else if(typeof json.response !== 'undefined') {
+                                            options.resolve.call(null, json.response, json.dialog);
+                                        }
+                                    } else if (json.response && json.dialog) {
+                                        options.resolve.call(null, json.response, json.dialog);
+                                    }
+                                    return;
+                                }
+                                throw new Error("Invalid XHR response from Server.");
+                                return;
+                                break;
                             }
                         }
-                    };
-                    xhr.onload = function (e) {
-                    };
-                    xhr.send();
-                    break;
-                }
-                case 'POST':{
-                    if (options.form !== undefined
-                    && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
-                        let xhr,data;
-
-                        if (false) {
-                            // Une version simple mais à corriger pour que soient accessibles de multiples <checkbox> :
-                            data = new FormData(options.form);
-                            xhr = new XMLHttpRequest();
-                        } else {
-                            data = '';
-                            options.form.diveTheDOM(function (n) {
-                                if (n.name) {
-                                    // transformer les '&' en caractères valides pour la requête POST :
-                                    let v = n.value;
-                                    v = encodeURIComponent(v);
-                                    
-                                    /*
-                                    // v = v.replace(/=/g, '<egal>');
-                                    // v = v.replace(/\'/g, '<apos>');
-                                    // v = v.replace(/\"/g, '<guill>');
-                                    v = v.replace(/\\/g, '__backslash__');
-                                    v = v.replace(/\&/g, '<and>');
-                                    //v = v.replace(/\#/g, '<diese>');
-                                    v = v.replace(/\;/g, '<pointvirgule>');
-                                    /**/
-                                    
-                                    // Test des champs de formulaire :
-                                    if ((n.type === 'checkbox') && !n.checked) { // typeof() ou .type
-                                    }
-                                    else if((n.type === 'radio') && !n.checked) {
-                                    }
-                                    else if((n.type === 'files') && !n.checked) {
-                                    }
-                                    else {
-                                        data += n.name+'='+v+'&';
-                                    }
-                                    // n.disabled = true;
-                                }
-                            });
-                            xhr = getHttpObject();
-                        }
-                        if (xhr) {
-                            // xhr.open("POST", src);
-                            xhr.open("POST",src+"&rnd="+Math.random(),true);
-                            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded"); // utiliser en POST uniquement
-                            // xhr.setRequestHeader("Content-length", chaine.length);
-                            // xhr.setRequestHeader("Connection", "close");
-                            xhr.onreadystatechange = function () {
-                                if (xhr.readyState === 4) {
-                                    switch (xhr.status) {
-                                        case 200:{
-                                            let json;
-                                            try{
-                                                json = JSON.parse(xhr.response);
-                                            }
-                                            catch(e) {
-                                                warn(xhr.response);
-                                                throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
-                                                return;
-                                            }
-                                            if (json) {
-                                                // console.log(json);
-                                                if (options.default) {
-                                                    if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
-                                                        (new aa.gui.Dialog('critical',{
-                                                            text: '- '+json.dialog.critical.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,undefined,json.dialog);
-                                                        return;
-                                                    }
-                                                    else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
-                                                        (new aa.gui.Dialog('warning',{
-                                                            text: '- '+json.dialog.warning.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,json.response,json.dialog);
-                                                        return;
-                                                    }
-                                                    else if(json.dialog && json.dialog.information && json.dialog.information.length) {
-                                                        (new aa.gui.Dialog('information',{
-                                                            text: '- '+json.dialog.information.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,json.response);
-                                                        return;
-                                                    } else if(typeof json.response !== 'undefined') {
-                                                        options.callback.call(null,json.response,json.dialog);
-                                                        return;
-                                                    }
-                                                } else if(json.response && json.dialog) {
-                                                    options.callback.call(null,json.response,json.dialog);
-                                                    return;
-                                                }
-                                            }
-                                            throw new Error("Invalid XHR response from Server.");
-                                            return;
-                                            break;
-                                        }
-                                    }
-                                }
-                            };
-                            xhr.onload = function (e) {
-                            };
-                            xhr.send(data);
-                        }
-                    } else {
-                        throw new Error("Invalid form in 'aa.XHR'.");
                     }
-                    break;
-                }
-                case 'FILE':{
-                    if (typeof options.form !== 'undefined'
-                    && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
-                        let xhr,data;
+                };
+                xhr.onload = function (e) {
+                };
+                xhr.send();
+                break;
+            }
+            case 'POST':{
+                if (options.form !== undefined
+                && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
+                    let xhr,data;
 
+                    if (false) {
+                        // Une version simple mais à corriger pour que soient accessibles de multiples <checkbox> :
                         data = new FormData(options.form);
                         xhr = new XMLHttpRequest();
-                        if (xhr) {
-                            // xhr.open("POST", src);
-                            xhr.open('POST',src+'&rnd='+Math.random(),true);
-                            // xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded'); // utiliser en POST uniquement
-                            // xhr.setRequestHeader("Content-length", chaine.length);
-                            // xhr.setRequestHeader("Connection", "close");
-                            xhr.onreadystatechange = function () {
-                                if (xhr.readyState === 4) {
-                                    switch (xhr.status) {
-                                        case 200:{
-                                            let json;
-                                            try{
-                                                json = JSON.parse(xhr.response);
-                                            }
-                                            catch(e) {
-                                                warn(xhr.response);
-                                                throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
+                    } else {
+                        data = '';
+                        options.form.diveTheDOM(function (n) {
+                            if (n.name) {
+                                // transformer les '&' en caractères valides pour la requête POST :
+                                let v = n.value;
+                                v = encodeURIComponent(v);
+                                
+                                /*
+                                // v = v.replace(/=/g, '<egal>');
+                                // v = v.replace(/\'/g, '<apos>');
+                                // v = v.replace(/\"/g, '<guill>');
+                                v = v.replace(/\\/g, '__backslash__');
+                                v = v.replace(/\&/g, '<and>');
+                                //v = v.replace(/\#/g, '<diese>');
+                                v = v.replace(/\;/g, '<pointvirgule>');
+                                /**/
+                                
+                                // Test des champs de formulaire :
+                                if ((n.type === 'checkbox') && !n.checked) { // typeof() ou .type
+                                }
+                                else if((n.type === 'radio') && !n.checked) {
+                                }
+                                else if((n.type === 'files') && !n.checked) {
+                                }
+                                else {
+                                    data += n.name+'='+v+'&';
+                                }
+                                // n.disabled = true;
+                            }
+                        });
+                        xhr = getHttpObject();
+                    }
+                    if (xhr) {
+                        // xhr.open("POST", src);
+                        xhr.open("POST",src+"&rnd="+Math.random(),true);
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded"); // utiliser en POST uniquement
+                        // xhr.setRequestHeader("Content-length", chaine.length);
+                        // xhr.setRequestHeader("Connection", "close");
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === 4) {
+                                switch (xhr.status) {
+                                    case 200:{
+                                        let json;
+                                        try{
+                                            json = JSON.parse(xhr.response);
+                                        }
+                                        catch(e) {
+                                            warn(xhr.response);
+                                            throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
+                                            return;
+                                        }
+                                        if (json) {
+                                            // console.log(json);
+                                            if (options.default) {
+                                                if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
+                                                    (new aa.gui.Dialog('critical',{
+                                                        text: '- '+json.dialog.critical.join('<br>- ')
+                                                    })).show();
+                                                    options.resolve.call(null, undefined, json.dialog);
+                                                    return;
+                                                }
+                                                else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
+                                                    (new aa.gui.Dialog('warning',{
+                                                        text: '- '+json.dialog.warning.join('<br>- ')
+                                                    })).show();
+                                                    options.resolve.call(null, json.response, json.dialog);
+                                                    return;
+                                                }
+                                                else if(json.dialog && json.dialog.information && json.dialog.information.length) {
+                                                    (new aa.gui.Dialog('information',{
+                                                        text: '- '+json.dialog.information.join('<br>- ')
+                                                    })).show();
+                                                    options.resolve.call(null, json.response);
+                                                    return;
+                                                } else if(typeof json.response !== 'undefined') {
+                                                    options.resolve.call(null, json.response, json.dialog);
+                                                    return;
+                                                }
+                                            } else if(json.response && json.dialog) {
+                                                options.resolve.call(null, json.response, json.dialog);
                                                 return;
                                             }
-                                            if (json) {
-                                                // console.log(json);
-                                                if (options.default) {
-                                                    if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
-                                                        (new aa.gui.Dialog('critical',{
-                                                            text: '- '+json.dialog.critical.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,undefined,json.dialog);
-                                                        return;
-                                                    }
-                                                    else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
-                                                        (new aa.gui.Dialog('warning',{
-                                                            text: '- '+json.dialog.warning.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,json.response,json.dialog);
-                                                        return;
-                                                    }
-                                                    else if(json.dialog && json.dialog.information && json.dialog.information.length) {
-                                                        (new aa.gui.Dialog('information',{
-                                                            text: '- '+json.dialog.information.join('<br>- ')
-                                                        })).show();
-                                                        options.callback.call(null,json.response);
-                                                        return;
-                                                    } else if(typeof json.response !== 'undefined') {
-                                                        options.callback.call(null,json.response,json.dialog);
-                                                        return;
-                                                    }
-                                                } else if(json.response && json.dialog) {
+                                        }
+                                        throw new Error("Invalid XHR response from Server.");
+                                        return;
+                                        break;
+                                    }
+                                }
+                            }
+                        };
+                        xhr.onload = function (e) {
+                        };
+                        xhr.send(data);
+                    }
+                } else {
+                    throw new Error("Invalid form in 'aa.XHR'.");
+                }
+                break;
+            }
+            case 'FILE':{
+                if (typeof options.form !== 'undefined'
+                && aa.isDom(options.form) && options.form.tagName.toLowerCase() === 'form') {
+                    let xhr,data;
+
+                    data = new FormData(options.form);
+                    xhr = new XMLHttpRequest();
+                    if (xhr) {
+                        // xhr.open("POST", src);
+                        xhr.open('POST',src+'&rnd='+Math.random(),true);
+                        // xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded'); // utiliser en POST uniquement
+                        // xhr.setRequestHeader("Content-length", chaine.length);
+                        // xhr.setRequestHeader("Connection", "close");
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === 4) {
+                                switch (xhr.status) {
+                                    case 200:{
+                                        let json;
+                                        try{
+                                            json = JSON.parse(xhr.response);
+                                        }
+                                        catch(e) {
+                                            warn(xhr.response);
+                                            throw new Error("Invalid XHR response from Server. (It doesn't seem to be correct JSON.)");
+                                            return;
+                                        }
+                                        if (json) {
+                                            // console.log(json);
+                                            if (options.default) {
+                                                if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
+                                                    (new aa.gui.Dialog('critical',{
+                                                        text: '- '+json.dialog.critical.join('<br>- ')
+                                                    })).show();
+                                                    options.callback.call(null,undefined,json.dialog);
+                                                    return;
+                                                }
+                                                else if(json.dialog && json.dialog.warning && json.dialog.warning.length) {
+                                                    (new aa.gui.Dialog('warning',{
+                                                        text: '- '+json.dialog.warning.join('<br>- ')
+                                                    })).show();
                                                     options.callback.call(null,json.response,json.dialog);
                                                     return;
                                                 }
+                                                else if(json.dialog && json.dialog.information && json.dialog.information.length) {
+                                                    (new aa.gui.Dialog('information',{
+                                                        text: '- '+json.dialog.information.join('<br>- ')
+                                                    })).show();
+                                                    options.callback.call(null,json.response);
+                                                    return;
+                                                } else if(typeof json.response !== 'undefined') {
+                                                    options.callback.call(null,json.response,json.dialog);
+                                                    return;
+                                                }
+                                            } else if(json.response && json.dialog) {
+                                                options.callback.call(null,json.response,json.dialog);
+                                                return;
                                             }
-                                            throw new Error("Invalid XHR response from Server.");
-                                            return;
-                                            break;
                                         }
+                                        throw new Error("Invalid XHR response from Server.");
+                                        return;
+                                        break;
                                     }
                                 }
-                            };
-                            xhr.onload = function (e) {
-                            };
-                            xhr.send(data);
-                        }
-                    } else {
-                        throw new Error("Invalid form in 'aa.XHR'.");
+                            }
+                        };
+                        xhr.onload = function (e) {
+                        };
+                        xhr.send(data);
                     }
-                    break;
+                } else {
+                    throw new Error("Invalid form in 'aa.XHR'.");
                 }
+                break;
             }
-        } else {
-            console.warn("Invalid 'aa.XHR' arguments.");
         }
     };
 

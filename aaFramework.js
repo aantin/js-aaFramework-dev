@@ -9364,7 +9364,7 @@
                 }
             });
         */
-        let i,elt,res,rest,table,value,type,
+        let i,elt,res,rest,table,value,type,tooltipText,
             id = null,
             classes = [],
             htmlAttributes = [
@@ -9400,6 +9400,7 @@
                 "dataset",
                 "default",
                 "disabled",
+                "direction",
                 "draggable",
                 "legend",
                 "max",
@@ -9418,10 +9419,6 @@
                 "suffix",
                 "text",
                 "tooltip",
-                "tooltipbottom",
-                "tooltipleft",
-                "tooltipright",
-                "tooltiptop",
                 "validation"
             ];
 
@@ -9430,43 +9427,57 @@
             nodeName = extracts.tagName;
 
             switch (nodeName) {
-                case "icon":
-                    return aa.icon.apply(undefined, arguments);
-                    break;
-                case "text":
-                    return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
-                        document.createTextNode(arguments[1])
-                        : undefined
-                    );
-                    break;
-                case "button":
-                    type = "button";
-                    break;
-                case "checkbox":
-                case "file":
-                case "password":
-                case "hidden":
-                case "radio":
-                case "number":
-                case "range":
-                case "reset":
-                case "submit":
-                    type = nodeName;
-                    nodeName = "input";
-                    break;
-                case "input":
-                    type = "text";
-                    nodeName = "input";
-                    break;
-                default:
-                    break;
+            case "icon":
+                return aa.icon.apply(undefined, arguments);
+                break;
+            case "text":
+                return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
+                    document.createTextNode(arguments[1])
+                    : undefined
+                );
+                break;
+            case "button":
+                type = "button";
+                break;
+            case "checkbox":
+            case "file":
+            case "password":
+            case "hidden":
+            case "radio":
+            case "number":
+            case "range":
+            case "reset":
+            case "submit":
+                type = nodeName;
+                nodeName = "input";
+                break;
+            case "input":
+                type = "text";
+                nodeName = "input";
+                break;
+            case "tooltip":
+                type = nodeName;
+                nodeName = "div";
+                break;
+            default:
+                break;
             }
 
             elt = document.createElement(nodeName);
             if (extracts.id) {
                 elt.id = extracts.id;
             }
-            if (type) {
+            if (type === "tooltip") {
+                elt.classList.add('tooltip-container');
+                elt.classList.add('right'); // Default direction
+                tooltipText = $$('div.text');
+                elt.appendChild($$('div.tooltip-anchor',
+                    $$('div.tooltip',
+                        $$('div.arrow'),
+                        tooltipText
+                    )
+                ));
+            } else if (type) {
                 elt.type = type;
             }
 
@@ -9504,9 +9515,9 @@
                             param.forEach(function (option, key) {
                                 let classes;
                                 if (aa.isString(key)) {
-                                    key = key.trim();
-                                    if (htmlAttributes.has(key.toLowerCase())) {
-                                        switch (key.toLowerCase()) {
+                                    key = key.trim().toLowerCase();
+                                    if (htmlAttributes.has(key)) {
+                                        switch (key) {
                                             case "onglets":
                                                 if (!aa.isArray(option)) { throw new TypeError("'onglets' option must be an Array."); }
                                                 const onglets = aa.html("legend.onglets");
@@ -9643,6 +9654,16 @@
                                                 }
                                                 break;
                                             
+                                            case "direction":
+                                                if (type === "tooltip") {
+                                                    aa.arg.test(option, aa.inArray(['bottom', 'left', 'right', 'top']), "'tooltip.direction'");
+                                                    if (option !== 'right') {
+                                                        elt.classList.remove('right');
+                                                        elt.classList.add(option);
+                                                    }
+                                                }
+                                                break;
+                                            
                                             case "orient":
                                                 if (
                                                     nodeName === "input" && type === "range"
@@ -9655,7 +9676,11 @@
                                                 break;
                                             
                                             case "text":
-                                                elt.innerHTML = option;
+                                                if (type === 'tooltip') {
+                                                    tooltipText.innerHTML = option;
+                                                } else {
+                                                    elt.innerHTML = option;
+                                                }
                                                 break;
                                             
                                             case "draggable":
@@ -9789,22 +9814,22 @@
                                                 break;
 
                                             case "tooltip":
-                                            case "tooltipbottom":
-                                            case "tooltipleft":
-                                            case "tooltipright":
-                                            case "tooltiptop":
                                                 (() => {
-                                                    const direction = key.toLowerCase().replace(/^tooltip/, '');
-                                                    aa.arg.test(option, aa.nonEmptyString, "'tooltip'");
+                                                    aa.arg.test(
+                                                        option,
+                                                        arg =>  aa.nonEmptyString(arg)
+                                                                || (aa.isElement(arg) && arg.classList.contains('tooltip-container')),
+                                                        "'tootltip'"
+                                                    );
+                                                    
                                                     elt.classList.add('with-tooltip');
-                                                    elt.appendChild($$(`div.tooltip-container.${direction ? direction : 'right'}`,
-                                                        $$('div.tooltip-anchor',
-                                                            $$('div.tooltip',
-                                                                $$('div.arrow'),
-                                                                $$('div.text', option.trim())
-                                                            )
-                                                        )
-                                                    ));
+                                                    if (aa.isString(option)) {
+                                                        elt.appendChild($$('tooltip', {
+                                                            text: option
+                                                        }));
+                                                    } else {
+                                                        elt.appendChild(option);
+                                                    }
                                                 })();
                                                 break;
 

@@ -9417,6 +9417,11 @@
                 "step",
                 "suffix",
                 "text",
+                "tooltip",
+                "tooltipbottom",
+                "tooltipleft",
+                "tooltipright",
+                "tooltiptop",
                 "validation"
             ];
 
@@ -9781,6 +9786,27 @@
                                                         });
                                                         break;
                                                 }
+                                                break;
+
+                                            case "tooltip":
+                                            case "tooltipbottom":
+                                            case "tooltipleft":
+                                            case "tooltipright":
+                                            case "tooltiptop":
+                                                (() => {
+                                                    const direction = key.toLowerCase().replace(/^tooltip/, '');
+                                                    log(direction)
+                                                    aa.arg.test(option, aa.nonEmptyString, "'tooltip'");
+                                                    elt.classList.add('with-tooltip');
+                                                    elt.appendChild($$(`div.tooltip-container.${direction ? direction : 'right'}`,
+                                                        $$('div.tooltip-anchor',
+                                                            $$('div.tooltip',
+                                                                $$('div.arrow'),
+                                                                $$('div.text', option.trim())
+                                                            )
+                                                        )
+                                                    ));
+                                                })();
                                                 break;
 
                                             case "validation":

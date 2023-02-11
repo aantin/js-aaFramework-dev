@@ -9364,7 +9364,7 @@
                 }
             });
         */
-        let i,elt,res,rest,table,value,type,tooltipText,
+        let i,elt,res,rest,table,value,type,
             id = null,
             classes = [],
             htmlAttributes = [
@@ -9393,10 +9393,11 @@
                 "width",
                 
                 // Attributes to transform before including:
-                // "css",
-                "colspan",
                 "checked",
                 "class",
+                "colspan",
+                "content",
+                // "css",
                 "dataset",
                 "default",
                 "disabled",
@@ -9470,29 +9471,35 @@
             if (type === "tooltip") {
                 elt.classList.add('tooltip-container');
                 elt.classList.add('right'); // Default direction
-                tooltipText = $$('div.text');
+                const textNode = $$('div.text');
                 elt.appendChild($$('div.tooltip-anchor',
                     $$('div.tooltip',
                         $$('div.arrow'),
-                        tooltipText
+                        textNode
                     )
                 ));
                 Object.defineProperties(elt, {
                     text: {
-                        get: () => tooltipText.innerHTML,
+                        get: () => textNode.innerHTML,
                         set: text => {
-                            aa.arg.test(text, aa.nonEmptyString, "'text'");
+                            aa.arg.test(text, aa.isString, "'text'");
 
-                            tooltipText.innerHTML = text.trim();
+                            textNode.innerHTML = text.trim();
                         }
                     },
                     content: {
-                        get: () => tooltipText.children,
-                        set: node => {
-                            aa.arg.test(node, aa.isNode, "'content'");
+                        get: () => textNode.children,
+                        set: content => {
+                            aa.arg.test(content, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
 
-                            tooltipText.innerHTML = '';
-                            tooltipText.appendChild(node);
+                            textNode.innerHTML = '';
+                            if (aa.isNode(content)) {
+                                textNode.appendChild(content);
+                            } else {
+                                content.forEach(node => {
+                                    textNode.appendChild(node);
+                                });
+                            }
                         }
                     },
                 });
@@ -9696,9 +9703,31 @@
                                                 }
                                                 break;
                                             
+                                            case "content":
+                                                aa.arg.test(option, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
+
+                                                if (type === 'tooltip') {
+                                                    elt.text = '';
+                                                    elt.content = option;
+                                                } else {
+                                                    elt.innerHTML = '';
+                                                    if (aa.isNode(option)) {
+                                                        elt.appendChild(option);
+                                                    } else if (aa.isArray(option)) {
+                                                        option.forEach(node => {
+                                                            elt.appendChild(node);
+                                                        });
+                                                    }
+                                                }
+                                                break;
+                                            
                                             case "text":
                                                 if (type === 'tooltip') {
-                                                    tooltipText.innerHTML = option;
+                                                    if (aa.isString(option)) {
+                                                        elt.text = option;
+                                                    } else {
+                                                        elt.content = option;
+                                                    }
                                                 } else {
                                                     elt.innerHTML = option;
                                                 }
@@ -9876,15 +9905,13 @@
                                             
                                             default:
                                                 if (aa.isString(option)) {
-                                                    return (elt.setAttribute(key,option.trim()));
-                                                } else if(aa.isNumber(option)) {
-                                                    return (elt.setAttribute(key,option));
+                                                    return (elt.setAttribute(key, option.trim()));
+                                                } else if (aa.isNumber(option)) {
+                                                    return (elt.setAttribute(key, option));
                                                 }
                                                 break;
                                         }
-                                    } else {
-                                        warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)");
-                                    }
+                                    } else { warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)"); }
                                 }
                                 return false;
                             });
@@ -9897,6 +9924,44 @@
         }
         return undefined;
     });
+    aa.HTMLCollection           = (() => {
+        function HTMLCollection (list) {
+            const getAccessor = function (thisArg) {
+                return aa.getAccessor.call(thisArg, {get, set});
+            }
+            aa.arg.test(list, aa.isArrayOf(aa.isElement), "'HTMLCollection.list'");
+
+            aa.defineAccessors.call(this, {
+                privates: {
+                    data: []
+                },
+                execute: {
+                    length: () => list.length
+                }
+            }, {getter: get, setter: set});
+
+            const that = getAccessor(this);
+
+            list.forEach((item, i) => {
+                this[i] = item;
+                that.data.push(item);
+            });
+            Object.freeze(this);
+        }
+        aa.deploy(HTMLCollection.prototype, {
+            item:       function (i) {
+                return this.hasOwnProperty(i) ? this[i] : null;
+            },
+            namedItem:  function (name) {
+                aa.arg.test(name, aa.nonEmptyString, "'name'");
+
+                const that = getAccessor(this);
+                const found = that.data.find(item => item.id === name || item.name === name);
+                return found ? found : null;
+            }
+        }, {force: true});
+        return HTMLCollection;
+    })();
     aa.img                      = Object.freeze(new (function () {
         const o = {
             convertUriToJpg: (uri, resolve /*, reject */) => {

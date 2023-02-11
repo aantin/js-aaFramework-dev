@@ -9477,6 +9477,27 @@
                         tooltipText
                     )
                 ));
+                Object.defineProperties(elt, {
+                    text: {
+                        get: () => tooltipText.innerHTML,
+                        set: text => {
+                            aa.arg.test(text, aa.nonEmptyString, "'text'");
+
+                            tooltipText.innerHTML = text.trim();
+                        }
+                    },
+                    content: {
+                        get: () => tooltipText.children,
+                        set: node => {
+                            aa.arg.test(node, aa.isNode, "'content'");
+
+                            tooltipText.innerHTML = '';
+                            tooltipText.appendChild(node);
+                        }
+                    },
+                });
+                Object.defineProperty(elt, 'text', {
+                });
             } else if (type) {
                 elt.type = type;
             }

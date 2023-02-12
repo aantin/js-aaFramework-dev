@@ -9707,7 +9707,6 @@
                                                 aa.arg.test(option, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
 
                                                 if (type === 'tooltip') {
-                                                    elt.text = '';
                                                     elt.content = option;
                                                 } else {
                                                     elt.innerHTML = '';

@@ -1891,9 +1891,8 @@
         text-align: right;
     }
     .aa label.cooked{
-        display: block;
+        display: inline-block;
         width: fit-content;
-        margin-left: 4px;
     }
     .aa label.cooked.disabled{
         color: var(--color-grey);
@@ -1922,6 +1921,7 @@
     .aa label.cooked input[type=checkbox] + button{
         border: 0 !important;
         background: transparent !important;
+        margin-left: 4px;
         margin-right: 4px;
     }
     .aa label.cooked input[type=radio] + button > span.mixed,

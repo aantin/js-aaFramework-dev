@@ -8996,6 +8996,97 @@
         const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
         return Animation;
     })();
+    aa.bake                     = function (query /*, spec */) {
+        aa.arg.test(query, aa.nonEmptyString, "'query'");
+        const spec = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
+            label:      aa.isString,
+            style:      aa.isString,
+            value:      value => aa.isString(value) || isNumber(value),
+            name:       aa.nonEmptyString,
+            placeholder: aa.nonEmptyString,
+            checked:    aa.isBool,
+            readonly:   aa.isBool,
+            disabled:   aa.isBool,
+            on:         aa.isObjectOfFunctions
+        }));
+        query = aa.selectorSplit(query);
+        aa.throwErrorIf(!query.tag, "Can not bake. Argument's tag option must be provided.", TypeError);
+
+        const privates = {
+            build:      function (query, spec) {
+                const that = privates.getAccessor(this);
+
+                switch (query.tag.toLowerCase()) {
+                case 'tooltip':
+                    that.contentNode = aa.html('div.text');
+                    that.node = (() => {
+                        const container = aa.html('div.tooltip-container',
+                            aa.html('div.tooltip-anchor',
+                                aa.html('div.arrow'),
+                                that.contentNode
+                            )
+                        );
+                        return container;
+                    })();
+                    break;
+                default:
+                    that.node = aa.html('div', spec);
+                    that.contentNode = that.node;
+                    break;
+                }
+
+                switch (query.tag.toLowerCase()) {
+                case 'tooltip':
+                    break;
+
+                default:
+                    break;
+                }
+            },
+            construct:  function (query, spec) {
+                aa.defineAccessors.call(this, {
+                    publics: {
+                        node:  null,
+                    },
+                    privates: {
+                        contentNode:    null
+                    },
+                    read: {},
+                    execute: {},
+                }, {getter: get, setter: set});
+                Object.defineProperties(this, {
+                    content: {
+                        get: () => {},
+                        set: value => {},
+                    },
+                    text: {
+                        get: () => {},
+                        set: value => {},
+                    },
+                });
+                privates.build.call(this, query, spec);
+            },
+            getAccessor: function (thisArg) {
+                return aa.getAccessor.call(thisArg, {get, set});
+            }
+        };
+
+        function Node (query, spec) {
+            privates.construct.apply(this, arguments);
+        }
+        aa.deploy(Node.prototype, {
+            clear:      function () {
+                const that = privates.getAccessor(this);
+                that.contentNode.innerHTML = '';
+            },
+            removeNode: function () {
+                const that = privates.getAccessor(this);
+                that.node.removeNode();
+            }
+        }, {force: true});
+
+        return new Node(query, spec);
+    };
     aa.cook                     = Object.freeze(function (name /*, spec */) {
         /**
          * @param {string} name
@@ -9036,10 +9127,11 @@
             document.body.appendChild(temp);
         });
         const getElement = (tagName) => {
-            let mixed = undefined;
             let editStarted = false;
-            let input = undefined;
-            let node = undefined;
+            let container   = undefined;
+            let input       = undefined;
+            let mixed       = undefined;
+            let node        = undefined;
             
             const getInput = () => {
                 if (!node) {
@@ -9081,7 +9173,8 @@
                             on: {click: () => {
                                 mixed.insertAfter(getInput());
                                 temp.appendChild(mixed);
-                                input[(tagName === "input" ? "select" : "focus")]();
+                                const method = (tagName === "input" ? "select" : "focus");
+                                input[method]();
                             }}
                         },
                         $$("div.table",
@@ -9099,10 +9192,11 @@
             };
             
             if (spec.mixed) {
-                return getMixed();
+                container = getMixed();
             } else {
-                return getInput();
+                container = getInput();
             }
+            return container;
         };
 
         switch(tagName.toLowerCase()) {
@@ -9137,7 +9231,7 @@
                         }
                         return txt;
                     };
-                    const getInput = () => {
+                    const getInputSingleton = () => {
                         if (!node) {
                             node = node || $$("label.cooked"+(spec.disabled ? ".disabled" : ''));
                             const input = $$(tagName+(!!id ? '#'+id : '')+(classes.length ? '.'+classes.join('.') : ''),
@@ -9150,8 +9244,8 @@
                                     }
                                     spec.mixed = true;
                                     temp.appendChild(getTxt());
-                                    getInput().insertAfter(getMixed());
-                                    temp.appendChild(getInput());
+                                    getInputSingleton().insertAfter(getMixedSingleton());
+                                    temp.appendChild(getInputSingleton());
                                 } else {
                                     if (input.checked) {
                                         if (events.oncheck) {
@@ -9180,11 +9274,42 @@
                             if (txt) {
                                 node.appendChild(txt);
                             }
+                            Object.defineProperties(node, {
+                                checked: {
+                                    get: () => input.checked,
+                                    set: checked => {
+                                        // log({checked});
+                                        aa.arg.test(checked, aa.isBool, "'checked'");
+                                        input.checked = checked;
+                                    }
+                                },
+                                disabled: {
+                                    get: () => input.disabled,
+                                    set: disabled => {
+                                        // log({disabled});
+                                        aa.arg.test(disabled, aa.isBool, "'disabled'");
+                                        input.disabled = disabled;
+                                    }
+                                },
+                                required: {
+                                    get: () => input.required,
+                                    set: required => {
+                                        // log({required});
+                                        aa.arg.test(required, aa.isBool, "'required'");
+                                        input.required = required;
+                                    }
+                                },
+                            });
                         }
                         return node;
                     };
-                    const getMixed = () => {
-                        if (spec.hasOwnProperty("on") && spec.on.some((callback, evtName)=> !aa.isFunction(callback))) { throw new TypeError("Spec 'on' must be an Array of Functions."); }
+                    const getMixedSingleton = () => {
+                        aa.throwErrorIf(
+                            spec.hasOwnProperty("on") && spec.on.some((callback, evtName)=> !aa.isFunction(callback)),
+                            "Spec 'on' must be an Array of Functions.",
+                            TypeError
+                        );
+                        aa.throwErrorIf(!aa.nonEmptyString(spec.value), "'value' attribute must be defined for mixed input.");
 
                         if (!mixed) {
                             mixed = $$("button.text.mixed",
@@ -9197,7 +9322,7 @@
                                 }),
                                 {
                                     disabled: (spec.disabled && spec.disabled === true),
-                                    style: "display: block; width: fit-content;",
+                                    style: "display: inline-block; width: fit-content;",
                                     dataset: {value: spec.value},
                                     on: {click: () => {
                                         if (events.oncheck) {
@@ -9205,8 +9330,8 @@
                                         }
                                         spec.checked = true;
                                         temp.appendChild(getTxt());
-                                        getMixed().insertAfter(getInput());
-                                        temp.appendChild(getMixed());
+                                        getMixedSingleton().insertAfter(getInputSingleton());
+                                        temp.appendChild(getMixedSingleton());
                                         mixed.focus();
                                     }}
                                 }
@@ -9217,6 +9342,20 @@
                                     mixed.on(evtName, callback);
                                 });
                             }
+
+                            // Pilot wrapped input:
+                            [
+                                'checked',
+                                'disabled',
+                                'required'
+                            ].forEach(attr => {
+                                Object.defineProperty(mixed, attr, {
+                                    get: () => getInputSingleton()[attr],
+                                    set: value => {
+                                        getInputSingleton()[attr] = value;
+                                    },
+                                });
+                            });
                         }
                         if (!constructing && events.onmix) {
                             // events.onmix.call();
@@ -9241,11 +9380,12 @@
                     // DOM:
                     if (tagName.toLowerCase() === "checkbox" && spec.mixed === true) {
                         delete(spec.mixed);
-                        elt = getMixed();
+                        elt = getMixedSingleton();
                     } else {
-                        elt = getInput();
+                        elt = getInputSingleton();
                     }
                     constructing = false;
+
                     return elt;
                 })();
                 break;

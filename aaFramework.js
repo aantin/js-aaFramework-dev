@@ -113,193 +113,7 @@
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
-        defineAccessors_X: function (publics, mode) {
-            if (!aa.isObject(publics)) { throw new TypeError("Argument must be an Object."); }
-            if (mode && mode.verify({
-                accessor:   o => aa.isArrayOfStrings(o),
-                reader:     o => aa.isArrayOfStrings(o),
-                writer:     o => aa.isArrayOfStrings(o),
-            })) {
-                if (mode.accessor) {
-                    mode.accessor.forEach((key) => {
-                        Object.defineProperty(this, key, {
-                            get: () => { return publics[key]; },
-                            set: (value) => {
-                                const method = "set"+key.firstToUpper();
-                                if (typeof this[method] === "function") {
-                                    this[method].call(this, value);
-                                }
-                            }
-                        });
-                    });
-                }
-                if (mode.reader) {
-                    mode.reader.forEach((key) => {
-                        Object.defineProperty(this, key, {
-                            get: () => { return publics[key]; },
-                        });
-                    });
-                }
-                if (mode.writer) {
-                    mode.writer.forEach((key) => {
-                        Object.defineProperty(this, key, {
-                            set: (value) => {
-                                const method = "set"+key.firstToUpper();
-                                if (typeof this[method] === "function") {
-                                    this[method].call(this, value);
-                                }
-                            }
-                        });
-                    });
-                }
-            }
-        },
-        events: (() => {
-            const id = aa.uid();
-            return {
-                getEmitter:     function (accessor /*, key, spec */) {
-                    /**
-                     *  Usage:
-                     *      const emit = getEmitter(get, "listeners");
-                     * 
-                     * @param {function|object} accessor
-                     * @param {string} key (optional)
-                     * @param {object} spec (optional)
-                     * 
-                     * @return {function}
-                     */
-                    aa.arg.test(accessor, arg => (aa.isFunction(arg) || aa.verifyObject({
-                        get: aa.isFunction,
-                        set: aa.isFunction,
-                    })(arg)), `'accessor'`);
-                    const key = aa.arg.optional(arguments, 1, `listeners-${id}`, aa.nonEmptyString);
-                    const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
-
-                    if (aa.isObject(accessor)) {
-                        accessor.sprinkle({get, set});
-                    }
-                    const getter = aa.isFunction(accessor) ? accessor : accessor.get;
-                    const setter = aa.isObject(accessor) ? accessor.set : set;
-
-                    return function emit (eventName, data) {
-                        /**
-                         *  Usage:
-                         *      emit.call(this, "eventname", data);
-                         * 
-                         * @param {string} eventName
-                         * @param {any} data
-                         * 
-                         * @return {void}
-                         */
-                        aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
-                        let listeners = getter(this, key);
-                        if (listeners === undefined) {
-                            setter(this, key, {});
-                            listeners = getter(this, key);
-                        }
-                        aa.arg.test(listeners, aa.isObject, `'listeners'`);
-
-                        eventName = eventName.trim();
-                        if (listeners.hasOwnProperty(eventName)) {
-                            listeners[eventName].forEach(callback => {
-                                const event = null; // A future event, some day...
-                                callback(event, data, this);
-                            });
-                        }
-                    };
-                },
-                getListener:    function (accessor /*, key, spec */) {
-                    /**
-                     * Usage:
-                     *      MyClass.prototype.on = getListener(get, "listeners");
-                     * 
-                     * @param {function|object} accessor (if accessor is a function, accessor defines the getter; else if accessor is an object)
-                     * @param {string} key (optional)
-                     * @param {object} spec (optional)
-                     * 
-                     * @return {function}
-                     */
-                    aa.arg.test(accessor, arg => (aa.isFunction(arg) || aa.verifyObject({
-                        get: aa.isFunction,
-                        set: aa.isFunction,
-                    })(arg)), `'accessor'`);
-                    const key = aa.arg.optional(arguments, 1, `listeners-${id}`, aa.nonEmptyString);
-                    const spec = aa.arg.optional(arguments, 2, {}, arg => aa.isObject(arg) && arg.verify(aa.prototypes.events.specs));
-
-                    if (aa.isObject(accessor)) {
-                        accessor.sprinkle({get, set});
-                    }
-                    const getter = aa.isFunction(accessor) ? accessor : accessor.get;
-                    const setter = aa.isObject(accessor) ? accessor.set : set;
-
-                    const on = function (eventName, callback) {
-                        /**
-                         *  Usage:
-                         *      this.on("eventname", (data) => {
-                         *          // do stuff with data...
-                         *      }));
-                         *  or
-                         *      this.on({
-                         *          eventname: data => {
-                         *              // do stuff with data...
-                         *          }
-                         *      });
-                         * 
-                         * @param {string} eventName
-                         * @param {function} callback
-                         * 
-                         * @return {object} this, for chaining
-                         */
-
-                        let listeners = getter(this, key);
-                        if (listeners === undefined) {
-                            setter(this, key, {});
-                            listeners = getter(this, key);
-                        }
-                        aa.arg.test(listeners, aa.isObject, `'listeners'`);
-
-                        if (aa.isObject(eventName)) {
-                            aa.arg.test(eventName, aa.isObjectOfFunctions, `'eventName'`);
-                            eventName.forEach((callback, name) => {
-                                on.call(this, name, callback);
-                            });
-                            return;
-                        }
-
-                        aa.arg.test(eventName, aa.nonEmptyString, `'eventName'`);
-                        aa.arg.test(callback, aa.isFunction, `'callback'`);
-
-                        eventName = eventName.trim();
-                        if (!listeners.hasOwnProperty(eventName)) {
-                            listeners[eventName] = [];
-                        }
-                        listeners[eventName].push(callback);
-                        return this;
-                    };
-                    return on;
-                },
-                specs: {
-                    verbose: value => typeof value === "boolean"
-                }
-            };
-        })(),
-        getPrivateAccessor_X: function (keys /*, spec */) {
-            aa.arg.test(keys, aa.isArrayOfStrings, `'keys'`);
-            const spec = aa.arg.optional(arguments, 1, {}, aa.verifyObject({
-                get: aa.isFunction,
-                set: aa.isFunction
-            }));
-            spec.sprinkle({get, set});
-            
-            const that = {};
-            keys.forEach(key => {
-                Object.defineProperty(that, key, {
-                    get: () => spec.get(this, key),
-                    set: value => { spec.set(this, key, value); }
-                });
-            });
-            return Object.freeze(that);
-        },
+        events: aa.event,
         hydrate:        function (spec /*, startWith */) {
             /**
              * @param {object} spec={}
@@ -783,6 +597,13 @@
              * @return {void}
              */
 
+            aa.defineAccessors.call(this, {
+                publics: {
+                },
+                privates: {
+                },
+            }, {getter: get, setter: set});
+
             set(this, "constructing", true);
             initAttributes.call(this);
             initGetters.call(this);
@@ -874,7 +695,11 @@
             publics.forEach((v, k) => {
                 Object.defineProperty(this, k, {
                     get: () => {
-                        return Object.freeze(get(this, k));
+                        let value = get(this, k);
+                        if (k === 'description' && value === null) {
+                            value = get(this, 'text');
+                        }
+                        return Object.freeze(value);
                     },
                     set: (v) => {
                         const method = "set"+k.firstToUpper();
@@ -921,22 +746,22 @@
         };
 
         // Methods:
-        if (aa.Action.prototype.hydrate === undefined) {
+        aa.deploy(aa.Action.prototype, {
 
             // General:
-            aa.Action.prototype.hydrate         = aa.prototypes.hydrate;
-            aa.Action.prototype.addToManager    = function () {
+            hydrate:         aa.prototypes.hydrate,
+            addToManager:    function () {
                 if (get(this, "addToManager")) {
                     aa.actionManager.update(this);
                 }
-            };
+            },
             /**
              * @param {string} evtName="execute" (optional)
              * @param {any} param=undefined (optional)
              *
              * @return {void}
              */
-            aa.Action.prototype.fire            = function (/* evtName, param */) {
+            fire:            function (/* evtName, param */) {
                 let evtName = arguments && arguments.length > 0 ? arguments[0] : "execute";
                 const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
                 aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
@@ -953,12 +778,16 @@
                 if (param !== undefined && !(evtName === "onexecute" && get(this, "disabled"))) {
                     dispatch.call(this, evtName.replace(/^on/, ''), param);
                 }
-            };
-            aa.Action.prototype.isValid         = function () {
+            },
+            hasCallback:        function (callback) {
+                const callbacks = get(this, "listeners").onexecute;
+                return callbacks.has(callback);
+            },
+            isValid:         function () {
                 
                 return (get(this, "name") !== null);
-            };
-            aa.Action.prototype.listenNode      = function (node, evtName, callback) {
+            },
+            listenNode:      function (node, evtName, callback) {
                 /**
                  * @param {element} node
                  * @param {string} evtName
@@ -979,8 +808,8 @@
                     node: node,
                     callback: callback
                 });
-            };
-            aa.Action.prototype.on              = function (evtName, callback) {
+            },
+            on:              function (evtName, callback) {
                 /**
                  * If not already added, add a callback Function to Action's events listener.
                  *
@@ -1006,28 +835,28 @@
                     res = true;
                 }
                 return res;
-            };
+            },
 
             // Setters:
-            aa.Action.prototype.get             = aa.prototypes.get;
-            aa.Action.prototype.set             = aa.prototypes.set;
-            aa.Action.prototype.setAccessible   = function (/* bool */) {
+            get:             aa.prototypes.get,
+            set:             aa.prototypes.set,
+            setAccessible:   function (/* bool */) {
                 const bool = arguments && arguments.length ? arguments[0] : true;
                 verify("accessible", bool);
                 set(this, "accessible", bool);
-            };
-            aa.Action.prototype.setAddToManager = function (bool) {
+            },
+            setAddToManager: function (bool) {
                 if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
                 
                 set(this, "addToManager", bool);
                 return bool;
-            };
-            aa.Action.prototype.setApp          = function (name) {
+            },
+            setApp:          function (name) {
                 verify("app", name);
                 set(this, "app", name.trim());
                 return true;
-            };
-            aa.Action.prototype.setCheckable    = function (bool) {
+            },
+            setCheckable:    function (bool) {
                 if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
                 
                 const change = (get(this, "checkable") !== bool);
@@ -1035,8 +864,8 @@
                 if (!get(this, "constructing") && change) {
                     this.fire("checkablechange", bool);
                 }
-            };
-            aa.Action.prototype.setChecked      = function (bool) {
+            },
+            setChecked:      function (bool) {
                 if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
 
                 if (get(this, "checkable")) {
@@ -1047,8 +876,8 @@
                     }
                 }
                 return bool;
-            };
-            aa.Action.prototype.setDescription  = function (str) {
+            },
+            setDescription:  function (str) {
                 verify("description", str);
                 const change = (get(this, "description") !== str);
                 set(this, "description", str);
@@ -1056,8 +885,8 @@
                     this.fire("descriptionchange", str);
                 }
                 return true;
-            };
-            aa.Action.prototype.setDisabled     = function (disabled) {
+            },
+            setDisabled:     function (disabled) {
                 /**
                  * @param {boolean} disabled
                  *
@@ -1072,22 +901,22 @@
                     this.fire((disabled ? "dis" : "en")+"able", disabled);
                 }
                 return get(this, "disabled");
-            };
-            aa.Action.prototype.setCallback     = function (f) {
+            },
+            setCallback:     function (f) {
                 aa.deprecated("aa.Action.callbacks");
                 verify("callback", f);
 
                 get(this, "listeners")["onexecute"].push(f); // now in 'onexecute' instead of in 'callbacks'
                 return true;
-            };
-            aa.Action.prototype.setCallbacks    = function (list) {
+            },
+            setCallbacks:    function (list) {
                 verify("callbacks", list);
 
                 return list.forEach((callback) => {
                     this.setCallback(callback);
                 });
-            };
-            aa.Action.prototype.setIcon         = function (str) {
+            },
+            setIcon:         function (str) {
                 verify("icon", str);
                 const previous = get(this, "icon");
                 const change = (previous !== str);
@@ -1099,13 +928,13 @@
                     });
                 }
                 return true;
-            };
-            aa.Action.prototype.setName         = function (p) {
+            },
+            setName:         function (p) {
                 verify("name", p);
                 set(this, "name", p.trim());
                 return true;
-            };
-            aa.Action.prototype.setOn           = function (o) {
+            },
+            setOn:           function (o) {
                 verify("on", o);
 
                 const verifier = {};
@@ -1118,8 +947,8 @@
                 o.forEach((callback, evtName) => {
                     this.on(evtName, callback);
                 });
-            };
-            aa.Action.prototype.setPriority     = function (p) {
+            },
+            setPriority:     function (p) {
                 verify("priority", p);
 
                 p = p.trim().toLowerCase();
@@ -1131,8 +960,8 @@
                     }
                     return true;
                 }
-            };
-            aa.Action.prototype.setText         = function (str) {
+            },
+            setText:         function (str) {
                 verify("text", str);
 
                 const change = (get(this, "text") !== str);
@@ -1141,14 +970,14 @@
                     this.fire("textchange", str);
                 }
                 return true;
-            };
-            aa.Action.prototype.setTooltip      = function (p) {
+            },
+            setTooltip:      function (p) {
                 verify("tooltip", p);
 
                 set(this, "tooltip", p.trim());
                 return true;
-            };
-            aa.Action.prototype.setType         = function (p) {
+            },
+            setType:         function (p) {
                 verify("type", p);
                 set(this, "type", p);
                 if (!get(this, "icon")) {
@@ -1167,10 +996,10 @@
                             break;
                     }
                 }
-            };
+            },
 
             // Getters:
-            aa.Action.prototype.getDomLi        = function () {
+            getDomLi:        function () {
                 let li = aa.html('li');
                 li.innerHTML = this.getText();
                 if (get(this, "tooltip")) {
@@ -1182,8 +1011,8 @@
                     });
                 }
                 return li;
-            };
-            aa.Action.prototype.getDescription  = function () {
+            },
+            getDescription:  function () {
                 return Object.freeze(
                     get(this, "description")
                     ? get(this, "description")
@@ -1193,8 +1022,8 @@
                         : "Action"
                     )
                 );
-            };
-            aa.Action.prototype.getText         = function () {
+            },
+            getText:         function () {
                 return Object.freeze(
                     get(this, "text")
                     ? get(this, "text")
@@ -1204,8 +1033,8 @@
                         : "Action"
                     )
                 );
-            };
-            aa.Action.prototype.getTitle        = function () {
+            },
+            getTitle:        function () {
                 return Object.freeze(
                     get(this, "title")
                     ? get(this, "title")
@@ -1215,12 +1044,12 @@
                         : "Action"
                     )
                 );
-            };
-            aa.Action.prototype.getCallbacks    = function () {
+            },
+            getCallbacks:    function () {
 
                 return get(this, "listeners").onexecute;
-            };
-        }
+            },
+        }, {force: true, condition: aa.Action.prototype.hydrate === undefined});
 
         // Init:
         construct.apply(this, arguments);
@@ -1751,6 +1580,32 @@
                     this.associate(evtName, aa.actionManager.get(evtName));
                 }
             },
+            cancel:         function (evtName, callback) {
+                if (aa.isObject(evtName)) {
+                    if (callback !== undefined) { console.warn("Second argument is ignored when first argument is an object."); }
+                    
+                    evtName.forEach((callback, name) => {
+                        this.cancel(name, callback);
+                    });
+                    return;
+                }
+
+                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                aa.arg.test(callback, aa.isFunction, "'callback'");
+
+                const events = get(this, "events");
+                if (events.hasOwnProperty(evtName)) {
+                    events[evtName].forEachReverse(event => {
+                        aa.throwErrorIf(
+                            !(event.action instanceof aa.Action),
+                            "Event 'action' attribute must be an Action."
+                        );
+                        if (event.action.hasCallback(callback)) {
+                            events[evtName].remove(event)
+                        }
+                    });
+                }
+            },
             dissociate:     function (evtName /*, param */) {
                 /**
                  * @param {String} evtName
@@ -1810,7 +1665,7 @@
                     if (evt instanceof aa.Event) {
                         pile.push(evt);
                     } else if(aa.isArray(evt)) {
-                        aa.arg.test(evt, evt => evt.every(e => e instanceof aa.Event), `'evt'`);
+                        aa.arg.test(evt, aa.isArrayOf(e => e instanceof aa.Event), `'evt'`);
                         evt.forEach((e) => {
                             pile.push(e);
                         });
@@ -1901,26 +1756,25 @@
             },
             run:            function (evt) {},
             suspend:        function (param) {
-                const o = {toSuspend: []};
                 aa.arg.test(param, arg => aa.isArray(arg) || aa.nonEmptyString(arg), 'param');
 
+                const toSuspend = [];
                 if (aa.nonEmptyString(param)) {
                     param = param.trim();
-                    o.toSuspend.push(param);
+                    toSuspend.push(param);
                 } else if(aa.isArray(param)) {
                     param.forEach((s) => {
                         if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
 
-                        o.toSuspend.push(s);
+                        toSuspend.push(s);
                     });
                 }
-                o.toSuspend.forEach((evtName) => {
+                toSuspend.forEach((evtName) => {
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let o = {};
                     o[evtName] = new aa.Event(new aa.Action({on: {execute: function () {}}}),["preventDefault"]);
                     this.listen(o);
                 });
-                delete o.toSuspend;
                 return this;
             },
 
@@ -2257,6 +2111,38 @@
     aa.build                    = new Builder();
 
     // Modules:
+    aa.actions = Object.freeze({
+        disable:    function (actionName) {
+            /**
+             * @param <string|string[]> actionName: Name or list of names of action to disable
+             */
+            if (aa.isArray(actionName)) {
+                actionName.forEach(name => {
+                    aa.actions.disable(name);
+                });
+                return;
+            }
+
+            aa.action(actionName, action => {
+                action.disabled = true;
+            });
+        },
+        enable:     function (actionName) {
+            /**
+             * @param <string|string[]> actionName: Name or list of names of action to enable
+             */
+            if (aa.isArray(actionName)) {
+                actionName.forEach(name => {
+                    aa.actions.enable(name);
+                });
+                return;
+            }
+
+            aa.action(actionName, action => {
+                action.disabled = false;
+            });
+        },
+    });
     aa.actionManager            = new (function () {
 
         // Variables:
@@ -3007,10 +2893,8 @@
             return response;
         };
         this.removeApp          = function (app) {
-            if (!aa.nonEmptyString(app)) {
-                throw new TypeError("Argument must be a non-empty String.");
-                return false;
-            }
+            aa.arg.test(app, aa.nonEmptyString, "'app'")
+
             app = app.trim();
             // console.group('aa.events.remove('+app+')');
             if (this.appNames.has(app) && typeof this.apps[app] !== 'undefined') {
@@ -3806,10 +3690,12 @@
 
                 // Attributes:
                 aa.defineAccessors.call(this, {
-                    publics: {},
+                    publics: {
+                    },
                     privates: {
                         onclickout: null,
                         menu:       null,
+                        node:       null,
                         theme:      null
                     },
                 }, {getter: get, setter: set});
@@ -3824,10 +3710,10 @@
 
                 hide:   function () {
                     const that = aa.getAccessor.call(this, {get, set});
-                    aa.events.removeApp("aaContextMenu");
-                    let dom = document.getElementById("aaContextMenu");
-                    if (aa.isDom(dom)) {
-                        dom.parentNode.removeChild(dom);
+                    if (that.node) {
+                        aa.events.removeApp("aaContextMenu");
+                        that.node.removeNode();
+                        that.node = null;
                         if (that.onclickout) {
                             document.body.cancel(`click`, that.onclickout);
                         }
@@ -3835,28 +3721,7 @@
                     }
                 },
                 show:   function () {
-                    const menu = get(this, "menu");
-                    const shortcut = shortcutMaker(get(this, "appName"));
                     const that = aa.getAccessor.call(this, {get, set});
-
-                    // const dom = $$("div#aaContextMenuBG.aa.bg");
-                    const menuNode = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide.bind(this)));
-                    
-                    this.hide();
-
-                    // Theme:
-                    const theme = get(this, 'theme');
-                    menuNode.classList.add(theme);
-                    aa.events.on('themechange', (theme, previous) => {
-                        menuNode.classList.remove(previous);
-                        menuNode.classList.add(theme);
-                    });
-
-                    menuNode.style.display = "block";
-                    menuNode.style.top = aa.mouse.y+"px";
-                    menuNode.style.left = (aa.mouse.x+4)+"px";
-                    menuNode.style.zIndex = aa.getMaxZIndex();
-                    document.body.appendChild(menuNode);
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {
@@ -3866,35 +3731,73 @@
                     };
                     document.body.on(`click`, that.onclickout);
                     
-                    aa.events.app("aaContextMenu").listen({"<Esc>": new aa.Event(new aa.Action({on: {execute: this.hide.bind(this)}}), ["preventDefault"])});
-                    aa.events.app("aaContextMenu").suspend([
-                        "<Down>",
-                        "<Up>",
-                        "<Home>",
-                        "<End>",
-                        "moletteBas",
-                        "moletteHaut",
-                        "mousewheel.Up",
-                        "mousewheel.Down",
-                        "<Tab>",
-                        "shift <Tab>",
-                    ]);
+                    this.hide();
 
-                    if (aa.mouse.y + menuNode.offsetHeight > aa.browser.height) {
-                        if (menuNode.offsetHeight <= (aa.browser.height-2)) {
-                            menuNode.style.top = (aa.browser.height - menuNode.offsetHeight-2)+"px";
-                        } else {
-                            menuNode.style.top = "2px";
+                    aa.wait(10, () => {
+                        const menu = get(this, "menu");
+                        const shortcut = shortcutMaker(get(this, "appName"));
+
+                        // const dom = $$("div#aaContextMenuBG.aa.bg");
+                        that.node = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide.bind(this)));
+
+                        // Theme:
+                        const theme = get(this, 'theme');
+                        that.node.classList.add(theme);
+                        aa.events.on('themechange', (theme, previous) => {
+                            that.node.classList.remove(previous);
+                            that.node.classList.add(theme);
+                        });
+
+                        that.node.style.display = "block";
+                        that.node.style.top = aa.mouse.y+"px";
+                        that.node.style.left = (aa.mouse.x+4)+"px";
+                        that.node.style.zIndex = aa.getMaxZIndex();
+                        document.body.appendChild(that.node);
+                        that.node = that.node;
+
+                        const escape = new aa.Action({
+                            app: 'aaContextMenu',
+                            accessible: true,
+                            on: {execute: () => {
+                                this.hide();
+                            }}
+                        });
+                        aa.events.app('aaContextMenu').on({
+                            '<Esc>': escape
+                        }, ['preventDefault', 'forever']);
+                        
+                        // aa.events.app("aaContextMenu").listen({
+                        //     "<Esc>": new aa.Event(new aa.Action({on: {execute: this.hide.bind(this)}}), ["preventDefault", "forever"])
+                        // });
+                        aa.events.app("aaContextMenu").suspend([
+                            "<Down>",
+                            "<Up>",
+                            "<Home>",
+                            "<End>",
+                            // "moletteBas",
+                            // "moletteHaut",
+                            // "mousewheel.Up",
+                            // "mousewheel.Down",
+                            "<Tab>",
+                            "shift <Tab>",
+                        ]);
+
+                        if (aa.mouse.y + that.node.offsetHeight > aa.browser.height) {
+                            if (that.node.offsetHeight <= (aa.browser.height-2)) {
+                                that.node.style.top = (aa.browser.height - that.node.offsetHeight-2)+"px";
+                            } else {
+                                that.node.style.top = "2px";
+                            }
                         }
-                    }
-                    if (aa.mouse.x + menuNode.offsetWidth > aa.browser.width) {
-                        if (menuNode.offsetWidth <= (aa.browser.width-2)) {
-                            menuNode.style.left = (aa.browser.width-menuNode.offsetWidth-2)+"px";
-                        } else {
-                            menuNode.style.left = "2px";
+                        if (aa.mouse.x + that.node.offsetWidth > aa.browser.width) {
+                            if (that.node.offsetWidth <= (aa.browser.width-2)) {
+                                that.node.style.left = (aa.browser.width-that.node.offsetWidth-2)+"px";
+                            } else {
+                                that.node.style.left = "2px";
+                            }
                         }
-                    }
-                    privates.emit.call(this, `show`);
+                        privates.emit.call(this, `show`);
+                    });
                 },
 
                 // Setters:
@@ -3963,8 +3866,15 @@
                 };
 
                 // Private attributes:
+                aa.defineAccessors.call(this, {
+                    publics: {
+                    },
+                    privates: {
+                    }
+                }, {getter: get, setter: set});
                 const privates = {
                     buttons:    true,
+                    icon:   null,
                     lastFocus:  null,
                     noButton:   null,
                     node:       null,
@@ -4368,6 +4278,10 @@
                 setFullscreen:      function (b) {
 
                     this.fullscreen = (b === true);
+                },
+                setIcon:            function (icon) {
+                    aa.arg.test(icon, aa.nonEmptyString, "'icon'");
+                    set(this, 'icon', icon.trim());
                 },
                 setId:              function (id) {
                     if (aa.isString(id) && id.trim()) {
@@ -5017,15 +4931,22 @@
                         case "critical":
                         case "confirm":
                         case "prompt":
-                            const icon = (this.type === "prompt" ? "confirm" : this.type);
-                            node.appendChild($$("div.fa-icon", $$("span.icon."+icon+".fa.fa-"+
-                                ({
-                                    information: "info-circle",
-                                    warning: "warning",
-                                    critical: "remove",
-                                    confirm: "question-circle"
-                                })[icon]
-                            +".fa-3x")));
+                            const icon = get(this, 'icon');
+                            if (icon && icon.match(/^url\([^\(\)]+\)/)) {
+                                node.appendChild($$('div.fa-icon.with-custom-icon',
+                                    $$('div.aaDialogIcon', {style: `background-image: ${icon.replace(/;+$/, '')};`})
+                                ));
+                            } else {
+                                const icon = (this.type === "prompt" ? "confirm" : this.type);
+                                node.appendChild($$("div.fa-icon", $$("span.icon."+icon+".fa.fa-"+
+                                    ({
+                                        information: "info-circle",
+                                        warning: "warning",
+                                        critical: "remove",
+                                        confirm: "question-circle"
+                                    })[icon]
+                                +".fa-3x")));
+                            }
                             break;
                     }
                 },
@@ -8792,6 +8713,37 @@
         return Object.freeze(action);
     });
     aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
+        /**
+         * Usage:
+            const XXX = (() => {
+                const {get, set} = aa.mapfactory();
+                function XXX () { get(XXX, 'construct').apply(this, arguments); }
+                function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
+                const blueprint = {
+                    accessors: {
+                        publics: {
+                        },
+                        privates: {
+                        },
+                    },
+                    construct: function () {
+                        const that = getAccessor(this);
+                    },
+                    methods: {
+                        publics: {
+                        },
+                        setters: {
+                        }
+                    },
+                    statics: {
+                    },
+                    verifiers: {
+                    }
+                };
+                aa.manufacture(XXX, blueprint, {get, set});
+                return XXX;
+            })();
+         */
         aa.arg.test(blueprint, aa.verifyObject({
             accessors:          aa.verifyObject(commons.accessors.verifiers),
             construct:          aa.isFunction,
@@ -8838,25 +8790,34 @@
                         aa.arg.test(
                             value,
                             value =>
-                                blueprint.verifiers
-                                && blueprint.verifiers.hasOwnProperty(key)
-                                && blueprint.verifiers[key].call(this, value),
+                                !blueprint.verifiers
+                                || (
+                                    !blueprint.verifiers.hasOwnProperty(key)
+                                    || blueprint.verifiers[key].call(this, value)
+                                ),
                             `'${key}' setter`
                         );
                         const isDifferent = (value !== getter(this, key));
-
                         if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
-                        if (blueprint.methods.setters[key]) {
+                        if (
+                            blueprint.methods
+                            && blueprint.methods.setters
+                            && blueprint.methods.setters.hasOwnProperty(key)
+                        ) {
                             blueprint.methods.setters[key].call(this, value);
                         } else {
-                            setter(this, key, value);
+                            if (blueprint.methods.setters[key]) {
+                                blueprint.methods.setters[key].call(this, value);
+                            } else {
+                                setter(this, key, value);
+                            }
                         }
                         if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
-                    }
+                    };
                 }
             });
             
-            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter });
+            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
 
             blueprint.construct.apply(this, arguments);
             
@@ -9556,6 +9517,7 @@
                 "required",
                 "rowspan",
                 "selected",
+                "shortcut",
                 "step",
                 "suffix",
                 "text",
@@ -9642,6 +9604,18 @@
                             }
                         }
                     },
+                    shortcut: {
+                        get: () => textNode.dataset.shortcut,
+                        set: shortcut => {
+                            aa.arg.test(shortcut, aa.isNullOrNonEmptyString, "'shortcut'");
+
+                            if (shortcut) {
+                                textNode.dataset.shortcut = shortcut.trim();
+                            } else {
+                                delete textNode.dataset.shortcut;
+                            }
+                        }
+                    }
                 });
                 Object.defineProperty(elt, 'text', {
                 });
@@ -10000,6 +9974,10 @@
                                                         });
                                                         break;
                                                 }
+                                                break;
+
+                                            case "shortcut":
+                                                elt.shortcut = option;
                                                 break;
 
                                             case "tooltip":

@@ -55,6 +55,10 @@
 
         --notif-bg:  #fff;
         --notif-text: #444;
+        
+        --tooltip-bg: #223;
+        --tooltip-text: #eef;
+        --tooltip-grey: #99f;
 
         --inset: inset 1px 1px 1px var(--color-blue-fade);
 
@@ -227,7 +231,8 @@
         font-size: 13px;
         line-height: 1;
     }
-    .aa button.icon{
+    .aa button.icon {
+        position: relative;
         padding: 0 0 0 1px;
         min-width: 0;
         width: 28px;
@@ -1204,10 +1209,7 @@
         height: 100%;
     }
     div.aaDialog div.menu{
-        /*position: absolute;*/
-        /*display: table-cell;*/
         vertical-align: middle;
-        padding: 8px 16px;
         padding: 0px 8px;
         width: 100%;
         height: auto;
@@ -1228,7 +1230,6 @@
     div.aaDialog div.menu label:first-child{
         margin-left: 0px;
     }
-    /*div.aaDialog div.menu input[type="file"],*/
     div.aaDialog div.menu button,
     div.aaDialog div.menu input[type="button"]{
         box-sizing: border-box;
@@ -1317,9 +1318,12 @@
         border-top: 0px solid transparent;
         border-bottom: 6px solid #444;
     }
-    div.aaDialog div.menu div.fa-icon{
+    div.aaDialog div.menu div.fa-icon {
         padding: 8px 0px;
         text-align: center;
+    }
+    div.aaDialog div.menu div.fa-icon.with-custom-icon {
+        padding: 16px 0 0 0;
     }
     div.aaDialog div.menu span.icon{
         display: inline-block;
@@ -1360,6 +1364,16 @@
     div.aaDialog div.icon.prompt,
     div.aaDialog div.icon.confirm{
         background-image: url(images/dialog_confirm.png);
+    }
+    div.aaDialog div.aaDialogIcon {
+        display: inline-block;
+        margin-top: 8px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: transparent;
+        background-position: center;
+        background-size: cover;
     }
     div.aaDialog form div.buttons{
         position: sticky;
@@ -2311,13 +2325,13 @@
         bottom: 4px;
         flex-direction: column-reverse;
         justify-content: flex-end;
-        align-items: center;
+        align-items: flex-start;
     }
     .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip {
         top: 4px;
         flex-direction: column;
         justify-content: flex-start;
-        align-items: center;
+        align-items: flex-start;
     }
     .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.arrow {
         width: 1px;
@@ -2332,33 +2346,42 @@
     .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
     .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
         display: block;
+        margin-left: 12px;
         border-left: 4px solid transparent;
         border-right: 4px solid transparent;
     }
     .aa .tooltip-container.left > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-left: 8px solid var(--notif-text);
+        border-left: 8px solid var(--tooltip-bg);
     }
     .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-right: 8px solid var(--notif-text);
+        border-right: 8px solid var(--tooltip-bg);
     }
     .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-top: 8px solid var(--notif-text);
+        border-top: 8px solid var(--tooltip-bg);
     }
     .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-bottom: 8px solid var(--notif-text);
+        border-bottom: 8px solid var(--tooltip-bg);
     }
     .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text {
         display: inline-block;
         padding: 2px 8px;
         white-space: nowrap;
-        background: var(--notif-text);
-        color: var(--notif-bg);
+        background: var(--tooltip-bg);
+        color: var(--tooltip-text);
         border-radius: 2px;
     }
+    .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text:after {
+        padding-left: 16px;
+        content: attr(data-shortcut);
+        color: var(--tooltip-grey);
+    }
+    .aa button.ico > .tooltip-container,
     .aa button.icon > .tooltip-container {
         display: none;
     }
+    .aa button.ico:hover > .tooltip-container,
     .aa button.icon:hover > .tooltip-container,
+    .aa button.ico:focus > .tooltip-container,
     .aa button.icon:focus > .tooltip-container {
         display: block;
     }

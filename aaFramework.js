@@ -5620,7 +5620,7 @@
             const view = {
                 percent: function (index, value) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     index = index.trim();
                     const nodes = that.nodes.collection;
@@ -5631,7 +5631,7 @@
             };
             const addNode   = function (index) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                const that = aa.getAccessor.call(this);
+                const that = aa.getAccessor.call(this, {get, set});
 
                 index = index.trim();
                 const container = that.nodes.container;
@@ -5669,7 +5669,7 @@
             const moveRange = function (index, value) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                const that = aa.getAccessor.call(this);
+                const that = aa.getAccessor.call(this, {get, set});
 
                 const nodes = that.nodes;
                 if (nodes.collection[index]) {
@@ -5696,7 +5696,7 @@
                         },
                         tasks: 0
                     }
-                });
+                }, {getter: get, setter: set});
 
                 construct.apply(this, arguments);
             };
@@ -5707,7 +5707,7 @@
                 hydrate: aa.prototypes.hydrate,
                 add:        function (index) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     index = index.trim();
                     that.tasks += 1;
@@ -5716,7 +5716,7 @@
                 },
                 complete:   function (index) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     index = index.trim();
                     const indexes = that.indexes;
@@ -5735,14 +5735,14 @@
                     }
                 },
                 hide:       function () {
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
                     el('aaProgress-'+that.id, node => {
                         node.removeNode();
                     });
                     delete collection[this.id];
                 },
                 show:       function () {
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
                     el('aaProgress', () => {}, () => {
                         const nodes = that.nodes;
                         nodes.container = $$('div.message');
@@ -5777,7 +5777,7 @@
                 move:       function (index, value) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
                     if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     index = index.trim();
                     if (that.indexes.hasOwnProperty(index)) {
@@ -5787,13 +5787,13 @@
                 },
                 setTitle:   function (title) {
                     if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     that.title = title.trim();
                 },
                 setVisible: function (visible) {
                     if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
-                    const that = aa.getAccessor.call(this);
+                    const that = aa.getAccessor.call(this, {get, set});
 
                     that.visible = visible;
                     el('aaProgress-'+that.id, (node) => {

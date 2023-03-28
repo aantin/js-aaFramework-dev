@@ -1135,27 +1135,28 @@
         };
     })();
     aa.Collection               = (() => {
-      const {get, set} = aa.mapFactory();
+        const {get, set} = aa.mapFactory();
+        function getAccessor (that) { return aa.getAccessor.call(that, 'listeners', {get, set}); }
 
-      /**
-       * Usage:
-       * new aa.Collection({
-       *    authenticate: <function>, // a function that returns a boolean, used to verify each item integrity with the collection
-       *    on: {
-       *        added:          <function>, // a callback function that will be called after an item is added to the collection
-       *        clear-before:   <function>, // a callback function that will be called before clearing the collection
-       *        clear:          <function>, // a callback function that will be called after clearing the collection
-       *        datamodified:   <function>, // a callback function that will be called after the collection is modified
-       *        removed:        <function>  // a callback function that will be called after an item is removed from the collection
-       *    },
-       *    parent: <any>
-       * });
-       * 
-       * @param {object} spec (optional)
-       * 
-       * @return {void}
-       */
-      function Collection (/* spec */) {
+        /**
+         * Usage:
+         * new aa.Collection({
+         *    authenticate: <function>, // a function that returns a boolean, used to verify each item integrity with the collection
+         *    on: {
+         *        added:          <function>, // a callback function that will be called after an item is added to the collection
+         *        clear-before:   <function>, // a callback function that will be called before clearing the collection
+         *        clear:          <function>, // a callback function that will be called after clearing the collection
+         *        datamodified:   <function>, // a callback function that will be called after the collection is modified
+         *        removed:        <function>  // a callback function that will be called after an item is removed from the collection
+         *    },
+         *    parent: <any>
+         * });
+         * 
+         * @param {object} spec (optional)
+         * 
+         * @return {void}
+         */
+        function Collection (/* spec */) {
             aa.defineAccessors.call(this, {
                 publics: {
                     authenticate: null
@@ -1278,6 +1279,30 @@
             indexOf:            function (/* value */) {
                 return get(this, "data").indexOf.apply(this, arguments);
             },
+            insertAt:           function (position, ...items) {
+                /**
+                 * @param <int> position
+                 * @param <any> ...items: The items to add to the collection from 'position' parameter.
+                 */
+                const that = getAccessor(this);
+                aa.arg.test(position, aa.isInt, "'position'");
+                if (position < 0) {
+                    position += that.data.length;
+                }
+                const args = [position, 0];
+                items.forEach(item => {
+                    aa.throwErrorIf(
+                        (this.authenticate && !this.authenticate(item)),
+                        "Invalid collection item."
+                    );
+                    args.push(item);
+                });
+                that.data.splice.apply(null, args);
+                items.forEach(item => {
+                    privates.emit.call(this, `added`, item);
+                });
+                privates.emit.call(this, `datamodified`);
+            },
             join:               function () {
                 return (
                     get(this, `data`).join.apply(this, arguments)
@@ -1287,14 +1312,10 @@
             push:               function (...items) {
                 const data = get(this, "data");
                 items.forEach(item => {
-                    if (this.authenticate) {
-                        if (!this.authenticate(item)) {
-                            console.error(`parent:`, this.parent);
-                            console.error(`unauthorized item:`, item);
-                            throw new Error(`Invalid collection item.`);
-                            return;
-                        }
-                    }
+                    aa.throwErrorIf(
+                        (this.authenticate && !this.authenticate(item)),
+                        "Invalid collection item."
+                    );
                     data.push(item);
                     
                     const index = data.length - 1;
@@ -1339,6 +1360,10 @@
                 const removedItems = [];
                 const data = get(this, "data");
                 items.forEach(item => {
+                    aa.throwErrorIf(
+                        (this.authenticate && !this.authenticate(item)),
+                        "Invalid collection item."
+                    );
                     const index = data.indexOf(item);
                     if (index > -1) {
                         const removedItem = data.splice(index, 1);
@@ -1349,6 +1374,9 @@
                         }
                     }
                 });
+                if (data.length === 0) {
+                    privates.emit.call(this, `clear`, []);
+                }
                 return removedItems;
             },
             sort:               function (func) {
@@ -8965,6 +8993,60 @@
         };
         const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
         return Animation;
+    })();
+    aa.Selection                = (() => {
+        const {get, set} = aa.mapFactory();
+        function getAccessor(that) { return aa.getAccessor.call(that, 'listeners', {get, set}); }
+        // ----------------
+        const Selection = (() => {
+            function Selection () { get(Selection, 'construct').apply(this, arguments); }
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        dimension:      1
+                    },
+                    privates: {
+                        list:           null,
+                        lastClicked:    null
+                    }
+                },
+                construct: function () {
+                    const that = getAccessor(this);
+                    that.list = [];
+                },
+                verifiers: {
+                    dimension: aa.isStrictlyPositiveInt
+                }
+            };
+            aa.manufacture(Selection, blueprint, {get, set});
+            return Selection;
+        })();
+        // ----------------
+        const Item = (() => {
+            function Item () { get(Item, 'construct').apply(this, arguments); }
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        checked: false
+                    },
+                    privates: {
+                        list: null,
+                        lastClickedItem: null
+                    }
+                },
+                construct: function () {
+                    const that = getAccessor(this);
+                    that.list = [];
+                },
+                verifiers: {
+                    checked: aa.isBool
+                }
+            };
+            aa.manufacture(Item, blueprint, {get, set});
+            return Item;
+        })();
+        // ----------------
+        return Selection;
     })();
     aa.bake                     = function (query /*, spec */) {
         aa.arg.test(query, aa.nonEmptyString, "'query'");

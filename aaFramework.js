@@ -1142,8 +1142,11 @@
        * new aa.Collection({
        *    authenticate: <function>, // a function that returns a boolean, used to verify each item integrity with the collection
        *    on: {
-       *        added: <function>,    // a callback function that will be called after an item is added to the collection
-       *        removed: <function>   // a callback function that will be called after an item is removed from the collection
+       *        added:          <function>, // a callback function that will be called after an item is added to the collection
+       *        clear-before:   <function>, // a callback function that will be called before clearing the collection
+       *        clear:          <function>, // a callback function that will be called after clearing the collection
+       *        datamodified:   <function>, // a callback function that will be called after the collection is modified
+       *        removed:        <function>  // a callback function that will be called after an item is removed from the collection
        *    },
        *    parent: <any>
        * });
@@ -1253,11 +1256,17 @@
             clear:              function () {
                 // get(this, `data`).clear();
                 const data = get(this, `data`);
+                const items = this.toArray();
+                privates.emit.call(this, `clear-before`, items);
                 while (data.length > 0) {
                     data.remove(data[data.length - 1]);
                 }
-                privates.emit.call(this, `clear`);
+                privates.emit.call(this, `clear`, items);
+                items.forEach(item => {
+                    privates.emit.call(this, `removed`, item);
+                });
                 privates.emit.call(this, `datamodified`);
+                return items;
             },
             has:                function (value) {
                 return (get(this, "data").indexOf(value) > -1);

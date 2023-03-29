@@ -3704,8 +3704,11 @@
             return Object.freeze(Menu);
         })();
         this.ContextMenu    = (function () {
+            function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
 
             // Closure private methods:
+            const view = {
+            };
             const privates = {
                 construct: function (/* spec */) {
                     const spec = aa.arg.optional(arguments, 0, {});
@@ -3720,8 +3723,11 @@
                     }
                     set(this, "menu", new aa.gui.Menu(spec));
                     aa.prototypes.initGetters.call(this, ["theme", "appName", "items"]);
+
+                    const that = getAccessor(this);
+                    that.view = view.bind(this);
                 },
-                emit: aa.prototypes.events.getEmitter({get, set})
+                emit: aa.prototypes.events.getEmitter({get, set}),
             };
             const ContextMenu   = function () {
 
@@ -3733,7 +3739,8 @@
                         onclickout: null,
                         menu:       null,
                         node:       null,
-                        theme:      null
+                        theme:      null,
+                        view:       null
                     },
                 }, {getter: get, setter: set});
 
@@ -3746,11 +3753,12 @@
                 on:     aa.prototypes.events.getListener({get, set}),
 
                 hide:   function () {
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = getAccessor(this);
                     if (that.node) {
                         aa.events.removeApp("aaContextMenu");
                         that.node.removeNode();
                         that.node = null;
+                        document.body.classList.remove('aaContextMenuFreeze');
                         if (that.onclickout) {
                             document.body.cancel(`click`, that.onclickout);
                         }
@@ -3758,7 +3766,7 @@
                     }
                 },
                 show:   function () {
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = getAccessor(this);
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {
@@ -3786,11 +3794,11 @@
                         });
 
                         that.node.style.display = "block";
-                        that.node.style.top = aa.mouse.y+"px";
-                        that.node.style.left = (aa.mouse.x+4)+"px";
+                        that.node.style.top = `${aa.mouse.y}px`;
+                        that.node.style.left = `${aa.mouse.x+4}px`;
                         that.node.style.zIndex = aa.getMaxZIndex();
                         document.body.appendChild(that.node);
-                        that.node = that.node;
+                        document.body.classList.add('aaContextMenuFreeze');
 
                         const escape = new aa.Action({
                             app: 'aaContextMenu',
@@ -3803,9 +3811,6 @@
                             '<Esc>': escape
                         }, ['preventDefault', 'forever']);
                         
-                        // aa.events.app("aaContextMenu").listen({
-                        //     "<Esc>": new aa.Event(new aa.Action({on: {execute: this.hide.bind(this)}}), ["preventDefault", "forever"])
-                        // });
                         aa.events.app("aaContextMenu").suspend([
                             "<Down>",
                             "<Up>",
@@ -3833,6 +3838,18 @@
                                 that.node.style.left = "2px";
                             }
                         }
+                        const ul = that.node.firstChild;
+                        if (ul) {
+                            const style = getComputedStyle(ul);
+                            const ulWidth = ul.offsetWidth || parseFloat(style.width);
+                            const ulHeight = ul.offsetHeight || parseFloat(style.height);
+
+                            const left = Math.min(aa.mouse.x + 4, Math.max(aa.browser.width - ulWidth - 4, 4));
+                            const top = Math.min(aa.mouse.y, Math.max(aa.browser.height - ulHeight, 4));
+                            that.node.style.left = `${left}px`;
+                            that.node.style.top = `${top}px`;
+                        }
+                        
                         privates.emit.call(this, `show`);
                     });
                 },
@@ -8993,61 +9010,6 @@
         };
         const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
         return Animation;
-    })();
-    aa.SelectionMatrix                = (() => {
-        const {get, set} = aa.mapFactory();
-        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
-        // ----------------
-        const SelectionMatrix = (() => {
-            function SelectionMatrix () { get(SelectionMatrix, 'construct').apply(this, arguments); }
-            const blueprint = {
-                accessors: {
-                    publics: {
-                        dimension:      1
-                    },
-                    privates: {
-                        list:           null,
-                        lastClicked:    null
-                    }
-                },
-                construct: function () {
-                    const that = getAccessor(this);
-                    that.list = [];
-                },
-                verifiers: {
-                    dimension:  aa.isStrictlyPositiveInt,
-                    list:       aa.isArray
-                }
-            };
-            aa.manufacture(SelectionMatrix, blueprint, {get, set});
-            return SelectionMatrix;
-        })();
-        // ----------------
-        const Item = (() => {
-            function Item () { get(Item, 'construct').apply(this, arguments); }
-            const blueprint = {
-                accessors: {
-                    publics: {
-                        checked: false
-                    },
-                    privates: {
-                        list: null,
-                        lastClickedItem: null
-                    }
-                },
-                construct: function () {
-                    const that = getAccessor(this);
-                    that.list = [];
-                },
-                verifiers: {
-                    checked: aa.isBool
-                }
-            };
-            aa.manufacture(Item, blueprint, {get, set});
-            return Item;
-        })();
-        // ----------------
-        return SelectionMatrix;
     })();
     aa.bake                     = function (query /*, spec */) {
         aa.arg.test(query, aa.nonEmptyString, "'query'");

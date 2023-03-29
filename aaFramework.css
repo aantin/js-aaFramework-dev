@@ -966,6 +966,9 @@
     /****************/
     /* Context menu */
     /****************/
+    body.aaContextMenuFreeze {
+        overflow: hidden;
+    }
     #aaContextMenuBG {
         background: rgba(128,128,128,0.1);
     }
@@ -2384,6 +2387,39 @@
     .aa button.ico:focus > .tooltip-container,
     .aa button.icon:focus > .tooltip-container {
         display: block;
+    }
+
+    section.SelectionMatrix {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255,255,255,.8);
+
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+    section.SelectionMatrix div.diamond {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+    section.SelectionMatrix div.diamond > span.diamond {
+        display: inline-block;
+        border-style: solid;
+        border-color: transparent;
+    }
+    section.SelectionMatrix div.diamond > span.diamond.left {
+        border-width: 6px 12px 6px 0px;
+        border-right-color: rgba(64,128,255,.8);
+    }
+    section.SelectionMatrix div.diamond > span.diamond.right {
+        border-width: 6px 0px 6px 12px;
+        border-left-color: rgba(64,128,255,.8);
     }
 
     /* --------------------------------

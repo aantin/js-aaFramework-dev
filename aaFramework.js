@@ -8994,12 +8994,12 @@
         const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
         return Animation;
     })();
-    aa.Selection                = (() => {
+    aa.SelectionMatrix                = (() => {
         const {get, set} = aa.mapFactory();
-        function getAccessor(that) { return aa.getAccessor.call(that, 'listeners', {get, set}); }
+        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
         // ----------------
-        const Selection = (() => {
-            function Selection () { get(Selection, 'construct').apply(this, arguments); }
+        const SelectionMatrix = (() => {
+            function SelectionMatrix () { get(SelectionMatrix, 'construct').apply(this, arguments); }
             const blueprint = {
                 accessors: {
                     publics: {
@@ -9015,11 +9015,12 @@
                     that.list = [];
                 },
                 verifiers: {
-                    dimension: aa.isStrictlyPositiveInt
+                    dimension:  aa.isStrictlyPositiveInt,
+                    list:       aa.isArray
                 }
             };
-            aa.manufacture(Selection, blueprint, {get, set});
-            return Selection;
+            aa.manufacture(SelectionMatrix, blueprint, {get, set});
+            return SelectionMatrix;
         })();
         // ----------------
         const Item = (() => {
@@ -9046,7 +9047,7 @@
             return Item;
         })();
         // ----------------
-        return Selection;
+        return SelectionMatrix;
     })();
     aa.bake                     = function (query /*, spec */) {
         aa.arg.test(query, aa.nonEmptyString, "'query'");

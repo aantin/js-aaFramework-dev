@@ -2389,7 +2389,15 @@
         display: block;
     }
 
+    /* Selection matrix */
+
     section.SelectionMatrix {
+        --item-top: rgba(64,128,255,.1);
+        --item-left: rgba(64,128,255,.2);
+        --item-right: rgba(64,128,255,.3);
+        --item-top-selected: rgba(64,128,255,.8);
+        --item-left-selected: rgba(64,128,255,.9);
+        --item-right-selected: rgba(64,128,255,1);
         position: fixed;
         top: 0;
         left: 0;
@@ -2407,19 +2415,75 @@
         flex-flow: row nowrap;
         justify-content: center;
         align-items: center;
+
+        position: relative;
     }
+    
     section.SelectionMatrix div.diamond > span.diamond {
+        position: absolute;
         display: inline-block;
         border-style: solid;
         border-color: transparent;
     }
-    section.SelectionMatrix div.diamond > span.diamond.left {
+
+    section.SelectionMatrix div.diamond > span.diamond.top-left {
+        top: 0;
+        left: -12px;
         border-width: 6px 12px 6px 0px;
-        border-right-color: rgba(64,128,255,.8);
+        border-right-color: var(--item-top);
+    }
+    section.SelectionMatrix div.diamond > span.diamond.top-right {
+        top: 0;
+        right: -12px;
+        border-width: 6px 0px 6px 12px;
+        border-left-color: var(--item-top);
+    }
+    section.SelectionMatrix div.diamond > span.diamond.left,
+    section.SelectionMatrix div.diamond > span.diamond.right {
+        height: 16px;
+    }
+    section.SelectionMatrix div.diamond > span.diamond.left {
+        top: 6px;
+        left: -12px;
+        border-width: 6px 0 0 12px;
+        border-left-color: var(--item-left);
     }
     section.SelectionMatrix div.diamond > span.diamond.right {
-        border-width: 6px 0px 6px 12px;
-        border-left-color: rgba(64,128,255,.8);
+        top: 6px;
+        right: -12px;
+        border-width: 6px 12px 0 0;
+        border-right-color: var(--item-right);
+    }
+    section.SelectionMatrix div.diamond > span.diamond.bottom-left {
+        top: 22px;
+        left: -12px;
+        border-width: 6px 0 0 12px;
+        border-top-color: var(--item-left);
+    }
+    section.SelectionMatrix div.diamond > span.diamond.bottom-right {
+        top: 22px;
+        right: -12px;
+        border-width: 6px 12px 0 0;
+        border-top-color: var(--item-right);
+    }
+
+    section.SelectionMatrix div.diamond.selected > span.diamond.top-left {
+        border-right-color: var(--item-top-selected);
+    }
+    section.SelectionMatrix div.diamond.selected > span.diamond.top-right {
+        border-left-color: var(--item-top-selected);
+    }
+    section.SelectionMatrix div.diamond.selected > span.diamond.left {
+        border-left-color: var(--item-left-selected);
+    }
+    section.SelectionMatrix div.diamond.selected > span.diamond.right {
+        border-right-color: var(--item-right-selected);
+    }
+    section.SelectionMatrix div.diamond.selected > span.diamond.bottom-left {
+        border-top-color: var(--item-left-selected);
+    }
+    section.SelectionMatrix div.diamond.selected > span.diamond.bottom-right {
+        border-top-color: var(--item-right-selected);
     }
 
     /* --------------------------------

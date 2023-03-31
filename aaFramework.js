@@ -1419,6 +1419,15 @@
             }
         }, {force: true});
 
+        // Iterator:
+        Collection.prototype[Symbol.iterator] = function* () {
+            const that = getAccessor(this);
+            for (let i=0; i<that.data.length; i++) {
+                const item = that.data[i];
+                yield item;
+            }
+        };
+
         // Static:
         aa.deploy(Collection, {
             fromArray: function (list /* spec */) {
@@ -1922,20 +1931,18 @@
         };
         aa.deploy(EventResponse.prototype, {
             // Methods:
-            preventDefault:     function () {
-            
-                set(this, "isPreventDefault", true);
+            preventDefault:     function (prevent=true) {
+                aa.arg.test(prevent, aa.isBool);
+                set(this, "isPreventDefault", prevent);
             },
             isPreventDefault:   function () {
-            
                 return get(this, "isPreventDefault");
             },
-            stopPropagation:    function () {
-            
+            stopPropagation:    function (stop=true) {
+                aa.arg.test(stop, aa.isBool);
                 set(this, "isStopPropagation", true);
             },
             isStopPropagation:   function () {
-            
                 return get(this, "isStopPropagation");
             },
 

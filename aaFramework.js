@@ -1422,8 +1422,7 @@
         // Iterator:
         Collection.prototype[Symbol.iterator] = function* () {
             const that = getAccessor(this);
-            for (let i=0; i<that.data.length; i++) {
-                const item = that.data[i];
+            for (let item of that.data) {
                 yield item;
             }
         };

@@ -113,7 +113,7 @@
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
-        events: aa.event,
+        events:         aa.event,
         hydrate:        function (spec /*, startWith */) {
             /**
              * @param {object} spec={}
@@ -8838,7 +8838,7 @@
         const getter = accessors.get;
         const setter = accessors.set;
 
-        const emit = aa.prototypes.events.getEmitter(getter, `listeners`);
+        const emit = aa.event.getEmitter(getter, `listeners`);
 
         // Constructor:
         setter(Instancer, `construct`, function (/* spec */) {
@@ -8849,7 +8849,7 @@
             .forEach(key => {
                 if (blueprint.accessors.publics.hasOwnProperty(key)) {
                     const method = `set${key.firstToUpper()}`;
-                    Instancer.prototype[method] = function (value) {
+                    Instancer.prototype[method] ??= function (value) {
                         aa.arg.test(
                             value,
                             value =>
@@ -8915,7 +8915,7 @@
                     }
                 });
             },
-            on:         aa.prototypes.events.getListener(getter, `listeners`),
+            on:         aa.event.getListener(getter, `listeners`),
         }, blueprint.methods.publics), {force: true});
 
         // Static:

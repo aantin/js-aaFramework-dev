@@ -8833,53 +8833,47 @@
             get: aa.isFunction,
             set: aa.isFunction,
         }));
-        accessors.sprinkle({ get, set });
 
-        const getter = accessors.get;
-        const setter = accessors.set;
+        const getter = accessors.get ?? get;
+        const setter = accessors.set ?? set;
 
-        const emit = aa.event.getEmitter(getter, `listeners`);
+        const emit = aa.event.getEmitter({get: getter, set: setter});
+
+        // Define setters:
+        Object.keys(blueprint.accessors.publics)
+        .forEach(key => {
+            if (blueprint.accessors.publics.hasOwnProperty(key)) {
+                const methodName = `set${key.firstToUpper()}`;
+                function method (value) {
+                    aa.arg.test(
+                        value,
+                        value =>
+                            !blueprint.verifiers
+                            || (
+                                !blueprint.verifiers.hasOwnProperty(key)
+                                || blueprint.verifiers[key].call(this, value)
+                            ),
+                        `'${key}' setter`
+                    );
+                    const isDifferent = (value !== getter(this, key));
+                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
+                    if (blueprint?.methods?.setters.hasOwnProperty(key)) {
+                        blueprint.methods.setters[key].call(this, value);
+                    } else {
+                        setter(this, key, value);
+                    }
+                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
+                }
+
+                // setter(this, methodName, method);
+                Instancer.prototype[methodName] ??= method;
+            }
+        });
 
         // Constructor:
         setter(Instancer, `construct`, function (/* spec */) {
             const spec = aa.arg.optional(arguments, 0, {});
 
-            // Define setters:
-            Object.keys(blueprint.accessors.publics)
-            .forEach(key => {
-                if (blueprint.accessors.publics.hasOwnProperty(key)) {
-                    const method = `set${key.firstToUpper()}`;
-                    Instancer.prototype[method] ??= function (value) {
-                        aa.arg.test(
-                            value,
-                            value =>
-                                !blueprint.verifiers
-                                || (
-                                    !blueprint.verifiers.hasOwnProperty(key)
-                                    || blueprint.verifiers[key].call(this, value)
-                                ),
-                            `'${key}' setter`
-                        );
-                        const isDifferent = (value !== getter(this, key));
-                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
-                        if (
-                            blueprint.methods
-                            && blueprint.methods.setters
-                            && blueprint.methods.setters.hasOwnProperty(key)
-                        ) {
-                            blueprint.methods.setters[key].call(this, value);
-                        } else {
-                            if (blueprint.methods.setters[key]) {
-                                blueprint.methods.setters[key].call(this, value);
-                            } else {
-                                setter(this, key, value);
-                            }
-                        }
-                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
-                    };
-                }
-            });
-            
             aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
 
             blueprint.construct.apply(this, arguments);
@@ -8888,7 +8882,7 @@
         });
 
         // Public:
-        aa.deploy(Instancer.prototype, Object.assign({
+        const methods = Object.assign({
             hydrate:    function (/* spec, order */) {
                 const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
                 // aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
@@ -8898,9 +8892,10 @@
                 // First assign with starting keys:
                 order.forEach((key) => {
                     if (spec.hasOwnProperty(key)) {
-                        const method = `set${key.firstToUpper()}`;
-                        if (aa.isFunction(this[method])) {
-                            this[method](spec[key]);
+                        const methodName = `set${key.firstToUpper()}`;
+                        const method = getter(this, methodName) ?? this[methodName];
+                        if (aa.isFunction(method)) {
+                            method.call(this, spec[key]);
                         }
                     }
                 });
@@ -8909,14 +8904,16 @@
                 Object.keys(spec)
                 .filter(key => !order.has(key))
                 .forEach(key => {
-                    const method = `set${key.firstToUpper()}`;
-                    if (aa.isFunction(this[method])) {
-                        this[method](spec[key]);
+                    const methodName = `set${key.firstToUpper()}`;
+                    const method = getter(this, methodName) ?? this[methodName];
+                    if (aa.isFunction(method)) {
+                        method.call(this, spec[key]);
                     }
                 });
             },
-            on:         aa.event.getListener(getter, `listeners`),
-        }, blueprint.methods.publics), {force: true});
+            on:         aa.event.getListener({get: getter, set: setter})
+        }, blueprint.methods.publics);
+        aa.deploy(Instancer.prototype, methods, {force: true});
 
         // Static:
         aa.deploy(Instancer, blueprint.statics, {force: true});

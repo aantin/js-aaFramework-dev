@@ -9684,10 +9684,12 @@
                 wrap: function (spec) {
                     aa.arg.optional(arguments, 0, {}, aa.verifyObject({
                         tag:    aa.isStringMatch(/^[a-z][a-z0-9]*$/i),
+                        trim:   aa.isBool,
                         toggle: aa.isBool
                     }));
                     spec.sprinkle({
                         tag:    'div',
+                        trim:   false,
                         toggle: false
                     });
 
@@ -9749,9 +9751,9 @@
                     }
 
                     privates.newSelection.call(this,
-                        text.head,
+                        `${text.head}`,
                         `${tag.start}${text.main}${tag.end}`,
-                        text.trail
+                        `${text.trail}`
                     );
                     return this;
                 }

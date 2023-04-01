@@ -454,28 +454,28 @@
         };
 
         // Public methods:
-        if (aa.ActionGroup.prototype.hydrate === undefined) {
+        aa.deploy(aa.ActionGroup.prototype, {
 
             // General:
-            aa.ActionGroup.prototype.hydrate        = aa.prototypes.hydrate;
-            aa.ActionGroup.prototype.isValid        = function () {
+            hydrate:        aa.prototypes.hydrate,
+            isValid:        function () {
                 return (
                     !!get(this, "label")
                 );
-            };
+            },
 
             // Setters:
-            aa.ActionGroup.prototype.addAction      = function (action) {
+            addAction:      function (action) {
                 if (!(action instanceof aa.Action)) { throw new TypeError("Argument must be an Action."); }
                 get(this, "collection").push(action);
-            };
-            aa.ActionGroup.prototype.setCollection  = function (arr) {
+            },
+            setCollection:  function (collection) {
                 const errors = [];
-                const parse = (arr) => {
-                    if(!aa.isArray(arr)) { throw new TypeError("Argument must be an Array."); }
+                const parse = (collection) => {
+                    aa.arg.test(collection, aa.isArray, "'collection'");
 
                     const list = [];
-                    arr.forEach((item) => {
+                    collection.forEach((item) => {
                         if (item instanceof aa.ActionGroup && item.isValid()) {
                             list.push(item);
                         } else if (item instanceof aa.Action && item.isValid()) {
@@ -491,20 +491,20 @@
                     });
                     return list;
                 };
-                const group = parse(arr);
+                const group = parse(collection);
                 if (errors.length) {
                     aa.gui.notification(errors.join("<br>"), {type: "warning"});
                 } else {
                     set(this, "collection", group);
                 }
-            };
-            aa.ActionGroup.prototype.setLabel       = function (str) {
+            },
+            setLabel:       function (str) {
                 if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
                 set(this, "label", str.trim());
-            };
+            },
 
             // Getters:
-        }
+        }, {force: true, condition: aa.ActionGroup.prototype.hydrate === undefined});
 
         // Instanciate:
         construct.apply(this, arguments);
@@ -3461,9 +3461,11 @@
                 let index = (top === true ? undefined : top);
                 arr.forEach((entry, i) => {
                     if (entry instanceof aa.ActionGroup && entry.isValid()) {
-                        const item = $$("li", $$("button", '<span class="icon fa fa-fw"></span> '+entry.label));
+                        const button = $$("button", '<span class="icon fa fa-fw"></span> '+entry.label);
+                        const item = $$("li", button);
                         item.classList.add("expand");
                         item.classList.add("shortcut");
+                        item.on('mouseover', e => { button.focus(); });
                         menu.appendChild(item);
                         if (top === true) {
                             tops[i] = item;
@@ -3527,6 +3529,7 @@
                                     });
                                 }
                             });
+                            btn.on('mouseover', e => { btn.focus(); });
                             item.appendChild(btn);
                             menu.appendChild(item);
                             if (action.checkable) {
@@ -3764,11 +3767,12 @@
                         left:   null,
                     },
                     privates: {
-                        onclickout: null,
-                        menu:       null,
-                        node:       null,
-                        theme:      null,
-                        view:       null
+                        activeElement:  null,
+                        onclickout:     null,
+                        menu:           null,
+                        node:           null,
+                        theme:          null,
+                        view:           null
                     },
                 }, {getter: get, setter: set});
 
@@ -3790,11 +3794,16 @@
                         if (that.onclickout) {
                             document.body.cancel(`click`, that.onclickout);
                         }
+                        if (that.activeElement) {
+                            that.activeElement.focus();
+                        }
                         privates.emit.call(this, `hide`);
                     }
                 },
                 show:   function () {
                     const that = getAccessor(this);
+                    that.activeElement = document.activeElement;
+                    that.activeElement.blur();
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {

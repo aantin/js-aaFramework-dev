@@ -3728,18 +3728,29 @@
                 construct: function (/* spec */) {
                     const spec = aa.arg.optional(arguments, 0, {});
 
+                    const that = getAccessor(this);
+
                     set(this, "theme", aa.settings.theme);
                     aa.events.on('themechange', (theme) => {
                         set(this, "theme", theme);
                     });
-                    if (aa.isObject(spec) && spec.hasOwnProperty("on")) {
-                        this.setOn(spec.on);
-                        delete spec.on;
+                    if (aa.isObject(spec)) {
+                        if (spec.hasOwnProperty("on")) {
+                            this.setOn(spec.on);
+                            delete spec.on;
+                        }
+                        if (spec.hasOwnProperty("top")) {
+                            this.setTop(spec.top);
+                            delete spec.top;
+                        }
+                        if (spec.hasOwnProperty("left")) {
+                            this.setLeft(spec.left);
+                            delete spec.left;
+                        }
                     }
                     set(this, "menu", new aa.gui.Menu(spec));
                     aa.prototypes.initGetters.call(this, ["theme", "appName", "items"]);
 
-                    const that = getAccessor(this);
                     that.view = view.bind(this);
                 },
                 emit: aa.prototypes.events.getEmitter({get, set}),
@@ -3749,6 +3760,8 @@
                 // Attributes:
                 aa.defineAccessors.call(this, {
                     publics: {
+                        top:    null,
+                        left:   null,
                     },
                     privates: {
                         onclickout: null,
@@ -3808,13 +3821,16 @@
                             that.node.classList.add(theme);
                         });
 
+                        that.top ??= aa.mouse.y;
+                        that.left ??= aa.mouse.x;
+
                         that.node.style.display = "block";
-                        that.node.style.top = `${aa.mouse.y}px`;
-                        that.node.style.left = `${aa.mouse.x+4}px`;
+                        that.node.style.top = `${that.top}px`;
+                        that.node.style.left = `${that.left+4}px`;
                         that.node.style.zIndex = aa.getMaxZIndex();
                         document.body.appendChild(that.node);
                         document.body.classList.add('aaContextMenuFreeze');
-
+                        
                         const escape = new aa.Action({
                             app: 'aaContextMenu',
                             accessible: true,
@@ -3822,8 +3838,34 @@
                                 this.hide();
                             }}
                         });
+                        const tab = (forward=true) => {
+                            aa.arg.test(forward, aa.isBool, "'forward' must be a Boolean");
+                            const buttons = Array.from(that.node.getElementsByTagName('button'));
+                            const active = document.activeElement;
+                            let toActivate = null;
+                            if (buttons.length) {
+                                let index = buttons.indexOf(active);
+                                if (index < 0) {
+                                    toActivate = buttons[0];
+                                } else {
+                                    index += forward ? 1 : -1;
+                                    if (index > buttons.length - 1) { index = 0; }
+                                    if (index < 0) { index = buttons.length - 1; }
+                                    toActivate = buttons[index];
+                                }
+                                toActivate.focus();
+                            }
+                        };
+                        
+                        // Set focus on first menu element:
+                        tab();
+                        
                         aa.events.app('aaContextMenu').on({
-                            '<Esc>': escape
+                            '<Esc>': escape,
+                            '<Tab>': e => { tab(); },
+                            '<Down>': e => { tab(); },
+                            'shift <Tab>': e => { tab(false); },
+                            '<Up>': e => { tab(false); },
                         }, ['preventDefault', 'forever']);
                         
                         aa.events.app("aaContextMenu").suspend([
@@ -3839,14 +3881,14 @@
                             "shift <Tab>",
                         ]);
 
-                        if (aa.mouse.y + that.node.offsetHeight > aa.browser.height) {
+                        if (that.top + that.node.offsetHeight > aa.browser.height) {
                             if (that.node.offsetHeight <= (aa.browser.height-2)) {
                                 that.node.style.top = (aa.browser.height - that.node.offsetHeight-2)+"px";
                             } else {
                                 that.node.style.top = "2px";
                             }
                         }
-                        if (aa.mouse.x + that.node.offsetWidth > aa.browser.width) {
+                        if (that.left + that.node.offsetWidth > aa.browser.width) {
                             if (that.node.offsetWidth <= (aa.browser.width-2)) {
                                 that.node.style.left = (aa.browser.width-that.node.offsetWidth-2)+"px";
                             } else {
@@ -3859,8 +3901,8 @@
                             const ulWidth = ul.offsetWidth || parseFloat(style.width);
                             const ulHeight = ul.offsetHeight || parseFloat(style.height);
 
-                            const left = Math.min(aa.mouse.x + 4, Math.max(aa.browser.width - ulWidth - 4, 4));
-                            const top = Math.min(aa.mouse.y, Math.max(aa.browser.height - ulHeight, 4));
+                            const left = Math.min(that.left + 4, Math.max(aa.browser.width - ulWidth - 4, 4));
+                            const top = Math.min(that.top, Math.max(aa.browser.height - ulHeight, 4));
                             that.node.style.left = `${left}px`;
                             that.node.style.top = `${top}px`;
                         }
@@ -3900,6 +3942,16 @@
 
                     // Call on single entry:
                     this.on.apply(this, arguments);
+                },
+                setTop:     function (top) {
+                    aa.arg.test(top, aa.isPositiveInt, "'top'");
+                    const that = getAccessor(this);
+                    that.top = top;
+                },
+                setLeft:    function (left) {
+                    aa.arg.test(left, aa.isPositiveInt, "'left'");
+                    const that = getAccessor(this);
+                    that.left = left;
                 },
             }, {force: true});
             return Object.freeze(ContextMenu);
@@ -5875,13 +5927,8 @@
 
         // Simplified aliases:
         this.contextmenu    = function (/* spec */) {
-            const spec = arguments && arguments.length ? arguments[0] : undefined;
-            let cm;
-            if (spec) {
-                cm = new aa.gui.ContextMenu(spec);
-            } else {
-                cm = new aa.gui.ContextMenu();
-            }
+            const spec = arguments && arguments.length ? arguments[0] : {};
+            const cm = new aa.gui.ContextMenu(spec);
             cm.show();
             return cm;
         };
@@ -8204,49 +8251,72 @@
             return undefined;
         },
     };
-    aa.mouse = {
-        x: 0,
-        y: 0,
-        absoluteX: 0,
-        absoluteY: 0,
-        getX: function () {
-
-            return aa.mouse.x;
-        },
-        getY: function () {
-
-            return aa.mouse.y;
-        },
-        onMove: function (e) {
-
-            if (arguments.length) {
-                // let evt = arguments[0];
-                
-                let evt = window.event || arguments[0];
-                
-                if (!aa.browser.is('ie')) {
-                    aa.mouse.x = evt.clientX;
-                    aa.mouse.y = evt.clientY;
-                    aa.mouse.absoluteX = evt.pageX;
-                    aa.mouse.absoluteY = evt.pageY;
-                } else {
-                    aa.mouse.x = event.clientX;
-                    aa.mouse.y = event.clientY;
-                    aa.mouse.absoluteX = event.clientX + document.body.scrollLeft;
-                    aa.mouse.absoluteY = event.clientY + document.body.scrollTop;
-                }
-                
-                aa.events.execute("mousemove", e);
-                
-                return {
-                    x: aa.mouse.x,
-                    y: aa.mouse.y,
-                    absoluteX: aa.mouse.absoluteX,
-                    absoluteY: aa.mouse.absoluteY
-                };
+    aa.mouse = (() => {
+        const privates = {
+            x: 0,
+            y: 0,
+            absoluteX: 0,
+            absoluteY: 0,
+        };
+        const mouse = {};
+        Object.defineProperties(mouse, {
+            x: {
+                get: () => privates.x,
+                set: value => {},
+            },
+            y: {
+                get: () => privates.y,
+                set: value => {},
+            },
+            absoluteX: {
+                get: () => privates.absoluteX,
+                set: value => {},
+            },
+            absoluteY: {
+                get: () => privates.absoluteY,
+                set: value => {},
+            },
+            getX: {
+                get: () => function () {
+                    return privates.x;
+                },
+            },
+            getY: {
+                get: () => function () {
+                    return privates.y;
+                },
+            },
+            onMove: {
+                get: () => function (e) {
+                    if (arguments.length) {
+                        let evt = window.event || arguments[0];
+                        
+                        if (!aa.browser.is('ie')) {
+                            privates.x = evt.clientX;
+                            privates.y = evt.clientY;
+                            privates.absoluteX = evt.pageX;
+                            privates.absoluteY = evt.pageY;
+                        } else {
+                            privates.x = event.clientX;
+                            privates.y = event.clientY;
+                            privates.absoluteX = event.clientX + document.body.scrollLeft;
+                            privates.absoluteY = event.clientY + document.body.scrollTop;
+                        }
+                        
+                        aa.events.execute("mousemove", e);
+                        
+                        return {
+                            x: privates.x,
+                            y: privates.y,
+                            absoluteX: privates.absoluteX,
+                            absoluteY: privates.absoluteY
+                        };
+                    }
+                },
             }
-        }
-    };
+        });
+        return Object.freeze(mouse);
+    })();
     aa.shortcut                 = Object.freeze(new (function () {
 
         // Attributes:

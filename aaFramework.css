@@ -1022,25 +1022,30 @@
     #aaContextMenu ul li input[type="button"]:active{
         border: 0;
     }
-    #aaContextMenu ul li button > span.fa.icon.critical{
-        color: var(--button-red-bg-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.warning{
-        color: var(--warning-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.confirm,
-    #aaContextMenu ul li button > span.fa.icon.information{
-        color: var(--confirm-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.reset{
-        color: var(--reset-color);
-    }
-    #aaContextMenu ul li:hover button > span.fa.icon{
+    #aaContextMenu ul li button:focus > span.fa.icon,
+    #aaContextMenu ul li:hover button > span.fa.icon {
         color: var(--submit-color);
         color: var(--color-blue-darker);
         color: var(--menu-shortcut-color);
     }
-    #aaContextMenu ul li.shortcut::before{
+    #aaContextMenu ul li button > span.fa.icon.critical {
+        color: var(--button-red-bg-color);
+    }
+    #aaContextMenu ul li:hover button > span.fa.icon.critical,
+    #aaContextMenu ul li button:focus > span.fa.icon.critical {
+        color: #f8f;
+    }
+    #aaContextMenu ul li button > span.fa.icon.warning {
+        color: var(--warning-color);
+    }
+    #aaContextMenu ul li button > span.fa.icon.confirm,
+    #aaContextMenu ul li button > span.fa.icon.information {
+        color: var(--confirm-color);
+    }
+    #aaContextMenu ul li button > span.fa.icon.reset {
+        color: var(--reset-color);
+    }
+    #aaContextMenu ul li.shortcut::before {
         content: attr(data-shortcut);
         position: absolute;
         top: 6px;
@@ -1051,7 +1056,7 @@
         font-size: 12px;
         color: var(--menu-shortcut-color);
     }
-    #aaContextMenu ul li.expand::before{
+    #aaContextMenu ul li.expand::before {
         position: absolute;
         top: 6px;
         right: 8px;
@@ -1062,14 +1067,14 @@
         content: '▸';
         color: #000;
     }
-    #aaContextMenu ul li.expand:hover::before{
+    #aaContextMenu ul li.expand:hover::before {
         color: #fff;
     }
-    #aaContextMenu > ul{
+    #aaContextMenu > ul {
         display: table;
     }
     #aaContextMenu > ul li button,
-    #aaContextMenu > ul li input[type=button]{
+    #aaContextMenu > ul li input[type=button] {
         margin: 0;
         padding: 4px 8px;
         width: 100%;
@@ -1088,6 +1093,11 @@
         min-width: 180px;
         width: 100%;
         text-align: left;
+    }
+    #aaContextMenu > ul li button:focus,
+    #aaContextMenu > ul li input[type=button]:focus {
+        background: var(--submit-bg-color);
+        color: var(--submit-color);
     }
     #aaContextMenu ul li:hover{
         background: var(--submit-bg-color);

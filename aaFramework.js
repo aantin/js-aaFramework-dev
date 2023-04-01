@@ -9646,6 +9646,155 @@
         }
         return Object.freeze(result);
     });
+    aa.selection                = Object.freeze((() => {
+        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
+        const shared = {
+            verifiers: {
+                field: arg => aa.isElement(arg)
+                    && aa.isPositiveInt(arg.selectionStart)
+                    && aa.isPositiveInt(arg.selectionEnd)
+            }
+        };
+        const InputSelection = (() => {
+            const privates = {
+                newSelection: function (head, main, trail) {
+                    aa.arg.test(head, aa.isString, "'head'");
+                    aa.arg.test(main, aa.isString, "'main'");
+                    aa.arg.test(trail, aa.isString, "'trail'");
+
+                    const that = getAccessor(this);
+                    const {field} = that;
+                    field.value = `${head}${main}${trail}`;
+                    field.focus();
+                    field.setSelectionRange(
+                        head.length,
+                        (head + main).length
+                    );
+                },
+                withScrollKeep: function (callback) {
+                    aa.arg.test(callback, aa.isFunction, "'callback'");
+
+                    const that = getAccessor(this);
+
+                    const {field} = that;
+                    const {scrollTop} = field;
+                    callback();
+                    field.scrollTop = scrollTop;
+                },
+                wrap: function (spec) {
+                    aa.arg.optional(arguments, 0, {}, aa.verifyObject({
+                        tag:    aa.isStringMatch(/^[a-z][a-z0-9]*$/i),
+                        toggle: aa.isBool
+                    }));
+                    spec.sprinkle({
+                        tag:    'div',
+                        toggle: false
+                    });
+
+                    const that = getAccessor(this);
+                    const tagName = spec.tag;
+                    const {field} = that;
+
+                    const tag = {
+                        start: `<${tagName}>`,
+                        end: `</${tagName}>`,
+                    };
+
+                    const posStart  = field.selectionStart;
+                    const posEnd    = field.selectionEnd;
+                    
+                    const text = {
+                        head:   field.value.substring(0, posStart),
+                        main:   field.value.substring(posStart, posEnd),
+                        trail:  field.value.substring(posEnd)
+                    };
+                    const regex = {
+                        start:  new RegExp(`^${tag.start}`),
+                        end:    new RegExp(`${tag.end}$`)
+                    };
+
+                    // If toggle option is enabled:
+                    if (spec.toggle) {
+
+                        // Remove outer tags if already exist:
+                        if (posStart >= tag.start.length) {
+                            const outsideText = {
+                                head:   field.value.substring(0, posStart - tag.start.length),
+                                main:   field.value.substring(
+                                    posStart - tag.start.length,
+                                    posEnd + tag.end.length,
+                                ),
+                                trail:  field.value.substring(posEnd + tag.end.length)
+                            };
+                            if (
+                                outsideText.main.match(regex.start)
+                                && outsideText.main.match(regex.end)
+                            ) {
+                                privates.newSelection.call(this, outsideText.head, text.main, outsideText.trail);
+                                return this;
+                            }
+                        }
+
+                        // Remove inner tags if already exist:
+                        if (
+                            text.main.match(regex.start)
+                            && text.main.match(regex.end)
+                        ) {
+                            const newMain = text.main
+                                            .replace(regex.start, '')
+                                            .replace(regex.end, '');
+                            privates.newSelection.call(this, text.head, newMain, text.trail);
+                            return this;
+                        }
+                    }
+
+                    privates.newSelection.call(this,
+                        text.head,
+                        `${tag.start}${text.main}${tag.end}`,
+                        text.trail
+                    );
+                    return this;
+                }
+            };
+
+            function InputSelection () { get(InputSelection, 'construct').apply(this, arguments); }
+            aa.manufacture(InputSelection, {
+                accessors: {
+                    publics: {
+                        field: null
+                    },
+                    privates: {
+                    }
+                },
+                construct: function () {
+                },
+                methods: {
+                    publics: {
+                        wrap: function (spec) {
+                            aa.arg.test(spec, aa.isObject, "'spec'");
+
+                            privates.withScrollKeep.call(this, () => {
+                                privates.wrap.call(this, spec);
+                            });
+                        }
+                    }
+                },
+                verifiers: {
+                    field: shared.verifiers.field
+                }
+            }, {get, set});
+            return InputSelection;
+        })();
+        return {
+            from: function (field) {
+                aa.arg.test(field, shared.verifiers.field, "'field'");
+
+                return new InputSelection({
+                    field
+                });
+            }
+        };
+    })());
     aa.html                     = Object.freeze(function (nodeName) {
         /*
             aa.html(nodeName[, args]);

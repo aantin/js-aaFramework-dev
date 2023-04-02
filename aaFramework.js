@@ -568,22 +568,23 @@
         const priorities = ["low", "normal", "high"];
         const types = ["information", "warning", "critical", "confirm", "reset"];
         const verifier = {
-            accessible: aa.isBool,
-            addToManager: aa.isBool,
-            app: aa.nonEmptyString,
-            checked: aa.isBool,
-            callback: aa.isFunction,
-            callbacks: aa.isArrayOfFunctions,
-            description: aa.nonEmptyString,
-            evtName: aa.nonEmptyString,
-            disabled: aa.isBool,
-            icon: aa.nonEmptyString,
-            name: aa.nonEmptyString,
-            on: aa.isObject,
-            priority: aa.nonEmptyString,
-            text: aa.nonEmptyString,
-            tooltip: aa.nonEmptyString,
-            type: type => types.has(type)
+            accessible:     aa.isBool,
+            addToManager:   aa.isBool,
+            app:            aa.nonEmptyString,
+            checked:        aa.isBool,
+            callback:       aa.isFunction,
+            callbacks:      aa.isArrayOfFunctions,
+            description:    aa.nonEmptyString,
+            evtName:        aa.nonEmptyString,
+            disabled:       aa.isBool,
+            icon:           aa.nonEmptyString,
+            name:           aa.nonEmptyString,
+            on:             aa.isObject,
+            priority:       aa.nonEmptyString,
+            shortcut:       aa.nonEmptyString,
+            text:           aa.nonEmptyString,
+            tooltip:        aa.nonEmptyString,
+            type:           aa.inArray(types)
         };
         const verify = aa.prototypes.verify(verifier);
         let count = 0;
@@ -712,6 +713,10 @@
             Object.defineProperty(this, "shortcut", {
                 get: () => {
                     return Object.freeze(getShortcut.call(this));
+                },
+                set: shortcut => {
+                    verify("shortcut", shortcut);
+                    set(this, "shortcut", shortcut.trim());
                 }
             });
             Object.defineProperty(this, "shortcuts", {
@@ -3517,7 +3522,9 @@
                                 aa.deprecated("action.callbacks");
                             }
                             const span = $$("span"+".icon.fa.fa-fw"+icon+type);
-                            const btn = $$("button", span);
+                            const btn = $$("button", span, {
+                                disabled: action.disabled
+                            });
                             btn.innerHTML += ' '+(action.text ? action.text : action.name);
                             btn.on("click", (e) => {
                                 if (callback) {
@@ -3530,8 +3537,11 @@
                                 }
                             });
                             btn.on('mouseover', e => { btn.focus(); });
+                            action.on('disablechange', disabled => { btn.disabled = action.disabled; });
+                            
                             item.appendChild(btn);
                             menu.appendChild(item);
+
                             if (action.checkable) {
                                 action.listenNode(btn, "oncheckchange", (node, checked) => {
                                     node.firstChild.classList[checked ? "add" : "remove"]("fa-check");
@@ -3850,20 +3860,21 @@
                         const tab = (forward=true) => {
                             aa.arg.test(forward, aa.isBool, "'forward' must be a Boolean");
 
-                            const buttons = Array.from(that.node.getElementsByTagName('button'));
+                            const enabledButtons = Array.from(that.node.getElementsByTagName('button'))
+                            .filter(button => !button.disabled);
                             const active = document.activeElement;
                             let toActivate = null;
-                            
+
                             active.blur();
-                            if (buttons.length) {
-                                let index = buttons.indexOf(active);
+                            if (enabledButtons.length) {
+                                let index = enabledButtons.indexOf(active);
                                 if (index < 0) {
-                                    toActivate = buttons[0];
+                                    toActivate = enabledButtons[0];
                                 } else {
                                     index += forward ? 1 : -1;
-                                    if (index > buttons.length - 1) { index = 0; }
-                                    if (index < 0) { index = buttons.length - 1; }
-                                    toActivate = buttons[index];
+                                    if (index > enabledButtons.length - 1) { index = 0; }
+                                    if (index < 0) { index = enabledButtons.length - 1; }
+                                    toActivate = enabledButtons[index];
                                 }
                                 toActivate.focus();
                             }

@@ -3849,9 +3849,12 @@
                         });
                         const tab = (forward=true) => {
                             aa.arg.test(forward, aa.isBool, "'forward' must be a Boolean");
+
                             const buttons = Array.from(that.node.getElementsByTagName('button'));
                             const active = document.activeElement;
                             let toActivate = null;
+                            
+                            active.blur();
                             if (buttons.length) {
                                 let index = buttons.indexOf(active);
                                 if (index < 0) {

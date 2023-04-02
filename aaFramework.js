@@ -2035,14 +2035,14 @@
         };
 
         // Methods:
-        if (aa.Storage.prototype.hydrate === undefined) {
+        aa.deploy(aa.Storage.prototype, {
 
             // General:
-            aa.Storage.prototype.clear       = function () {
+            clear:        function () {
                 this.data = {};
                 register.call(this);
-            };
-            aa.Storage.prototype.destroy     = function () {
+            },
+            destroy:      function () {
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 const name = "aa_DB_"+get(this, "table");
@@ -2050,28 +2050,28 @@
                 if (localStorage.getItem(name)) {
                     localStorage.removeItem(name);
                 }
-            };
-            aa.Storage.prototype.insert      = function (key, value) {
+            },
+            insert:       function (key, value) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
                 
                 key = key.trim();
                 this.data[key] = value;
                 register.call(this);
-            };
-            aa.Storage.prototype.isValid     = function () {
+            },
+            isValid:      function () {
 
                 return (get(this, "table") !== null);
-            };
-            aa.Storage.prototype.load        = function () {
+            },
+            load:         function () {
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 const data = getStorage.apply(this);
                 if (data) {
                     this.data = data;
                 }
-            };
-            aa.Storage.prototype.remove      = function (key) {
+            },
+            remove:       function (key) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
@@ -2080,8 +2080,8 @@
                     delete this.data[key];
                     register.call(this);
                 }
-            };
-            aa.Storage.prototype.select      = function (key) {
+            },
+            select:       function (key) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
@@ -2091,8 +2091,8 @@
                     ? this.data[key]
                     : undefined
                 );
-            };
-        }
+            },
+        }, {force: true, condition: aa.Storage.prototype.hydrate === undefined});
 
         // Instanciate:
         construct.apply(this, arguments);

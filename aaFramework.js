@@ -11217,6 +11217,154 @@
     };
 
     // Getters:
+    aa.getEditorField           = (() => {
+        function verify (value, verifier) {
+            aa.arg.test(verifier, aa.isFunction, "'verifier'");
+
+            const verified = verifier(value);
+            aa.throwErrorIf(
+                !aa.isBool(verified),
+                "'holdIfNot' method must return a Boolean"
+            );
+            return verified;
+        }
+        return function (spec) {
+            aa.arg.test(spec, aa.verifyObject({
+                autoResize:     aa.isBool,
+                holdIfNot:      aa.isFunction,
+                on:             aa.verifyObject({
+                    cancel:     aa.isFunction,
+                    end:        aa.isFunction,
+                    submit:     aa.isFunction
+                }),
+                placeholder:    aa.isNullOrNonEmptyString,
+                tag:            aa.inArray(['input', 'textarea']),
+                value:          aa.isNullOrNonEmptyString
+            }), "'spec'");
+            spec.sprinkle({
+                autoResize: true,
+                holdIfNot: () => true,
+                tag: 'input',
+            });
+
+            const editorFieldAppName = `aa-editor-field`;
+            
+            let closed = false;
+
+            const events = {
+                blur: () => {
+                    events.close(true);
+                },
+                cancel: () => {
+                    events.close(false);
+                },
+                deletion: () => {
+                    aa.selection.from(field).wrap({
+                        tag:    'del',
+                        trim:   true,
+                        toggle: true
+                    });
+                },
+                italic: () => {
+                    aa.selection.from(field).wrap({
+                        tag:    'i',
+                        trim:   true,
+                        toggle: true
+                    });
+                },
+                bold: () => {
+                    aa.selection.from(field).wrap({
+                        tag:    'strong',
+                        trim:   true,
+                        toggle: true
+                    });
+                },
+                underline: () => {
+                    aa.selection.from(field).wrap({
+                        tag:    'u',
+                        trim:   true,
+                        toggle: true
+                    });
+                },
+                focus: () => {
+                    aa.events.app(editorFieldAppName).on({
+                        'cmdOrCtrl <B>':    events.bold,
+                        '<Esc>':            events.cancel,
+                        '<Del>':            events.deletion,
+                        'alt <Del>':        events.insertion,
+                        'cmdOrCtrl <I>':    events.italic,
+                        '<Enter>':          events.submit,
+                        'cmdOrCtrl <U>':    events.underline,
+                    }, ['preventDefault', 'always']);
+                },
+                insertion: () => {
+                    aa.selection.from(field).wrap({
+                        tag:    'ins',
+                        trim:   true,
+                        toggle: true
+                    });
+                },
+                submit: () => {
+                    events.close(true);
+                },
+                close: (submit=true) => {
+                    aa.arg.test(submit, aa.isBool, "'submit'");
+
+                    const value = field.value;
+                    
+                    // Prevent from doing anything if field is empty:
+                    if (!verify(value, spec.holdIfNot)) { return; }
+                    
+                    if (!closed) {
+                        aa.wait(10, () => {
+                            if (submit) {
+                                spec?.on?.submit(value);
+                            } else {
+                                spec?.on?.cancel(value);
+                            }
+
+                            aa.events.app(editorFieldAppName).cancel('<Esc>', cancel);
+                            aa.events.removeApp(editorFieldAppName);
+
+                            spec?.on?.end(value);
+                        });
+                        closed = true;
+                    }
+                },
+            };
+
+            const nodeSpec = {
+                on: {input: e => {
+                    if (spec.tag === 'textarea' && spec.autoResize) {
+                        aa.resizeTextarea(field);
+                    }
+                }}
+            };
+            switch (spec.tag) {
+            case 'textarea':
+                nodeSpec.text = spec.value; 
+                break;
+            case 'input':
+            default:
+                nodeSpec.value = spec.value; 
+                break;
+            }
+            if (spec.placeholder) { nodeSpec.placeholder = spec.placeholder; }
+
+            const field = $$(spec.tag, nodeSpec);
+            if (spec.tag === 'textarea' && spec.autoResize) {
+                aa.resizeTextarea(field);
+            }
+            field.on('focus',   events.focus);
+            field.on('blur',    events.blur);
+            field.on('dblclick', e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            return field;
+        };
+    })();
     aa.getLang                  = function () {
         let html,lang;
 

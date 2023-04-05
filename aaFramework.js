@@ -1275,7 +1275,8 @@
                 return items;
             },
             has:                function (value) {
-                return (get(this, "data").indexOf(value) > -1);
+                const that = getAccessor(this);
+                return (that.data.indexOf(value) > -1);
             },
             hydrate:            function (spec) {
                 aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`);

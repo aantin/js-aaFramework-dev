@@ -1324,20 +1324,21 @@
             },
             on:                 aa.prototypes.events.getListener(get, "listeners"),
             push:               function (...items) {
-                const data = get(this, "data");
+                const that = getAccessor(this);
+
                 items.forEach(item => {
                     aa.throwErrorIf(
                         (this.authenticate && !this.authenticate(item)),
                         "Invalid collection item."
                     );
-                    data.push(item);
+                    that.data.push(item);
                     
-                    const index = data.length - 1;
+                    const index = that.data.length - 1;
                     if (!this.hasOwnProperty(index)) {
                         Object.defineProperty(this, index, {
                             get: () => {
-                                if (index >= data.length) { throw new Error(``); }
-                                return get(this, "data")[index];
+                                if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
+                                return that.data[index];
                             }
                         });
                     }
@@ -9121,22 +9122,54 @@
         function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
         // ----------------
         const SelectionMatrix = (() => {
+            const commands = {
+                next:       function () {
+                    const that = getAccessor(this);
+                },
+                previous:   function () {
+                    const that = getAccessor(this);
+                },
+                expandTo:   function (...indexes) {
+                    const that = getAccessor(this);
+                },
+                add:        function (index) {
+                    const that = getAccessor(this);
+                },
+                toggle:        function (index) {
+                    const that = getAccessor(this);
+                },
+            };
             function SelectionMatrix () { get(SelectionMatrix, 'construct').apply(this, arguments); }
             const blueprint = {
                 accessors: {
                     publics: {
-                        dimension:  1,
-                        lengths:    null
+                        collection:     null,
+                        dimension:      1,
+                        lengths:        null,
+                        on:             {}
                     },
                     privates: {
                         list:           null,
-                        lastClicked:    null
+                        _lastSelected:  null,
+                    },
+                    read: {
+                        id:             null,
+                    },
+                    execute: {
+                        lastSelected:   function () {
+                            const that = getAccessor(this);
+                            return Object.freeze([...that._lastSelected]);
+                        },
                     }
                 },
+                startHydratingWith: ['dimension'],
                 construct: function () {
                     const that = getAccessor(this);
-                    that.lengths =  [1];
-                    that.list =     [];
+                    
+                    that._lastSelected  = [];
+                    that.id             = aa.uid(16);
+                    that.lengths        = [1];
+                    that.list           = [];
                 },
                 methods: {
                     publics: {
@@ -9155,18 +9188,36 @@
                             // log({diamond})
                             document.body.appendChild(node);
                         },
+                        exec: function (cmd) {
+                            aa.arg.test(cmd, blueprint.verifiers.commands, "'cmd'");
+                            commands[cmd].call(this);
+                            return this;
+                        },
                         pos: function (...indexes) {
                             aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers");
-                            // aa.arg.test(indexes, indexes => indexes.length <= this.lengths.length, "'indexes' length must be less than or equal to the 'lengths' attribute length");
 
-                            indexes.forEach(index => {
+                            const that = getAccessor(this);
+                            let itemPointer = that.collection;
+
+                            aa.throwErrorIf(!that.collection, "Collection reference is null.");
+
+                            indexes.forEach((index, i) => {
+                                aa.throwErrorIf(
+                                    index > itemPointer.length - 1,
+                                    `${Number.toOrdinal(i+1)} index (${index}) is out of range.`
+                                );
+                                itemPointer = itemPointer[index];
                             });
-                            const methods = {
-                                exec: function (evtName) {
-                                    const that = getAccessor(this);
-                                    log(evtName, indexes)
+                            // log({pointer: itemPointer});
 
-                                    switch (evtName) {
+                            const methods = {
+                                exec: function (cmd) {
+                                    aa.arg.test(cmd, blueprint.verifiers.commands, "'command'");
+
+                                    const that = getAccessor(this);
+                                    // log(cmd, indexes);
+
+                                    switch (cmd) {
                                     case '<Click>':
                                     case 'alt <Click>':
                                         break;
@@ -9187,10 +9238,9 @@
                                 set: function (value) {
                                     const that = getAccessor(this);
 
-                                    // log.apply(null, indexes.concat(value));
                                     let list = that.list;
                                     indexes.forEach((index, depth) => {
-                                        log(index)
+                                        // log(index)
                                         if (!aa.isArray(list[index])) {
                                             list[index] = [];
                                         }
@@ -9201,19 +9251,47 @@
                                             list[index] = item;
                                         }
                                     });
-                                    // log('---')
                                 }
                             };
                             return Object.freeze(methods.bind(this));
                         }
                     },
                     setters: {
+                        collection:     function (collection) {
+                            const that = getAccessor(this);
+
+                            const verifyCollectionInDepth = (depth, collection) => {
+                                aa.throwErrorIf(
+                                    !blueprint.verifiers.collection(collection),
+                                    "Every dimension of SelectionMatrix must be a Collection.",
+                                    TypeError
+                                );
+
+                                if (depth < that.dimension) {
+                                    collection.forEach(item => {
+                                        verifyCollectionInDepth(depth+1, collection);
+                                    });
+                                }
+                            };
+                            verifyCollectionInDepth(0, collection);
+                            
+                            collection.on('datamodified', () => {
+                                verifyCollectionInDepth(0, that.collection);
+                            });
+                            that.collection = collection;
+                        },
                     }
                 },
                 verifiers: {
-                    dimension:  aa.isStrictlyPositiveInt,
-                    lengths:    aa.isArrayOf(aa.isStrictlyPositiveInt),
-                    list:       aa.isArray
+                    collection:     arg => arg instanceof aa.Collection,
+                    commands:       aa.inArray(Object.keys(commands)),
+                    dimension:      aa.isStrictlyPositiveInt,
+                    lengths:        aa.isArrayOf(aa.isStrictlyPositiveInt),
+                    list:           aa.isArray,
+                    on:             aa.verifyObject({
+                        select:     aa.isFunction,
+                        deselect:   aa.isFunction,
+                    })
                 }
             };
             aa.manufacture(SelectionMatrix, blueprint, {get, set});

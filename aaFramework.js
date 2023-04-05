@@ -10063,6 +10063,7 @@
                 "shortcut",
                 "step",
                 "suffix",
+                "target",
                 "text",
                 "tooltip",
                 "validation"

@@ -163,6 +163,9 @@
               -ms-user-select: none;
                   user-select: none;
     }
+    .aa a {
+        color: var(--color-blue);
+    }
     .aa b,
     .aa strong {
         font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;

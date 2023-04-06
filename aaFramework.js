@@ -1395,6 +1395,17 @@
                 }
                 return removedItems;
             },
+            reverse:            function () {
+                const that = getAccessor(this);
+                
+                const spec = {};
+                if (that.authenticate) { spec.authenticate = that.authenticate; }
+                
+                const newCollection = new aa.Collection(spec);
+                newCollection.push(...(that.data.reverse()));
+                
+                return newCollection;
+            },
             sort:               function (func) {
                 get(this, 'data').sort(func);
             },

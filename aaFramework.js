@@ -1402,7 +1402,9 @@
                 if (that.authenticate) { spec.authenticate = that.authenticate; }
                 
                 const newCollection = new aa.Collection(spec);
-                newCollection.push(...(that.data.reverse()));
+                that.data.forEachReverse(item => {
+                    newCollection.push(item);
+                });
                 
                 return newCollection;
             },

@@ -11434,6 +11434,9 @@
             const field = $$(spec.tag, nodeSpec);
             if (spec.tag === 'textarea' && spec.autoResize) {
                 aa.resizeTextarea(field);
+                field.on('input', e => {
+                    aa.resizeTextarea(field);
+                });
             }
             field.on('focus',   events.focus);
             field.on('blur',    events.blur);

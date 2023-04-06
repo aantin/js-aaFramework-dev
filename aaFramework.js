@@ -4027,13 +4027,14 @@
                 // Private attributes:
                 aa.defineAccessors.call(this, {
                     publics: {
+                        escape: true
                     },
                     privates: {
                     }
                 }, {getter: get, setter: set});
                 const privates = {
                     buttons:    true,
-                    icon:   null,
+                    icon:       null,
                     lastFocus:  null,
                     noButton:   null,
                     node:       null,

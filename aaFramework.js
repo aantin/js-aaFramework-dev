@@ -11532,18 +11532,46 @@
         }
         return aa.defaultLang;
     };
-    aa.getLorem                 = function () {
-        let i,
-            times = [],
-            lorem = 'Lorem ipsum <b><i>dolor</i> sit</b> amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
-        if (arguments && arguments.length && aa.isInt(arguments[0]) && arguments[0]>0) {
-            for(i=0; i<arguments[0]; i++) {
-                times.push(lorem);
-            }
-            return times.join('\n\n');
-        } else {
-            return lorem;
-        }
+    aa.lorem                    = function (spec={}) {
+        /**
+         * Generate a lorem text.
+         * 
+         * @param <object> spec:
+         *      @key <int> repeat:  The number of times the lorem will be repeated.
+         *      @key <int> words:   The number of words to generate for each lorem.
+         */
+        aa.arg.test(spec, aa.verifyObject({
+            repeat: aa.isStrictlyPositiveInt,
+            words:  aa.isStrictlyPositiveInt
+        }), "'spec'");
+        spec.sprinkle({
+            repeat: 1,
+            words:  null,
+        });
+
+        const parts = [];
+        const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+
+        aa.repeat(spec.repeat, () => {
+            parts.push(
+                lorem.split(' ')
+                .filter((word, i) => (!spec.words || i < spec.words))
+                .join(' ')
+            );
+        });
+        return parts.join('\n\n');
+    };
+    aa.getLorem                 = function (times=1) {
+        aa.deprecated('aa.getLorem');
+        aa.arg.test(times, aa.isStrictlyPositiveInt, "'times'");
+
+        const parts = [];
+        const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+
+        aa.repeat(times, () => {
+            parts.push(lorem);
+        });
+        return parts.join('\n\n');
     };
     aa.getMaxZIndex             = function () {
         let dom = document.body;

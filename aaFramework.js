@@ -11378,6 +11378,17 @@
             return verified;
         }
         return function (spec) {
+            /**
+             * @param <object> spec:
+             *      @key <bool> autoResize
+             *      @key <function> holdIfNot
+             *      @key <object> on:
+             *          @key <function> cancel
+             *          @key <function> end
+             *          @key <function> submit
+             *      @key <null|string> placeholder
+             *      @key <enum: input,textarea> tag
+             */
             aa.arg.test(spec, aa.verifyObject({
                 autoResize:     aa.isBool,
                 holdIfNot:      aa.isFunction,
@@ -11387,7 +11398,7 @@
                     submit:     aa.isFunction
                 }),
                 placeholder:    aa.isNullOrNonEmptyString,
-                tag:            aa.inArray(['input', 'textarea']),
+                tag:            aa.inEnum('input', 'textarea'),
                 value:          aa.isNullOrNonEmptyString
             }), "'spec'");
             spec.sprinkle({
@@ -11467,15 +11478,15 @@
                     if (!closed) {
                         aa.wait(10, () => {
                             if (submit) {
-                                spec?.on?.submit(value);
+                                spec?.on?.submit?.(value);
                             } else {
-                                spec?.on?.cancel(value);
+                                spec?.on?.cancel?.(value);
                             }
 
                             aa.events.app(editorFieldAppName).cancel('<Esc>', cancel);
                             aa.events.removeApp(editorFieldAppName);
 
-                            spec?.on?.end(value);
+                            spec?.on?.end?.(value);
                         });
                         closed = true;
                     }

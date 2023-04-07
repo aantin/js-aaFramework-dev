@@ -4054,6 +4054,8 @@
             const db = new aa.Storage("aaDialog");
             let dialogCollection = {}; // liste des <aa.gui.Dialog> ouvertes
 
+            function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
+
             const Dialog = function (type /* , spec */) {
                 /**
                  * @param {String} type
@@ -4088,6 +4090,7 @@
                     privates: {
                     }
                 }, {getter: get, setter: set});
+
                 const privates = {
                     buttons:    true,
                     icon:       null,
@@ -4489,7 +4492,8 @@
                 },
                 setEscape:          function (escape) {
                     aa.arg.test(escape, aa.isBool, `'escape'`);
-                    this.escape = escape;
+                    const that = getAccessor(this);
+                    that.escape = escape;
                 },
                 setFullscreen:      function (b) {
 

@@ -1437,7 +1437,6 @@
                         const removedItem = data.splice(index, 1);
                         if (removedItem.length) {
                             while (this.hasOwnProperty(this.length)) {
-                                warn("reduce")
                                 delete this[this.length]
                             }
                             privates.emit.call(this, `removed`, removedItem[0]);
@@ -5180,7 +5179,10 @@
                             }
                         }
                     }));
-                    get(this, "btn-cancel").value = aa.lang.get("action.no");
+                    const texts = {
+                        confirm: 'no'
+                    };
+                    get(this, "btn-cancel").value = aa.lang.get(`action.${texts[this.type] ?? 'cancel'}`);
                     node.appendChild(get(this, "btn-cancel"));
                 },
                 addInputTo:         function (node) {
@@ -5219,7 +5221,11 @@
                             this.hide();
                         }}
                     }));
-                    get(this, "btn-submit").value = aa.lang.get("action.yes");
+                    const texts = {
+                        confirm:        'yes',
+                        prompt:         'submit',
+                    };
+                    get(this, "btn-submit").value = aa.lang.get(`action.${texts[this.type] ?? 'ok'}`);
                     node.appendChild(get(this, "btn-submit"));
                     get(this, "btn-submit").focus();
                 },
@@ -5441,20 +5447,9 @@
                                 e.stopPropagation();
                                 e.preventDefault();
                                 const btn = get(this, "yesButton");
-                                if (btn) {
-                                    // btn.click();
-                                }
                             }
                         }
                     });
-                    // form.on("submit", (e) => {
-                    //     e.stopPropagation();
-                    //     e.preventDefault();
-                    //     const btn = get(this, "yesButton");
-                    //     if (btn) {
-                    //         btn.click();
-                    //     }
-                    // });
                     return form;
                 },
                 getMenu:            function () {

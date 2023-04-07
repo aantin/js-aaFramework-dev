@@ -1164,7 +1164,7 @@
         function Collection (/* spec */) {
             aa.defineAccessors.call(this, {
                 publics: {
-                    authenticate: null
+                    authenticate:   null
                 },
                 privates: {
                     data: [],
@@ -1197,8 +1197,23 @@
             
             // Methods:
             construct:          function (/* spec */) {
-                const spec = aa.arg.optional(arguments, 0, {});
+                const spec = aa.arg.optional(arguments, 0, {}, aa.isObject);
+
+                spec.sprinkle({ authenticate: aa.any });
+
+                const that = getAccessor(this);
+                let data = null;
+                if (spec.hasOwnProperty('data')) {
+                    // aa.throwErrorIf(!aa.isArrayLike(spec.data), "'data' attribute must be an Array-like.");
+                    data = spec.data;
+                    delete spec.data;
+                }
+
                 this.hydrate(spec);
+
+                if (data) {
+                    this.push(...data);
+                }
             },
             emit:               aa.prototypes.events.getEmitter(get, "listeners"),
         };
@@ -1209,19 +1224,33 @@
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const data = get(this, "data");
-                data.forEach(callback, thisArg);
+                const that = getAccessor(this);
+                return that.data.forEach((item, i, list) => {
+                    return callback.call(thisArg, item, i, this);
+                }, thisArg);
+            },
+            loopThrough:        function (callback /*, spec */) {
+                aa.arg.test(callback, aa.isFunction, `callback`);
+                const spec = aa.arg.optional(arguments, 1, {});
+                
+                const that = getAccessor(this);
+                spec.sprinkle({context: undefined});
+                
+                return that.data.loopThrough((item, i, list) => {
+                    return callback.call(spec.context, item, i, this);
+                }, spec);
             },
             filter:             function (callback /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
+                const that = getAccessor(this);
                 const spec = {};
                 if (this.authenticate) {
                     spec.authenticate = this.authenticate;
                 }
                 const collection = new aa.Collection(spec);
-                get(this, "data").forEach((item, i) => {
+                that.data.forEach((item, i) => {
                     const isVerified = callback.call(thisArg, item, i, this);
                     aa.throwErrorIf(!aa.isBool(isVerified), `Callback function must return a boolean.`);
                     if (isVerified) {
@@ -1235,27 +1264,40 @@
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const data = get(this, "data");
-                return data.find(callback, thisArg);
+                const that = getAccessor(this);
+                return that.data.find((item, i, list) => {
+                    return callback.call(thisArg, item, i, this);
+                }, thisArg);
             },
             map:                function (callback /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-                return get(this, "data").map(callback, thisArg);
+
+                const that = getAccessor(this);
+                return that.data.map((item, i, list) => {
+                    return callback.call(thisArg, item, i, this);
+                }, thisArg);
             },
             reduce:             function (callback, accumulator /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = aa.arg.optional(arguments, 2, undefined);
 
-                const data = get(this, "data");
-                return data.reduce(callback, accumulator, thisArg);
+                // const data = get(this, "data");
+                // return data.reduce(callback, accumulator, thisArg);
+
+                const that = getAccessor(this);
+                return that.data.reduce((accumulator, item, i, list) => {
+                    return callback.call(thisArg, accumulator, item, i, this);
+                }, accumulator, thisArg);
             },
             some:               function (callback /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const data = get(this, "data");
-                return data.some(callback, thisArg);
+                const that = getAccessor(this);
+                return that.data.some((item, i, list) => {
+                    return callback.call(thisArg, item, i, this);
+                }, thisArg);
             },
 
             // General:
@@ -1337,7 +1379,9 @@
                     const index = that.data.length - 1;
                     if (!this.hasOwnProperty(index)) {
                         Object.defineProperty(this, index, {
-                            get: () => {
+                            configurable:   true,
+                            enumerable:     true,
+                            get:            () => {
                                 if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
                                 return that.data[index];
                             }
@@ -1360,6 +1404,14 @@
                             });
                         }
                     });
+                    const lastIndex = that.data.length - 1;
+                    if (!this.hasOwnProperty(lastIndex)) {
+                        Object.defineProperty(this, lastIndex, {
+                            configurable:   true,
+                            enumerable:     true,
+                            get:            () => that.data[lastIndex]
+                        });
+                    }
                     privates.emit.call(this, `added`, item);
                     privates.emit.call(this, `datamodified`);
                 });
@@ -1384,6 +1436,10 @@
                     if (index > -1) {
                         const removedItem = data.splice(index, 1);
                         if (removedItem.length) {
+                            while (this.hasOwnProperty(this.length)) {
+                                warn("reduce")
+                                delete this[this.length]
+                            }
                             privates.emit.call(this, `removed`, removedItem[0]);
                             privates.emit.call(this, `datamodified`);
                             removedItems.push(removedItem[0]);

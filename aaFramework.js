@@ -9521,6 +9521,7 @@
             aa.cook("checkbox", {
                 checked:    boolean,
                 disabled:   boolean,
+                dataset:    string{},
                 id:         string,
                 label:      string,
                 mixable:    boolean,
@@ -9529,7 +9530,7 @@
                 value:      string,
                 on: {
                     mix:    function,
-                    click: function
+                    click:  function
                 }
             });
          */
@@ -9538,6 +9539,7 @@
         if (!aa.isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
         if (spec.mixed !== undefined && !aa.isBool(spec.mixed)) { throw new TypeError("Spec 'mixed' must be a Boolean."); }
         if (spec.mixable !== undefined && !aa.isBool(spec.mixable)) { throw new TypeError("Spec 'mixable' must be a Boolean."); }
+        if (spec.dataset !== undefined && !aa.isObjectOfStrings(spec.dataset)) { throw new TypeError("Spec 'dataset' must be an Object of Strings.") }
 
         const {tagName, id, classes} = aa.extractClassNameAndID(name);
 
@@ -9682,16 +9684,20 @@
                                 }
                             });
                             node.appendChild(input);
+                            const buttonSpec = {
+                                disabled: !!spec.disabled,
+                                on: {click: (e) => {
+                                    e.preventDefault();
+                                    input.click();
+                                }}
+                            };
+                            if (spec.dataset) {
+                                buttonSpec.dataset = spec.dataset;
+                            }
                             node.appendChild($$("button.text",
                                 $$("span.unchecked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "square-o" : "circle-thin")),
                                 $$("span.checked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "check-square" : "circle")),
-                                {
-                                    disabled: !!spec.disabled,
-                                    on: {click: (e) => {
-                                        e.preventDefault();
-                                        input.click();
-                                    }}
-                                }
+                                buttonSpec
                             ));
                             const txt = getTxt();
                             if (txt) {

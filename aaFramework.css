@@ -2392,14 +2392,14 @@
         content: attr(data-shortcut);
         color: var(--tooltip-grey);
     }
-    .aa button.ico > .tooltip-container,
-    .aa button.icon > .tooltip-container {
+    .aa button > .tooltip-container,
+    .aa button > .tooltip-container {
         display: none;
     }
-    .aa button.ico:hover > .tooltip-container,
-    .aa button.icon:hover > .tooltip-container,
-    .aa button.ico:focus > .tooltip-container,
-    .aa button.icon:focus > .tooltip-container {
+    .aa button:hover > .tooltip-container,
+    .aa button:hover > .tooltip-container,
+    .aa button:focus > .tooltip-container,
+    .aa button:focus > .tooltip-container {
         display: block;
     }
 

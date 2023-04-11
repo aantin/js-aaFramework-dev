@@ -1419,7 +1419,7 @@
             pushUnique:         function (...items) {
                 const data = get(this, "data");
                 items.forEach(item => {
-                    if (!data.has(item)) {
+                    if (data.indexOf(item) < 0) {
                         this.push(item);
                     }
                 });
@@ -9510,7 +9510,7 @@
 
         return new Node(query, spec);
     };
-    aa.cook                     = Object.freeze(function (name /*, spec */) {
+    aa.cook                     = Object.freeze(function (name, spec={}) {
         /**
          * @param {string} name
          * @param {object} spec
@@ -9534,12 +9534,16 @@
                 }
             });
          */
-        if (!aa.nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
-        const spec = (arguments && arguments.length > 1 ? arguments[1] : {});
-        if (!aa.isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
-        if (spec.mixed !== undefined && !aa.isBool(spec.mixed)) { throw new TypeError("Spec 'mixed' must be a Boolean."); }
-        if (spec.mixable !== undefined && !aa.isBool(spec.mixable)) { throw new TypeError("Spec 'mixable' must be a Boolean."); }
-        if (spec.dataset !== undefined && !aa.isObjectOfStrings(spec.dataset)) { throw new TypeError("Spec 'dataset' must be an Object of Strings.") }
+        aa.arg.test(name, aa.nonEmptyString, "'name'");
+        // const spec = (arguments && arguments.length > 1 ? arguments[1] : {});
+
+        aa.throwErrorIf(!aa.isObject(spec), "Second argument must be an Object.", TypeError);
+        aa.throwErrorIf(spec.mixed !== undefined && !aa.isBool(spec.mixed), "Spec 'mixed' must be a Boolean.", TypeError);
+        aa.throwErrorIf(spec.mixable !== undefined && !aa.isBool(spec.mixable), "Spec 'mixable' must be a Boolean.", TypeError);
+        aa.throwErrorIf(spec.dataset !== undefined && !aa.isObjectOfStrings(spec.dataset), "Spec 'dataset' must be an Object of Strings.", TypeError);
+        aa.throwErrorIf(spec.on !== undefined && !aa.isObjectOfFunctions(spec.on), "Spec 'on' must be an Object of Functions.", TypeError);
+
+        spec.on ??= {};
 
         const {tagName, id, classes} = aa.extractClassNameAndID(name);
 
@@ -9562,7 +9566,13 @@
                 if (!node) {
                     let span = null;
                     node = $$("label");
-                    if (spec.label && aa.isString(spec.label)) {
+                    if (
+                        spec.label
+                        && (
+                            aa.isString(spec.label)
+                            || aa.isNode(spec.label)
+                        )
+                    ) {
                         span = $$("text", spec.label);
                     }
                     input = $$(tagName,
@@ -9649,7 +9659,13 @@
 
                     const getTxt = () => {
                         let txt;
-                        if (spec.label && aa.isString(spec.label)) {
+                        if (
+                            spec.label
+                            && (
+                                aa.isString(spec.label)
+                                || aa.isNode(spec.label)
+                            )
+                        ) {
                             txt = $$("span", spec.label);
                         } else if (spec.value && aa.isString(spec.value)) {
                             txt = $$("span", spec.value);
@@ -9662,6 +9678,8 @@
                             const input = $$(tagName+(!!id ? '#'+id : '')+(classes.length ? '.'+classes.join('.') : ''),
                                 spec.ignoreKeys("label", "mixable", "mixed")
                             );
+                            input.on('click', e => {
+                            });
                             input.on("input", (e) => {
                                 if (spec.mixable && spec.mixable === true && input.checked === true) {
                                     if (events.onmix) {
@@ -9686,24 +9704,36 @@
                             node.appendChild(input);
                             const buttonSpec = {
                                 disabled: !!spec.disabled,
-                                on: {click: (e) => {
-                                    e.preventDefault();
-                                    input.click();
-                                }}
+                                // on: {click: e => {
+                                //     e.preventDefault();
+                                //     spec.on.click?.(e);
+                                //     input.click(e);
+                                // }}
                             };
-                            if (spec.dataset) {
-                                buttonSpec.dataset = spec.dataset;
-                            }
-                            node.appendChild($$("button.text",
+                            if (spec.dataset) { buttonSpec.dataset = spec.dataset; }
+                            const btn = $$("button.text",
                                 $$("span.unchecked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "square-o" : "circle-thin")),
                                 $$("span.checked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "check-square" : "circle")),
                                 buttonSpec
-                            ));
+                            );
+                            if (spec.on.blur) {         btn.on('blur', spec.on.blur); }
+                            if (spec.on.focus) {        btn.on('focus', spec.on.focus); }
+                            if (spec.on.input) {        input.on('input', spec.on.input); }
+                            if (spec.on.click) {        node.on('click', spec.on.click); }
+                            if (spec.on.contextmenu) {  node.on('contextmenu', spec.on.contextmenu); }
+                            if (spec.on.mousedown) {    node.on('mousedown', spec.on.mousedown); }
+                            if (spec.on.mouseout) {     node.on('mouseout', spec.on.mouseout); }
+                            if (spec.on.mouseover) {    node.on('mouseover', spec.on.mouseover); }
+                            if (spec.on.mouseup) {      node.on('mouseup', spec.on.mouseup); }
+
+                            node.appendChild(btn);
                             const txt = getTxt();
                             if (txt) {
                                 node.appendChild(txt);
                             }
                             Object.defineProperties(node, {
+
+                                // Attributes:
                                 checked: {
                                     get: () => input.checked,
                                     set: checked => {
@@ -9728,6 +9758,11 @@
                                         input.required = required;
                                     }
                                 },
+
+                                // Methods:
+                                blur:   { get: () => { return btn.blur; }},
+                                focus:  { get: () => { return btn.focus; }},
+                                click:  { get: () => { return input.click; }},
                             });
                         }
                         return node;

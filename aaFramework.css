@@ -2402,6 +2402,9 @@
     .aa button:focus > .tooltip-container {
         display: block;
     }
+    .aa button:focus > .tooltip-container.hidden {
+        display: none;
+    }
 
     /* Selection matrix */
 

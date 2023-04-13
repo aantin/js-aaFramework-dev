@@ -8949,7 +8949,7 @@
         /**
          * Build a constructor with publics, privates, static, etc properties.
          * 
-         * Calling the 'construct' private method will call the following sequence of events:
+         * Calling the 'construct' private method will call the following sequence:
          *      - define accessors
          *      - construct
          *      - hydrate
@@ -9045,23 +9045,28 @@
             if (blueprint.accessors.publics.hasOwnProperty(key)) {
                 const methodName = `set${key.firstToUpper()}`;
                 function method (value) {
+                    // Verify value integrity:
                     aa.arg.test(
                         value,
                         value =>
                             !blueprint.verifiers
-                            || (
-                                !blueprint.verifiers.hasOwnProperty(key)
-                                || blueprint.verifiers[key].call(this, value)
-                            ),
+                            || !(blueprint.verifiers.hasOwnProperty(key))
+                            || blueprint.verifiers[key].call(this, value),
                         `'${key}' setter`
                     );
+
+                    // Emit onchange event:
                     const isDifferent = (value !== getter(this, key));
                     if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
+
+                    // Set value:
                     if (blueprint?.methods?.setters.hasOwnProperty(key)) {
                         blueprint.methods.setters[key].call(this, value);
                     } else {
                         setter(this, key, value);
                     }
+
+                    // Emit onchanged event:
                     if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
                 }
 

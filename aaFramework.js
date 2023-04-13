@@ -86,8 +86,8 @@
         const commons = {
             accessors: {
                 verifiers: {
-                    publics:        aa.isObject,
-                    privates:       aa.isObject,
+                    publics:        aa.isObjectOf(value => !aa.isFunction(value)),
+                    privates:       aa.isObjectOf(value => !aa.isFunction(value)),
                     read:           aa.isObject,
                     execute:        aa.isObject
                 }
@@ -8947,6 +8947,13 @@
     });
     aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
         /**
+         * Build a constructor with publics, privates, static, etc properties.
+         * 
+         * Calling the 'construct' private method will call the following sequence of events:
+         *      - define accessors
+         *      - construct
+         *      - hydrate
+         * 
          * Usage:
             const XXX = (() => {
                 const {get, set} = aa.mapfactory();
@@ -8982,6 +8989,7 @@
             construct:          aa.isFunction,
             startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
             methods:            aa.verifyObject({
+                privates:       aa.isObjectOfFunctions,
                 publics:        aa.isObjectOfFunctions,
                 setters:        aa.isObjectOfFunctions
             }),
@@ -8990,15 +8998,37 @@
         }), `'blueprint'`);
         blueprint.sprinkle({
             accessors: commons.accessors.defaultValue,
-            construct: function () {},
             startHydratingWith: [],
             methods: {
-                publics: {},
+                privates: {},
+                publics:{},
                 setters: {}
             },
             statics: {},
             verifiers: {}
         });
+
+        // Verify property name duplications between attributes and methods:
+        Object.keys(blueprint.methods)
+        ?.filter(visibility => visibility !== 'setters')
+        ?.forEach(methodVisibility => {
+            blueprint.methods?.[methodVisibility]
+            ?.forEach((callback, methodName) => {
+                Object.keys(blueprint.accessors)
+                ?.forEach(attributeVisibility => {
+                    aa.throwErrorIf(
+                        blueprint.accessors?.[attributeVisibility]?.hasOwnProperty(methodName),
+                        `Property '${methodName}' must not be declared in both attributes and methods.`
+                    );
+                });
+            });
+        });
+
+        // Internally use private methods as attributes:
+        blueprint.methods?.privates?.forEach((callback, methodName) => {
+            blueprint.accessors.privates[methodName] = callback;
+        });
+
         const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
             get: aa.isFunction,
             set: aa.isFunction,
@@ -9046,7 +9076,7 @@
 
             aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
 
-            blueprint.construct.apply(this, arguments);
+            blueprint.construct?.apply(this, arguments);
             
             this.hydrate(spec, blueprint.startHydratingWith);
         });

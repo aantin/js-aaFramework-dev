@@ -1443,6 +1443,7 @@
     div.aaDialog div.message h5,
     div.aaDialog div.message h6{
         margin: 4px 0px;
+        color: var(--color-black);
     }
     div.aaDialog code{
         padding: 2px 4px;

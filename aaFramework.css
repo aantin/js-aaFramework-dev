@@ -2296,6 +2296,7 @@
     -------------------------------- */
 
     .aa .tooltip-container {
+        z-index: 8;
         position: absolute;
         display: block;
     }
@@ -2339,17 +2340,30 @@
         justify-content: flex-end;
         align-items: center;
     }
+    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
     .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip {
-        bottom: 4px;
+        bottom: 24px;
         flex-direction: column-reverse;
         justify-content: flex-end;
-        align-items: flex-start;
     }
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip {
+    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
         top: 4px;
         flex-direction: column;
         justify-content: flex-start;
+    }
+    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
         align-items: flex-start;
+    }
+    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
+    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip {
+        right: -32px;
+        align-items: flex-end;
     }
     .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.arrow {
         width: 1px;
@@ -2361,10 +2375,13 @@
         border-top: 4px solid transparent;
         border-bottom: 4px solid transparent;
     }
+    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
     .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
     .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
         display: block;
-        margin-left: 12px;
         border-left: 4px solid transparent;
         border-right: 4px solid transparent;
     }
@@ -2374,11 +2391,25 @@
     .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
         border-right: 8px solid var(--tooltip-bg);
     }
+    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
     .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow {
         border-top: 8px solid var(--tooltip-bg);
     }
+    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
     .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
         border-bottom: 8px solid var(--tooltip-bg);
+    }
+    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow {
+        margin-right: 16px;
+    }
+    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow,
+    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow {
+        margin-left: 8px;
     }
     .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text {
         display: inline-block;

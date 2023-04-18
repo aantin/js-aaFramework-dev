@@ -10488,7 +10488,16 @@
                                             
                                             case "direction":
                                                 if (type === "tooltip") {
-                                                    aa.arg.test(option, aa.inArray(['bottom', 'left', 'right', 'top']), "'tooltip.direction'");
+                                                    aa.arg.test(option, aa.inEnum(
+                                                        'bottom',
+                                                        'bottom-left',
+                                                        'bottom-right',
+                                                        'left',
+                                                        'right',
+                                                        'top',
+                                                        'top-left',
+                                                        'top-right',
+                                                    ), "'tooltip.direction'");
                                                     if (option !== 'right') {
                                                         elt.classList.remove('right');
                                                         elt.classList.add(option);

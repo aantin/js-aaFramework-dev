@@ -8927,9 +8927,9 @@
          *
          * @return {aa.Action}
          */
-        if (!aa.nonEmptyString(name)) { throw new TypeError("Argument must be a non-empty String."); }
-        const resolve = arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined;
-        const reject = arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined;
+        aa.arg.test(name, aa.nonEmptyString, "'name'");
+        const resolve   = aa.arg.optional(arguments, 1, undefined, aa.isFunction);
+        const reject    = aa.arg.optional(arguments, 2, undefined, aa.isFunction);
 
         const action = aa.actionManager.get(name);
 

@@ -8563,7 +8563,7 @@
             emitter: emit
         });
     });
-    aa.Action = (() => {
+    aa.Action                   = (() => {
         const {get, set} = aa.mapFactory();
         function _ (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
         function Action () { get(Action, 'construct').apply(this, arguments); }
@@ -8744,6 +8744,10 @@
                         const disabled = aa.arg.optional(arguments, 0, true);
                         this.disabled = disabled;
                         return this.disabled;
+                    },
+                    hasCallback:        function (callback) {
+                        const that = _(this);
+                        return that.listeners.onexecute.indexOf(callback > -1);
                     },
                     isValid:    function () {
                         return (this.name !== null);

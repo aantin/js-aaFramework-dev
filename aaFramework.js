@@ -8517,9 +8517,6 @@
             blueprint.construct?.apply(this, arguments);
             
             this.hydrate(spec, blueprint.startHydratingWith);
-
-            // Emit event 'hydrated':
-            blueprint.on?.hydrated?.call(this);
         });
 
         // Public:
@@ -8551,6 +8548,9 @@
                         method.call(this, spec[key]);
                     }
                 });
+
+                // Emit event 'hydrated':
+                emit.call(this, 'hydrated');
             },
             on:         aa.event.getListener({get: getter, set: setter})
         }, blueprint.methods.publics);

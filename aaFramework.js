@@ -8457,11 +8457,6 @@
             });
         });
 
-        // Internally use private methods as attributes:
-        blueprint.methods?.privates?.forEach((callback, methodName) => {
-            blueprint.accessors.privates[methodName] = callback;
-        });
-
         const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
             get: aa.isFunction,
             set: aa.isFunction,
@@ -8513,6 +8508,7 @@
             const spec = aa.arg.optional(arguments, 0, {});
 
             aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
+            aa.definePrivateMethods.call(this, blueprint.methods?.privates, {get: getter, set: setter});
 
             blueprint.construct?.apply(this, arguments);
             

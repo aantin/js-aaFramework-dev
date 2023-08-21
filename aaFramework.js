@@ -1645,6 +1645,9 @@
             
             // Attributes:
             aa.defineAccessors.call(this, {
+                execute: {
+                    name: () => get(this, 'app')
+                },
                 privates: {
                     app: null,
                     module: null,
@@ -1954,6 +1957,13 @@
             // Aliases:
             resume:         EventApp.prototype.run,
             pause:          EventApp.prototype.suspend,
+        }, {force: true});
+
+        // Statics:
+        aa.deploy(EventApp, {
+            getCurrent: function () {
+                return aa.events.app(aa.events.appNames.last);
+            },
         }, {force: true});
 
         return EventApp;

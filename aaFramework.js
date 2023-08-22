@@ -2393,7 +2393,7 @@
             });
         };
         Object.defineProperty(this, 'actions', {
-            get: () => Object.create(actions)
+            get: () => { return ({}).sprinkle(actions); }
         });
     })();
     aa.blob                     = Object.freeze({   

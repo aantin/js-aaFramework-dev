@@ -4621,7 +4621,7 @@
                     // }
                 },
                 setText:            function (p) {
-                    if (aa.isElement(p)) {
+                    if (aa.isElement(p) || p instanceof DocumentFragment) {
                         this.text = p;
                     } else if(aa.nonEmptyString(p)) {
                         this.text = p.trim();
@@ -5294,7 +5294,7 @@
                         });
                     } else if (aa.isString(this.text)) {
                         node.appendChild($$("div", this.text));
-                    } else if (aa.isElement(this.text)) {
+                    } else if (aa.isElement(this.text) || this.text instanceof DocumentFragment) {
                         node.appendChild(this.text);
                     }
                 },

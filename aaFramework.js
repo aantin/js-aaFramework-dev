@@ -697,7 +697,7 @@
                  *
                  * @return {void}
                  */
-                if (!isElement(node)) { throw new TypeError("First argument must be an Element node."); }
+                if (!aa.isElement(node)) { throw new TypeError("First argument must be an Element node."); }
                 if (!allowedEvents.has(evtName)) { throw new TypeError("Second argument not valid."); }
                 if (!aa.isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
 

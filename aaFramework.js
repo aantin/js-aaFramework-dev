@@ -3903,6 +3903,15 @@
                 // Instanciate:
                 privates.construct.apply(this, arguments);
             };
+            Object.defineProperties(privates, {
+                currentContextMenu: {
+                    get: () => get(privates, 'currentContextMenu'),
+                    set: instance => {
+                        aa.arg.test(instance, aa.instanceof(ContextMenu), "'instance'");
+                        set(privates, 'currentContextMenu', instance);
+                    }
+                }
+            });
 
             // Public:
             aa.deploy(ContextMenu.prototype, {
@@ -3926,6 +3935,10 @@
                 },
                 show:   function () {
                     const that = getAccessor(this);
+
+                    privates.currentContextMenu?.hide();
+                    privates.currentContextMenu = this;
+
                     that.activeElement = document.activeElement;
                     that.activeElement.blur();
 

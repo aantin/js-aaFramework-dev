@@ -3935,7 +3935,8 @@
                             this.hide();
                         }
                     };
-                    document.body.on(`click`, that.onclickout);
+                    document.body.on('click', that.onclickout);
+                    document.body.on('contextmenu', that.onclickout);
                     
                     this.hide();
 

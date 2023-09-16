@@ -1845,7 +1845,6 @@
                     const action = callback;
                     spec[evtName] = new aa.Event(action, options);
                 } else { throw new TypeError("Second argument must be a Function or an instance of <aa.Action>."); }
-                // if (evtName === "<Esc>") { log("framework:", evtName, spec[evtName].action.name, options); }
                 this.listen(spec);
                 return this;
             },
@@ -2026,7 +2025,7 @@
             aa.Parser.prototype.replace     = function (mask,value) {
                 if (this.content !== null) {
                     let regex = new RegExp('\\{\\{\\{\\s*'+mask+'\\s*\\}\\}\\}','g');
-                    // console.log(regex);
+                    
                     this.content = this.content.split('{{{'+mask+'}}}').join(value);
                     this.content = this.content.split('{{{ '+mask+'}}}').join(value);
                     this.content = this.content.split('{{{'+mask+' }}}').join(value);
@@ -8669,7 +8668,13 @@
                 byShortcuts = {};
                 shortcuts = {};
             },
-            show:       function (appName) {
+            show:       function (appName, spec={}) {
+                aa.arg.test(spec, aa.verifyObject({
+                    on: aa.isObjectOfFunctions
+                }), "'spec'");
+                spec.sprinkle({
+                    on: {}
+                });
 
                 // Display window:
                 dialog = aa.gui.window({
@@ -8680,10 +8685,12 @@
                     text:       gui.getNode(appName),
                     on: {
                         resize: () => {
+                            spec.on?.resize?.();
                         },
                         hide: () => {
                             gui.reset();
                             isGuiOpened = false;
+                            spec.on?.hide?.();
                         }
                     }
                 });
@@ -8838,7 +8845,6 @@
                     return specials.join('+');
                 })();
             }
-            // log({str: str, prefix: prefix, key: key});
             if (os === "mac") {
                 str = str.replace(/[a-z\+]+\s/gi, '');
                 prefix = (specials.reduce((acc, special) => {
@@ -8866,8 +8872,14 @@
             }
             return str;
         };
-        this.gui        = function (appName) {
+        this.gui        = function (appName, spec={}) {
             verify("appName", appName);
+            aa.arg.test(spec, aa.verifyObject({
+                on: aa.isObjectOfFunctions
+            }), "'spec'");
+            spec.sprinkle({
+                on: {}
+            });
 
             if (!isGuiOpened) {
                 isGuiOpened = true;
@@ -8881,7 +8893,9 @@
                     },
                     
                     // Resolved:
-                    () => { gui.show(appName); },
+                    () => { gui.show(appName, {
+                        ...(spec.on && {on: spec.on})
+                    }); },
                     
                     // Rejected:
                     () => { aa.gui.warn("An error occured."); }
@@ -9331,7 +9345,6 @@
                     publics: {
                         diagram: function () {
                             const that = getAccessor(this);
-                            // log(that.list);
                             const diamonds = $$('div');
                             const node = $$('section.SelectionMatrix',
                                 diamonds
@@ -9341,7 +9354,6 @@
                                 parent: this
                             }));
                             diamonds.appendChild(diamond.node);
-                            // log({diamond})
                             document.body.appendChild(node);
                         },
                         exec: function (cmd) {
@@ -9364,14 +9376,12 @@
                                 );
                                 itemPointer = itemPointer[index];
                             });
-                            // log({pointer: itemPointer});
 
                             const methods = {
                                 exec: function (cmd) {
                                     aa.arg.test(cmd, blueprint.verifiers.commands, "'command'");
 
                                     const that = getAccessor(this);
-                                    // log(cmd, indexes);
 
                                     switch (cmd) {
                                     case '<Click>':
@@ -9396,7 +9406,6 @@
 
                                     let list = that.list;
                                     indexes.forEach((index, depth) => {
-                                        // log(index)
                                         if (!aa.isArray(list[index])) {
                                             list[index] = [];
                                         }
@@ -9823,7 +9832,6 @@
                                 checked: {
                                     get: () => input.checked,
                                     set: checked => {
-                                        // log({checked});
                                         aa.arg.test(checked, aa.isBool, "'checked'");
                                         input.checked = checked;
                                     }
@@ -9831,7 +9839,6 @@
                                 disabled: {
                                     get: () => input.disabled,
                                     set: disabled => {
-                                        // log({disabled});
                                         aa.arg.test(disabled, aa.isBool, "'disabled'");
                                         input.disabled = disabled;
                                     }
@@ -9839,7 +9846,6 @@
                                 required: {
                                     get: () => input.required,
                                     set: required => {
-                                        // log({required});
                                         aa.arg.test(required, aa.isBool, "'required'");
                                         input.required = required;
                                     }
@@ -10656,7 +10662,6 @@
                                                 break;
                                             
                                             case "on":
-                                                // log(nodeName);
                                                 if (aa.isArray(option)) {
                                                     if (option.length > 1 && !aa.isArray(option[0])) {
                                                         let evt =       option[0];
@@ -11377,7 +11382,6 @@
                                             return;
                                         }
                                         if (json) {
-                                            // console.log(json);
                                             if (options.default) {
                                                 if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
                                                     (new aa.gui.Dialog('critical',{
@@ -11451,7 +11455,6 @@
                                             return;
                                         }
                                         if (json) {
-                                            // console.log(json);
                                             if (options.default) {
                                                 if (json.dialog && json.dialog.critical && json.dialog.critical.length) {
                                                     (new aa.gui.Dialog('critical',{
@@ -11734,13 +11737,11 @@
         }
 
         aa.walkTheDOM(dom, function (node) {
-            // log(i,node);
             // i++;
             switch (node.nodeName.toLowerCase()) {
                 case 'script':
                 case 'style':
                 case 'iframe':
-                    // log(node.nodeName);
                     break;
                 default:
                     if (aa.isElement(node)) {

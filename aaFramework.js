@@ -689,14 +689,14 @@
                 
                 return (get(this, "name") !== null);
             };
+            /**
+             * @param {element} node
+             * @param {string} evtName
+             * @param {function} callback
+             *
+             * @return {void}
+             */
             aa.Action.prototype.listenNode      = function (node, evtName, callback) {
-                /**
-                 * @param {element} node
-                 * @param {string} evtName
-                 * @param {function} callback
-                 *
-                 * @return {void}
-                 */
                 if (!aa.isElement(node)) { throw new TypeError("First argument must be an Element node."); }
                 if (!allowedEvents.has(evtName)) { throw new TypeError("Second argument not valid."); }
                 if (!aa.isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
@@ -711,17 +711,29 @@
                     callback: callback
                 });
             };
+            /**
+             * If not already added, add a callback Function to Action's events listener.
+             *
+             * @param {string|object} evtName - The event name. In the case of giving an Object of callback Functions instead of an event name String, the second argument must be omitted.
+             * @param {function} [callback] - A function that will be executed when the evtName Event is fired. This argument must be omitted if the first argument is an Object of Functions.
+             *
+             * @return {boolean} - true if callback could be added, false if already existed
+             */
             aa.Action.prototype.on              = function (evtName, callback) {
-                /**
-                 * If not already added, add a callback Function to Action's events listener.
-                 *
-                 * @param {string} evtName
-                 * @param {function} callback
-                 *
-                 * return {boolean} true if callback could be added, false if already existed
-                 */
                 
                 let res = false;
+
+                if (aa.isObject(evtName)) {
+                    aa.throwErrorIf(
+                        arguments.length > 1,
+                        `Only one argument is allowed if first argument is an Object.`
+                    );
+                    aa.arg.test(evtName, aa.isObjectOfFunctions, "'evtName'");
+                    evtName.forEach((callback, name) => {
+                        this.on(name, callback);
+                    });
+                    return;
+                }
                 
                 if (!aa.nonEmptyString(evtName)) {   throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isFunction(callback)) {      throw new TypeError("Second argument must be a Function."); }

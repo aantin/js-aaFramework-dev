@@ -2799,7 +2799,7 @@
                                 style: "position: fixed; bottom: 0; right: 0; margin: 2px; padding: 4px 8px; background: #222; color: #0f8; border-radius: 4px;"
                             });
                             document.body.appendChild(div);
-                            div.innerHTML = aa.shortcut.format(combinaison, ["aa.htmlEncode", "simple"])
+                            div.innerHTML = aa.shortcut.format(combinaison, ["htmlEncode", "simple"])
                                 // .replace(/\</g,"&lt;")
                                 // .replace(/\>/g,"&gt;")
                             ;
@@ -3460,12 +3460,28 @@
             spec: aa.isObject
         });
 
+        /**
+         * Usage:
+         *      // Initialzing the reminder messages:
+         *      aa.gui.reminders.app('my-app-name').add('reminder-id', 'A message to display as a checkbox label');
+         * 
+         *      // Call a confirm modal window:
+         *      aa.gui.confirm({
+         *          text: 'The confirmation message',
+         *          reminder: 'reminder-key',
+         *          on: {submit: data => {}}
+         *      });
+         * 
+         *      // GUI to edit the registered reminders:
+         *      aa.reminders.edit();
+         */
         const Reminders = function () {
 
             // Private attributes:
-            const attr = {
+            const privates = {
                 app: "undefined"
             }
+            const db = new aa.Storage("aaDialog");
 
             // Methods:
             aa.deploy(Reminders.prototype, {
@@ -3473,15 +3489,15 @@
                     if (!aa.nonEmptyString(id)) { throw new TypeError("First argument must be a non-empty String."); }
                     if (!aa.nonEmptyString(message)) { throw new TypeError("Second argument must be a non-empty String."); }
 
-                    this.app(attr.app);
-                    reminders[attr.app][id] = message;
+                    this.app(privates.app);
+                    reminders[privates.app][id] = message;
                     return this;
                 },
                 app:    function (app) {
                     if (!aa.nonEmptyString(app)) { throw new TypeError("Argument must be a non-empty String."); }
 
                     app = app.trim();
-                    attr.app = app;
+                    privates.app = app;
                     if (!reminders.hasOwnProperty(app)) {
                         reminders[app] = {};
                     }
@@ -3491,16 +3507,49 @@
                     const apps = reminders.keys();
                     apps.sortNatural();
                     const content = $$("div");
-                    const db = new aa.Storage("aaDialog");
                     db.load();
                     const remindersInDB = db.select("reminders") || [];
 
-                    apps.forEach((app) => {
+                    apps.forEach(app => {
                         const fieldset = $$("fieldset", {
                             legend: app
                         });
                         content.appendChild(fieldset);
                         fieldset.appendChild($$("div", "Ask for my confirmation before:"));
+                        const list = reminders[app].reduce((list, message, id) => {
+                            list.push({id, message});
+                            return list;
+                        }, []);
+                        list.sort((a, b) => {
+                            a = a.message.toLowerCase();
+                            b = b.message.toLowerCase();
+
+                            return (a > b ?
+                                1
+                                : (a < b ?
+                                    -1
+                                    : 0
+                                )
+                            );
+                        });
+                        list.forEach(entry => {
+                            const hidden = $$("checkbox.hidden", {
+                                checked: remindersInDB.has(entry.id),
+                                name: "doNotRemind[]",
+                                value: entry.id
+                            });
+                            fieldset.appendChild(hidden);
+                            fieldset.appendChild($$('div', aa.cook("checkbox", {
+                                checked: !remindersInDB.has(entry.id),
+                                label: entry.message,
+                                name: "remind[]",
+                                value: entry.id,
+                                on: {input: (e) => {
+                                    hidden.checked = !e.target.checked;
+                                }}
+                            })));
+                        });
+                        return;
                         const descriptions = [];
                         reminders[app].forEach((desc, id) => {
                             descriptions.push(desc);
@@ -3532,7 +3581,7 @@
                         title: "User confirmation",
                         text: content,
                         on: {submit: (data) => {
-                            data.doNotRemind = data.doNotRemind || [];
+                            data.doNotRemind = data.doNotRemind || [];
                             db.insert("reminders", data.doNotRemind);
                         }}
                     });
@@ -4828,8 +4877,7 @@
             };
             const initRemindersDB   = function () {
                 db.load();
-                const reminders = db.select("reminders");
-                if (!reminders) {
+                if (!db.select("reminders")) {
                     db.insert("reminders", []);
                 }
             };
@@ -4855,9 +4903,7 @@
                     initRemindersDB.call(this);
                     const reminders = db.select("reminders");
                     if (checked) {
-                        if (!reminders.has(reminder)) {
-                            reminders.push(reminder);
-                        }
+                        reminders.pushUnique(reminder);
                     } else {
                         if (reminders.has(reminder)) {
                             reminders.splice(reminders.indexOf(reminder), 1);
@@ -5265,7 +5311,7 @@
                     if (reminder) {
                         node.appendChild($$("br"));
                         node.appendChild(aa.cook("checkbox", {
-                            label: "Don't show this message again",
+                            label: "Don't show similar messages again",
                             name: "doNotRemind",
                             value: true
                         }));
@@ -8824,7 +8870,7 @@
              *
              * @return {String}
              */
-            const allowedOptions = ["aa.htmlEncode", "simple", "css"];
+            const allowedOptions = ["htmlEncode", "simple", "css"];
 
             // Verify arguments integrity:
             verify("shortcut", str);

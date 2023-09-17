@@ -9650,7 +9650,7 @@
         aa.throwErrorIf(spec.mixed !== undefined && !aa.isBool(spec.mixed), "Spec 'mixed' must be a Boolean.", TypeError);
         aa.throwErrorIf(spec.mixable !== undefined && !aa.isBool(spec.mixable), "Spec 'mixable' must be a Boolean.", TypeError);
         aa.throwErrorIf(spec.dataset !== undefined && !aa.isObjectOfStrings(spec.dataset), "Spec 'dataset' must be an Object of Strings.", TypeError);
-        aa.throwErrorIf(spec.on !== undefined && !aa.isObjectOfFunctions(spec.on), "Spec 'on' must be an Object of Functions.", TypeError);
+        aa.throwErrorIf(spec.hasOwnProperty('on') && !aa.isObjectOfFunctions(spec.on), "Spec 'on' must be an Object of Functions.", TypeError);
 
         spec.on ??= {};
 

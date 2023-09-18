@@ -1206,7 +1206,7 @@
                     this.push(...data);
                 }
             },
-            emit:               aa.prototypes.events.getEmitter(get, "listeners"),
+            emit:               aa.prototypes.events.getEmitter({get, set}, "listeners"),
         };
 
         // Publics:
@@ -3592,6 +3592,7 @@
                     aa.gui.win({
                         title: "User confirmation",
                         text: content,
+                        buttons: false,
                         on: {submit: (data) => {
                             data.doNotRemind = data.doNotRemind || [];
                             db.insert("reminders", data.doNotRemind);

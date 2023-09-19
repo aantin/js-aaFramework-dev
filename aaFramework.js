@@ -10327,7 +10327,7 @@
                     const previousItem = previous[x];
                     if (comparator(nextItem, previousItem)) {
                         cell.matched = true;
-                        cell.value = previousItem;
+                        cell.value = nextItem;
 
                         // Add 1 to the upper-left weight:
                         cell.weight = (x > 0 && y > 0 ?

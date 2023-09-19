@@ -2535,6 +2535,120 @@
         border-top-color: var(--item-right-selected);
     }
 
+    .aa table.diff {
+        --radius: 6px;
+        margin: 0 auto;
+        border-spacing: 0;
+    }
+    .aa table.diff tr > th {
+        background: #eee;
+    }
+    .aa table.diff > thead > tr > th {
+        padding: var(--radius) 0;
+        text-align: center;
+        vertical-align: bottom;
+        border-bottom: 1px solid var(--color-grey-darker);
+    }
+    .aa table.diff > thead > tr > th:first-child {
+        border-top-left-radius: var(--radius);
+    }
+    .aa table.diff > thead > tr > th:last-child {
+        border-top-right-radius: var(--radius);
+    }
+    .aa table.diff > thead > tr > th:first-child {
+        border-bottom-width: 0px;
+    }
+    .aa table.diff > tbody > tr > th {
+        padding: var(--radius);
+        white-space: nowrap;
+        text-align: right;
+        border-right: 1px solid var(--color-grey-darker);
+    }
+    .aa table.diff > tbody > tr:last-child > th:first-child {
+        border-bottom-left-radius: var(--radius);
+    }
+    .aa table.diff > tbody > tr:last-child > td:last-child {
+        border-bottom-right-radius: var(--radius);
+    }
+    .aa table.diff tr > th > span::after {
+        content: attr(data-index);
+        color: var(--color-orange);
+    }
+    .aa table.diff thead > tr > th > span::after {
+        display: block;
+    }
+    .aa table.diff td {
+        padding: 0;
+        width: 28px;
+        height: 28px;
+        background: #eee;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .aa table.diff td {
+        color: var(--color-grey);
+    }
+    .aa table.diff td.path {
+        opacity: .5;
+        background: var(--color-blue-lighter);
+        color: var(--color-blue-darker);
+    }
+    .aa table.diff td.selected {
+        background: var(--color-blue-lighter);
+    }
+    .aa table.diff td.matched {
+        opacity: 1;
+        color: #000;
+    }
+    .aa table.diff td.removed {
+        background: var(--error-bg-color);
+        color: var(--error-color);
+    }
+    .aa table.diff td.added {
+        background: var(--color-green-lighter);
+        color: var(--color-green-darker);
+    }
+    .aa .diff.lines {
+        display: block;
+        margin: 16px auto;
+        width: fit-content;
+        color: initial;
+        color: var(--color-black);
+    }
+    .aa .diff.lines * {
+        font-family: Courier New;
+    }
+    .aa .diff.lines > .line {
+        margin: 0;
+        padding: 0 4px 0 8px;
+        line-height: 1.5;
+        display: block;
+        background: #eee;
+    }
+    .aa .diff.lines > .line:before {
+        content: ' ';
+        display: inline-block;
+        margin-right: 2px;
+        padding-right: 8px;
+        border-right: 1px solid #bbb;
+    }
+    .aa .diff.lines > .added {
+        background: var(--color-green-lighter);
+/*        color: var(--color-green-darker);*/
+    }
+    .aa .diff.lines > .added:before {
+        content: '+';
+        border-right-color: var(--color-green);
+    }
+    .aa .diff.lines > .removed {
+        background: var(--error-bg-color);
+        color: var(--error-color);
+    }
+    .aa .diff.lines > .removed:before {
+        content: '-';
+        border-right-color: var(--color-red);
+    }
+
     /* --------------------------------
     Dark version:
     -------------------------------- */

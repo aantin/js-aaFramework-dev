@@ -10025,6 +10025,325 @@
 
         return elt;
     });
+    aa.diff                     = Object.freeze((() => {
+        const {get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
+        const entryTypes = [null, 'added', 'removed'];
+        const diffTypes = ['Myers']; // first element will be used by default
+        // --------------------------------
+        const Cell = (() => {
+            function Cell () { get(Cell, 'construct').apply(this, arguments) }
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        aIndex:     0,
+                        bIndex:     0,
+                        index:      0,
+                        matched:    false,
+                        path:       false,
+                        selected:   false,
+                        value:      null,
+                        type:       null,
+                        weight:     0,
+                    }
+                },
+                verifiers: {
+                    aIndex:     aa.isPositiveInt,
+                    bIndex:     aa.isPositiveInt,
+                    index:      aa.isPositiveInt,
+                    matched:    aa.isBool,
+                    path:       aa.isBool,
+                    selected:   aa.isBool,
+                    value:      aa.any,
+                    type:       aa.inArray(entryTypes),
+                    weight:     aa.isPositiveInt,
+                },
+            };
+            aa.manufacture(Cell, blueprint, {get, set});
+            return Cell;
+        })();
+        const DiffEntry = (() => {
+            function DiffEntry () { get(DiffEntry, 'construct').apply(this, arguments) }
+            const blueprint = {
+                accessors: {
+                    read: {
+                        index:  null,
+                        type:   null,
+                        value:  null,
+                    }
+                },
+                construct: function (spec={}) {
+                    aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), "'spec'");
+                    const that = _(this);
+
+                    Object.keys(spec).forEach(attr => {
+                        const method = `set${attr.firstToUpper()}`;
+                        that[method](spec[attr]);
+                    });
+                },
+                methods: {
+                    publics: {
+                        toObject: function () {
+                            return {
+                                index:  this.index,
+                                type:   this.type,
+                                value:  this.value,
+                            };
+                        },
+                    },
+                    privates: {
+                        setIndex: function (index) {
+                            aa.arg.test(index, blueprint.verifiers.index, "'index'");
+                            const that = _(this);
+                            that.index = index;
+                        },
+                        setType: function (type) {
+                            aa.arg.test(type, blueprint.verifiers.type, "'type'");
+                            const that = _(this);
+                            that.type = type;
+                        },
+                        setValue: function (value) {
+                            aa.arg.test(value, blueprint.verifiers.value, "'value'");
+                            const that = _(this);
+                            that.value = value;
+                        },
+                    }
+                },
+                verifiers: {
+                    index:  aa.isPositiveInt,
+                    type:   aa.inArray(entryTypes),
+                    value:  aa.any,
+                },
+            };
+            aa.manufacture(DiffEntry, blueprint, {get, set});
+            return DiffEntry;
+        })();
+        // --------------------------------
+        /**
+         * Compare two Array-like.
+         * 
+         * @param {array-like} previous - The first array to compare, also often considered as old Array.
+         * @param {array-like} next - The second array to compare, also often considered as new Array.
+         * 
+         * @return {object}
+         */
+        function diff (previous, next, options={}) {
+            aa.arg.test(previous, arg => aa.isArrayLike(arg), "'previous'");
+            aa.arg.test(next, arg => aa.isArrayLike(arg), "'next'");
+            aa.arg.test(options, aa.verifyObject({
+                comparator: aa.isFunction,
+                render:     aa.isBool,
+                type:       aa.inArray(diffTypes),
+            }), "'options'");
+            options.sprinkle({
+                comparator: (a, b) => a === b,
+                render:     false,
+                type:       diffTypes[0]
+            });
+
+            let entries;
+
+            switch (options.type.toLowerCase()) {
+            case 'myers':
+                const result = getMyersResult(previous, next, options.comparator);
+                entries = result.entries;
+
+                if (options.render) {
+                    const node = getMyersNode(previous, next, result.virtual);
+                    Object.defineProperties(entries, {
+                        node: {get: () => node}
+                    });
+                }
+                break;
+            }
+
+
+            return Object.freeze(entries);
+        };
+        function getMyersEntries (previous, next, virtual) {
+            const results = [];
+
+            // Matching items:
+            let x = previous.length - 1;
+            let y = next.length - 1;
+            let i = x * y;
+            while (i > -1 && x > -1 && y > -1) {
+                const cell = virtual[y][x];
+                cell.values = true;
+                if (cell.matched) {
+                    cell.selected = true;
+                    results.push(cell);
+                    x--;
+                    y--;
+                } else {
+                    if ((virtual[y][x-1]?.weight) === cell.weight) {
+                        cell.value = previous[x];
+                        cell.type = 'removed';
+                        results.push(cell);
+                        x--;
+                    } else if ((virtual[y-1]?.[x].weight) === cell.weight) {
+                        cell.value = next[y];
+                        cell.type = 'added';
+                        results.push(cell);
+                        y--;
+                    } else {
+                        console.warn('?');
+                    }
+                }
+                i--;
+            }
+
+            // Added:
+            if (y > -1) {
+                for (; y > -1; y--) {
+                    const cell = virtual[y][0];
+                    cell.type = 'added';
+                    cell.values = true;
+                    cell.value = next[y];
+                    results.push(cell);
+                }
+            }
+            
+            // Removed:
+            else if (x > -1) {
+                for (; x > -1; x--) {
+                    const cell = virtual[0][x];
+                    cell.values = true;
+                    cell.type = 'removed';
+                    cell.value = previous[x];
+                    results.push(cell);
+                }
+            }
+
+            results.reverse();
+
+            return aa.Collection.fromArray(sortRemovedBeforeAdded(results.map(cell => {
+                return new DiffEntry({
+                    index: cell.index,
+                    type: cell.type,
+                    value: cell.value,
+                });
+            })), {
+                authenticate: aa.instanceof(DiffEntry)
+            });
+        }
+        function getMyersNode (previous, next, virtual) {
+            const header = $$('thead');
+            const body = $$('tbody');
+            const table = $$('table.diff.sticky',
+                header,
+                body
+            );
+            [...next].forEach((destItem, y) => {
+
+                // Top header:
+                if (y === 0) {
+                    const cells = new DocumentFragment();
+                    cells.append($$('th'));
+                    [...previous].forEach((srcItem, x) => {
+                        cells.append($$('th.stick-top',
+                            $$('span', aa.isString(previous) ? srcItem : '', {dataset: {index: `[${x}]`}})),
+                        );
+                    });
+                    header.append($$('tr', cells));
+                }
+
+                // Row content:
+                const row = $$('tr');
+                body.append(row);
+                [...previous].forEach((srcItem, x) => {
+                    const cell = virtual[y][x];
+
+                    // Left header:
+                    if (x === 0) {
+                        row.append($$('th.stick-left',
+                            $$('span', aa.isString(next) ? destItem : '', {dataset: {index: ` [${y}]`}})),
+                        )
+                    }
+
+                    // Cell content:
+                    let cellContent = $$(`span`, `${cell.weight}`);
+                    const indexes = `[${cell.aIndex}][${cell.bIndex}]`;
+                    row.append($$(`td${cell.matched ? '.matched' : ''}${cell.selected ? '.selected' : ''}${cell.path ? '.path' : ''}${cell.type === 'removed' ? '.removed' : ''}${cell.type === 'added' ? '.added' : ''}`, cellContent, {
+                        on: {click: e => {
+                            log('position', indexes);
+                        }}
+                    }));
+                });
+            });
+            return table;
+        };
+        function getMyersResult (previous, next, comparator) {
+            const virtual = getTableFromSize(next.length, previous.length);
+            getMyersWeighted(previous, next, virtual, comparator);
+            const entries = getMyersEntries(previous, next, virtual);
+
+            return {
+                entries,
+                virtual
+            };
+        };
+        function getTableFromSize (rows, columns) {
+            aa.arg.test(rows, aa.isPositiveInt, "'rows'");
+            aa.arg.test(columns, aa.isPositiveInt, "'columns'");
+
+            const table = [];
+            aa.repeat(rows, y => {
+                const virtualRow = [];
+                aa.repeat(columns, x => {
+                    const cell = new Cell();
+                    cell.aIndex = x;
+                    cell.bIndex = y;
+                    virtualRow.push(cell);
+                });
+                table.push(virtualRow);
+            });
+            return table;
+        }
+        function sortRemovedBeforeAdded (list) {
+            const results = [];
+            const added = [];
+
+            list.forEach(cell => {
+                if (cell.type === 'added') {
+                    added.push(cell);
+                } else {
+                    if (!cell.type) {
+                        results.push(...added);
+                        added.clear();
+                    }
+                    results.push(cell);
+                }
+            });
+            results.push(...added);
+            added.clear();
+
+            return results;
+        }
+        function getMyersWeighted (previous, next, virtual, comparator) {
+            virtual.forEach((row, y) => {
+                const nextItem = next[y];
+                row.forEach((cell, x) => {
+                    const previousItem = previous[x];
+                    if (comparator(nextItem, previousItem)) {
+                        cell.matched = true;
+                        cell.value = previousItem;
+
+                        // Add 1 to the upper-left weight:
+                        cell.weight = (x > 0 && y > 0 ?
+                            virtual[y-1][x-1].weight + 1
+                            : 1
+                        );
+                    } else {
+                        // Retrieve the max weight from left or upper cells:
+                        cell.weight = Math.max(y > 0 ? virtual[y-1][x].weight : 0, x > 0 ? virtual[y][x-1].weight : 0);
+                    }
+                })
+            });
+        }
+        // --------------------------------
+        return diff;
+    })());
     aa.extractClassNameAndID    = Object.freeze(function (str) {
         if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
 

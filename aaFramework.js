@@ -21,9 +21,9 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.0",
+        version: "3.1",
         dependencies: {
-            aaJS: "^3.0"
+            aaJS: "^3.1"
         }
     }, null, (err) => {
         document.body.appendChild(aa.html("div.dependencyError","Invalid dependencies",{

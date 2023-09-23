@@ -1,3272 +1,3243 @@
-    /* é */
-    :root{
-        --duration: .2s;
+/* é */
+:root{
+    --duration: .2s;
 
-        --font-family: 'Fira L', 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        --color: #666;
-        --submit-bg-color: #49f;
-        --submit-color: #fff;
-        --reset-color: #aaa;
-        --reset-bg-color: #e8e8e8;
-        --button-bg-color: #ddd;
-        --button-disabled-color: #ddd;
-        --button-disabled-bg-color: #eee;
-        --button-red-bg-color: #f66;
-        --button-red-color: #fff;
-        --error-bg-color: #fcc;
-        --error-color: #c00;
-        --menu-shortcut-color: #acf;
-        --menu-disabled-color: #ccc;
-        --form-placeholder-color: #8bf;
-        --form-focus-color: #36e;
-        --color-placeholder: #248;
+    --font-family: 'Fira L', 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    --color: #666;
+    --submit-bg-color: #49f;
+    --submit-color: #fff;
+    --reset-color: #aaa;
+    --reset-bg-color: #e8e8e8;
+    --button-bg-color: #ddd;
+    --button-disabled-color: #ddd;
+    --button-disabled-bg-color: #eee;
+    --button-red-bg-color: #f66;
+    --button-red-color: #fff;
+    --error-bg-color: #fcc;
+    --error-color: #c00;
+    --menu-shortcut-color: #acf;
+    --menu-disabled-color: #ccc;
+    --form-placeholder-color: #8bf;
+    --form-focus-color: #36e;
+    --color-placeholder: #248;
 
-        --bg-color-lighter: #fff;
-        --bg-color: #f8f8f8;
-        --bg-color-darker: #eee;
+    --bg-color-lighter: #fff;
+    --bg-color: #f8f8f8;
+    --bg-color-darker: #eee;
 
-        --warning-color: #fb0;
-        --critical-color: #f66;
-        --confirm-color: #49f;
+    --warning-color: #fb0;
+    --critical-color: #f66;
+    --confirm-color: #49f;
 
-        --color-blue: #49f;
-        --color-blue-darker: #248;
-        --color-blue-fade: rgba(64,128,255,0.2);
-        --color-blue-lighter: #acf;
-        --color-orange: #fa0;
-        --color-gold: #ba8e4d;
-        --color-green: #6c8;
-        --color-green-darker: #4a7;
-        --color-green-lighter: #aea;
-        --color-purple: #80f;
-        --color-magenta: #f0f;
-        --color-magenta-lighter: #f8f;
-        --color-grey: #ccc;
-        --color-grey-darker: #888;
-        --color-grey-lighter: #ddd;
-        --color-red: #f88;
-        --color-white: #fff;
-        --color-black: #000;
-        --color-cyan: #0dc;
-        
-        --color-light-grey: #eee;
-        --color-light-grey: #f4f4f4;
-        --color-light-blue: #f0f8ff;
+    --color-blue: #49f;
+    --color-blue-darker: #248;
+    --color-blue-fade: rgba(64,128,255,0.2);
+    --color-blue-lighter: #acf;
+    --color-orange: #fa0;
+    --color-gold: #ba8e4d;
+    --color-green: #6c8;
+    --color-green-darker: #4a7;
+    --color-green-lighter: #aea;
+    --color-purple: #80f;
+    --color-magenta: #f0f;
+    --color-magenta-lighter: #f8f;
+    --color-grey: #ccc;
+    --color-grey-darker: #888;
+    --color-grey-lighter: #ddd;
+    --color-red: #f88;
+    --color-white: #fff;
+    --color-black: #000;
+    --color-cyan: #0dc;
+    
+    --color-light-grey: #eee;
+    --color-light-grey: #f4f4f4;
+    --color-light-blue: #f0f8ff;
 
-        --notif-bg:  #fff;
-        --notif-text: #444;
-        
-        --tooltip-bg: #223;
-        --tooltip-text: #eef;
-        --tooltip-grey: #99f;
+    --notif-bg:  #fff;
+    --notif-text: #444;
+    
+    --tooltip-bg: #223;
+    --tooltip-text: #eef;
+    --tooltip-grey: #99f;
 
-        --inset: inset 1px 1px 1px var(--color-blue-fade);
-
-        /* --------------------------------
-        Dark
-        -------------------------------- */
-
-        --dark-color: #aaa;
-        --dark-color-darker: #888;
-
-        --dark-submit-bg-color: #49f;
-        --dark-button-disabled-bg-color: #444;
-        --dark-button-disabled-color: #bbb;
-        
-        --dark-color-bg-lighter: #333;
-        --dark-color-bg: #222;
-        --dark-color-bg-darker: #111;
-        
-        --dark-color-grey: #444;
-        --dark-color-blue: #248;
-        --dark-color-green: #384;
-        --dark-color-orange: #c40;
-        --dark-color-red: #c00;
-        --dark-color-cyan: #1ed;
-    }
-    body.aaFrameworkFreeze{
-        overflow: hidden;
-    }
-    @charset "utf-8";
-    /* -------------------------------- */
-    @font-face {
-        font-family: 'Fira UL';
-        src: url('vendors/fonts/fira-sans/FiraSans-UltraLight.ttf');
-    }
-    @font-face {
-        font-family: 'Fira EL';
-        src: url('vendors/fonts/fira-sans/FiraSans-ExtraLight.ttf');
-    }
-    @font-face {
-        font-family: 'Fira L';
-        src: url('vendors/fonts/fira-sans/FiraSans-Light.ttf');
-    }
-    @font-face {
-        font-family: 'Fira L-i';
-        src: url('vendors/fonts/fira-sans/FiraSans-LightItalic.ttf');
-    }
-    @font-face {
-        font-family: 'Fira';
-        src: url('vendors/fonts/fira-sans/FiraSans-Regular.ttf');
-    }
-    @font-face {
-        font-family: 'Fira-i';
-        src: url('vendors/fonts/fira-sans/FiraSans-RegularItalic.ttf');
-    }
-    @font-face {
-        font-family: 'pencilkaisho';
-        src: url('./vendors/fonts/pencilkaisho/080/g_pencilkaisho_JISlimit_R.ttf');
-    }
-    @font-face {
-        font-family: 'aoyagi';
-        src: url('./vendors/fonts/aoyagireisyosimo_ttf_2_01/aoyagireisyosimo_ttf_2_01.ttf');
-    }
-    @font-face {
-        font-family: 'katyou';
-        src: url('./vendors/fonts/katyou/katyou-p.ttf');
-    }
-    /* -------------------------------- */
-    /**/
-    *{
-        outline: 0;
-        font-family: var(--font-family);
-    }
-    .center {
-        text-align: center;
-    }
-    .aaBlur {
-        /*filter: blur(1px);*/
-    }
-    .waitAndFadeOut {
-        animation: aaFadeOut 1s 1;
-        animation-fill-mode: forwards;
-        animation-delay: 2s;
-    }
-    .fadeOut {
-        -webkit-animation: aaFadeOut var(--duration) 1;
-        -moz-animation: aaFadeOut var(--duration) 1;
-        -o-animation: aaFadeOut var(--duration) 1;
-        animation: aaFadeOut var(--duration) 1;
-
-        animation-fill-mode: forwards;
-        animation-delay: 0s;
-    }
-    .aa {
-        font-size: 13px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-
-        -webkit-touch-callout: none;
-          -webkit-user-select: none;
-           -khtml-user-select: none;
-             -moz-user-select: none;
-              -ms-user-select: none;
-                  user-select: none;
-    }
-    .aa a {
-        color: var(--color-blue);
-    }
-    .aa b,
-    .aa strong {
-        font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-    }
-    .aa code,
-    .aa code *{
-        font-family: Courier New;
-    }
-    .aa button,
-    .aa input[type="button"],
-    .aa input[type="submit"],
-    .aa input[type="reset"],
-    .aa input[type="password"],
-    .aa input[type="number"],
-    .aa input[type="text"]{
-        all: initial;
-        white-space: nowrap;
-    }
-    .aa input[type="password"],
-    .aa input[type="number"],
-    .aa input[type="text"]{
-        font-size: 13px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-
-        -webkit-touch-callout: text;
-          -webkit-user-select: text;
-           -khtml-user-select: text;
-             -moz-user-select: text;
-              -ms-user-select: text;
-                  user-select: text;
-    }
-    .aa input[type="number"]{
-        text-align: right;
-
-        -webkit-touch-callout: text;
-          -webkit-user-select: text;
-           -khtml-user-select: text;
-             -moz-user-select: text;
-              -ms-user-select: text;
-                  user-select: text;
-    }
-    .aa button,
-    .aa input[type="submit"],
-    .aa input[type="reset"],
-    .aa input[type="button"]{
-        font-size: 13px;
-        font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-    }
-    .aa button.small:disabled,
-    .aa input.small[type="submit"]:disabled,
-    .aa input.small[type="reset"]:disabled,
-    .aa input.small[type="button"]:disabled{
-        background-color: var(--button-disabled-bg-color);
-        color: var(--button-disabled-color);
-        border-color: var(--button-disabled-bg-color);
-        box-shadow: 0 0 0 transparent;
-    }
-    .aa button.small,
-    .aa input.small[type="submit"],
-    .aa input.small[type="reset"],
-    .aa input.small[type="button"]{
-        margin: 0px 2px;
-        padding: 1px 8px;
-        min-width: auto;
-        font-size: 13px;
-        line-height: 1;
-    }
-    .aa button.icon {
-        position: relative;
-        padding: 0 0 0 1px;
-        min-width: 0;
-        width: 28px;
-        height: 28px;
-        border-radius: 16px;
-    }
-    .aa button.small.icon,
-    .aa input.small.icon[type="submit"],
-    .aa input.small.icon[type="reset"],
-    .aa input.small.icon[type="button"]{
-        padding: 1px;
-        min-width: 16px;
-    }
-    .aa *.with-tooltip {
-        position: relative;
-    }
-    .aa .fa {
-        font-family: FontAwesome;
-    }
-    .aa.bg{
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-        background: transparent;
-    }
-    .aa.bg.vanish{
-        -webkit-animation: fadeToNone var(--duration) ease-in;
-        -moz-animation: fadeToNone var(--duration) ease-in;
-        -o-animation: fadeToNone var(--duration) ease-in;
-        animation: fadeToNone var(--duration) ease-in;
-    }
-    .aa.bg.fade{
-        -webkit-animation: fadeFromNone var(--duration) ease-out;
-        -moz-animation: fadeFromNone var(--duration) ease-out;
-        -o-animation: fadeFromNone var(--duration) ease-out;
-        animation: fadeFromNone var(--duration) ease-out;
-    }
-    .aa.bg.shade{
-        background: rgba(0,0,0,0.4);
-    }
-    .aa.bg.shade.transparent{
-        background: transparent;
-    }
-    .aa.bg.shortcut{
-        background: rgba(16,32,64,0.88);
-        background: rgba(0,8,16,0.88);
-        font-size: 24px;
-        color: var(--submit-bg-color);
-    }
-    .aa.bg.loading .icon{
-        color: var(--color-white);
-        font-size: 64px;
-    }
-    .aa.shortcut div.hotkey{
-        margin-top: 16px;
-        font-size: 48px;
-        color: #fff;
-    }
-    .aa.shortcut div.hotkey.placeholder{
-        color: var(--color-blue-fade);
-        color: var(--color-blue-darker);
-    }
-    .aa .keyboardKey{
-        display: inline-block;
-        margin: 0 0.1em;
-        padding: 0 0.4em;
-        min-width: 26px;
-        background: #acf;
-        color: var(--color-blue-darker);
-        border-radius: 0.2em;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-    }
-    .aa .keyboardKey:first-child{ margin-left: 0; }
-    .aa .keyboardKey:last-child{ margin-right: 0; }
-    .aa.shortcut .keyboardKey{
-        /* active */
-        background: #acf;
-        color: var(--color-blue-darker);
-    }
-    .aa.shortcut div.placeholder .keyboardKey{
-        /* placeholder */
-        background: var(--color-blue-darker);
-        color: #124;
-    }
-    .aa.shortcut button{
-        background-color: var(--submit-bg-color);
-        border-color: var(--submit-bg-color);
-        color: #def;
-    }
-    .aa.shortcut button:focus{
-        border-color: #def;
-    }
-    .aa.shortcut button[disabled]{
-        color: #124;
-        background-color: var(--color-blue-darker);
-        border-color: var(--color-blue-darker);
-    }
-    .aa .right{
-        text-align: right;
-    }
-    .aa .fa.gris:before{
-        color: #ccc;
-    }
-    div.aaTable{
-        display: table;
-    }
-    div.aaTable.fullscreen{
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    div.aaTable.fullscreen div.td{
-        display: table-cell;
-        vertical-align: middle;
-        text-align: center;
-    }
-    /****************/
-    /*   Boutons    */
-    /****************/
-    .aa select{
-        padding: 4px 12px;
-        min-width: 120px;
-        height: 24px;
-        line-height: 24px;
-        background: #fff;
-        box-shadow: 0px 1px 2px rgba(0,0,0,0.2);
-        border: 1px solid #fff;
-    }
-    .aa select:focus{
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa input[type=radio],
-    .aa input[type=checkbox]{
-        margin: 2px 0px;
-        margin-bottom: 3px;
-    }
-    .aa textarea,
-    .aa input[type=text],
-    .aa input[type=password]{
-        display: table-cell;
-        padding: 6px 8px 4px 8px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-size: 14px;
-        min-width: 240px;
-        border-radius: 2px;
-        border: 1px solid var(--bg-color);
-        box-shadow: 1px 1px 2px rgba(0,0,0,0.1) inset;
-    }
-    .aa textarea:focus,
-    .aa input[type=text]:focus,
-    .aa input[type=password]:focus{
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa textarea{
-        width: 640px;
-        height: 120px;
-        min-height: 46px;
-        resize: vertical;
-
-        -webkit-touch-callout: text;
-          -webkit-user-select: text;
-           -khtml-user-select: text;
-             -moz-user-select: text;
-              -ms-user-select: text;
-                  user-select: text;
-    }
-    .aa textarea::placeholder,
-    .aa input[type=text]::placeholder,
-    .aa input[type=password]::placeholder{
-        font-style: italic;
-        color: #aaa;
-    }
-    .aa button,
-    .aa input[type=button],
-    .aa input[type=reset],
-    .aa input[type=submit]{
-        margin: 2px;
-        padding: 6px 8px;
-        min-width: 124px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-size: 14px;
-        font-weight: bold;
-        background: var(--button-disabled-color);
-        text-align: center;
-        border-radius: 2px;
-        border: 1px solid var(--button-disabled-color);
-    }
-    .aa button:hover,
-    .aa input[type=button]:hover,
-    .aa input[type=reset]:hover,
-    .aa input[type=submit]:hover{
-        box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
-    }
-    .aa button:focus,
-    .aa input[type=button]:focus,
-    .aa input[type=reset]:focus,
-    .aa input[type=submit]:focus{
-        border: 1px solid #aaa;
-        box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
-    }
-    .aa button[type=submit],
-    .aa input[type=submit]{
-        background: var(--submit-bg-color);
-        color: #fff;
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa button[type=submit]:hover,
-    .aa input[type=submit]:hover,
-    .aa button[type=submit]:focus,
-    .aa input[type=submit]:focus{
-        background: var(--submit-bg-color);
-        border: 1px solid var(--color-blue-darker);
-        box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
-    }
-    .aa button.transparent {
-        margin: 0px;
-        padding: 0px;
-        min-width: auto;
-        background: transparent;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-weight: normal;
-        border: 0px solid transparent;
-        box-shadow: 0px 0px 0px transparent;
-        text-decoration: none;
-    }
-    .aa button.transparent:hover,
-    .aa button.transparent:focus {
-        background: transparent;
-        border: 0px solid transparent;
-    }
-    .aa button.text,
-    .aa input[type=button].text,
-    .aa button.link,
-    .aa input[type=button].link{
-        margin: 0px;
-        padding: 0px;
-        min-width: auto;
-        background: transparent;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-weight: normal;
-        /*font-size: 14px;*/
-        border: 0px solid transparent;
-        box-shadow: 0px 0px 0px transparent;
-        text-decoration: none;
-    }
-    .aa button.text,
-    .aa input[type=button].text{
-        cursor: default;
-        color: var(--color);
-    }
-    .aa button.link,
-    .aa input[type=button].link{
-        cursor: pointer;
-        color: var(--submit-bg-color);
-    }
-    .aa button.link:hover,
-    .aa button.link:focus,
-    .aa input[type=button].link:hover,
-    .aa input[type=button].link:focus{
-        border: 0px solid transparent;
-        background-color: transparent;
-        text-decoration: underline;
-    }
-    .aa button.link:disabled,
-    .aa input[type=button].link:disabled{
-        color: var(--button-disabled-color);
-        text-decoration: none;
-    }
-    .aa button.link.red,
-    .aa input[type=button].link.red{
-        color: var(--button-red-bg-color);
-    }
-    .aa button.link.red:disabled,
-    .aa input[type=button].link.red:disabled{
-        color: var(--button-disabled-color);
-        color: #fcc;
-        text-decoration: line-through;
-    }
-    .aa button.btn-ico,
-    .aa input[type=button].btn-ico{
-        padding: 0px;
-        min-width: 32px;
-        width: 32px;
-        height: 32px;
-        line-height: 16px;
-        font-size: 24px;
-        text-align: center;
-        /*box-shadow: 0px 0px 0px transparent;*/
-    }
-    .aa button.btn-2x,
-    .aa input[type=button].btn-2x{
-        min-width: 64px;
-        width: 64px;
-        height: 64px;
-        line-height: 32px;
-        font-size: 48px;
-        border-radius: 32px;
-    }
-    .aa button.btn-small,
-    .aa input[type=button].btn-small{
-        min-width: 16px;
-        width: 16px;
-        height: 16px;
-        line-height: 8px;
-        font-size: 12px;
-        border-radius: 8px;
-    }
-    .aa button.btn-ico:hover,
-    .aa input[type=button].btn-ico:hover{
-        box-shadow: 0px 1px 2px rgba(0,0,0,0.2);
-    }
-    .aa button.btn-round,
-    .aa input[type=button].btn-round{
-        border-radius: 16px;
-    }
-    .aa button.btn-round.btn-2x,
-    .aa input[type=button].btn-round.btn-2x{
-        border-radius: 32px;
-    }
-    .aa button.btn-squar,
-    .aa input[type=button].btn-squaree{
-    }
-    .aa button.btn-transparent,
-    .aa input[type=button].btn-transparent{
-        color: transparent;
-        /*color: rgba(255,255,255,0.5);*/
-        background: transparent;
-        /*background: rgba(255,0,0,0.5);*/
-        border: 1px solid transparent;
-        box-shadow: 0px 0px 0px transparent;
-    }
-    .aa button.btn-blue,
-    .aa input[type=button].btn-blue{
-        color: #fff;
-        background: var(--submit-bg-color);
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa button.btn-blue span.fa,
-    .aa input[type=button].btn-blue span.fa{
-        color: var(--dark-color-blue);
-    }
-    .aa button.btn-blue:focus,
-    .aa input[type=button].btn-blue:focus{
-        border: 1px solid var(--color-blue-darker);
-    }
-    .aa button.btn-red,
-    .aa input[type=button].btn-red{
-        color: #fff;
-        background: #f66;
-        border: 1px solid #f66;
-    }
-    .aa button.btn-red span.fa,
-    .aa input[type=button].btn-red span.fa{
-        color: var(--dark-color-red);
-    }
-    .aa button.btn-red:focus,
-    .aa input[type=button].btn-red:focus{
-        border: 1px solid #b33;
-    }
-    .aa button.btn-green,
-    .aa input[type=button].btn-green{
-        color: #fff;
-        background: var(--color-green);
-        border: 1px solid var(--color-green);
-    }
-    .aa button.btn-green span.fa,
-    .aa input[type=button].btn-green span.fa{
-        color: var(--dark-color-green);
-    }
-    .aa button.btn-green:focus,
-    .aa input[type=button].btn-green:focus{
-        border: 1px solid #384;
-    }
-    .aa button.btn-plus:before,
-    .aa input[type=button].btn-plus:before{
-        content: "\f00e";
-    }
-    .aa button.btn-ico:disabled,
-    .aa input[type=button].btn-ico:disabled{
-        background: var(--button-disabled-bg-color);
-        border: 1px solid transparent;
-        box-shadow: 0px 0px 0px transparent;
-    }
-
-    .aa table.sticky {
-        position: relative;
-    }
-    .aa table.sticky > tr > td,
-    .aa table.sticky > tr > th,
-    .aa table.sticky > thead > tr > td,
-    .aa table.sticky > thead > tr > th,
-    .aa table.sticky > tbody > tr > td,
-    .aa table.sticky > tbody > tr > th {
-        /*white-space: nowrap;*/
-    }
-    .aa table.sticky > tr > td.stick-top,
-    .aa table.sticky > tr > th.stick-top,
-    .aa table.sticky > thead > tr > td.stick-top,
-    .aa table.sticky > thead > tr > th.stick-top,
-    .aa table.sticky > tbody > tr > td.stick-top,
-    .aa table.sticky > tbody > tr > th.stick-top {
-        position: sticky;
-        top: 0px;
-        z-index: 2;
-    }
-    .aa table.sticky > tr > td.stick-bottom,
-    .aa table.sticky > tr > th.stick-bottom,
-    .aa table.sticky > thead > tr > td.stick-bottom,
-    .aa table.sticky > thead > tr > th.stick-bottom,
-    .aa table.sticky > tbody > tr > td.stick-bottom,
-    .aa table.sticky > tbody > tr > th.stick-bottom {
-        position: sticky;
-        bottom: 0px;
-        z-index: 2;
-    }
-    .aa table.sticky > tr > td.stick-left,
-    .aa table.sticky > tr > th.stick-left,
-    .aa table.sticky > thead > tr > td.stick-left,
-    .aa table.sticky > thead > tr > th.stick-left,
-    .aa table.sticky > tbody > tr > td.stick-left,
-    .aa table.sticky > tbody > tr > th.stick-left {
-        position: sticky;
-        left: 0px;
-        z-index: 2;
-    }
-    .aa table.sticky > tr > td.stick-right,
-    .aa table.sticky > tr > th.stick-right,
-    .aa table.sticky > thead > tr > td.stick-right,
-    .aa table.sticky > thead > tr > th.stick-right,
-    .aa table.sticky > tbody > tr > td.stick-right,
-    .aa table.sticky > tbody > tr > th.stick-right {
-        position: sticky;
-        right: 0px;
-        z-index: 2;
-    }
-    .aa table.sticky > tr > td.stick-top-left,
-    .aa table.sticky > tr > th.stick-top-left,
-    .aa table.sticky > thead > tr > td.stick-top-left,
-    .aa table.sticky > thead > tr > th.stick-top-left,
-    .aa table.sticky > tbody > tr > td.stick-top-left,
-    .aa table.sticky > tbody > tr > th.stick-top-left {
-        position: sticky;
-        top: 0px;
-        left: 0px;
-        z-index: 3;
-    }
-    .aa table.sticky > tr > td.stick-top-right,
-    .aa table.sticky > tr > th.stick-top-right,
-    .aa table.sticky > thead > tr > td.stick-top-right,
-    .aa table.sticky > thead > tr > th.stick-top-right,
-    .aa table.sticky > tbody > tr > td.stick-top-right,
-    .aa table.sticky > tbody > tr > th.stick-top-right {
-        position: sticky;
-        top: 0px;
-        right: 0px;
-        z-index: 3;
-    }
-    .aa table.sticky > tr > td.stick-bottom-left,
-    .aa table.sticky > tr > th.stick-bottom-left,
-    .aa table.sticky > thead > tr > td.stick-bottom-left,
-    .aa table.sticky > thead > tr > th.stick-bottom-left,
-    .aa table.sticky > tbody > tr > td.stick-bottom-left,
-    .aa table.sticky > tbody > tr > th.stick-bottom-left {
-        position: sticky;
-        bottom: 0px;
-        left: 0px;
-        z-index: 3;
-    }
-    .aa table.sticky > tr > td.stick-bottom-right,
-    .aa table.sticky > tr > th.stick-bottom-right,
-    .aa table.sticky > thead > tr > td.stick-bottom-right,
-    .aa table.sticky > thead > tr > th.stick-bottom-right,
-    .aa table.sticky > tbody > tr > td.stick-bottom-right,
-    .aa table.sticky > tbody > tr > th.stick-bottom-right {
-        position: sticky;
-        bottom: 0px;
-        right: 0px;
-        z-index: 3;
-    }
-    .aa .pannel table.sticky > tr > td,
-    .aa .pannel table.sticky > tr > th,
-    .aa .pannel table.sticky > thead > tr > td,
-    .aa .pannel table.sticky > thead > tr > th,
-    .aa .pannel table.sticky > tbody > tr > td,
-    .aa .pannel table.sticky > tbody > tr > th {
-        background-color: var(--bg-color);
-    }
-
-
-    /****************/
-    /* Menu */
-    /****************/
-    .aaMenu > ul{
-        margin: 0;
-        padding: 0;
-    }
-    .aaMenu > ul > li{
-        display: inline-block;
-        list-style: none;
-    }
-    .aaMenu > ul > li > button,
-    .aaMenu > ul > li > input[type=button]{
-        min-width: fit-content;
-        margin: 0;
-        border-width: 0;
-        background: transparent;
-        box-shadow: 0 0 0 transparent;
-    }
-    .aaMenu > ul > li:hover > button,
-    .aaMenu > ul > li:hover > input[type=button]{
-        color: var(--submit-bg-color);
-    }
-    /********************************/
-    .aaMenu hr{
-        margin: 4px 0px;
-        border: 0px;
-        border-top: 1px solid #eee;
-    }
-    .aaMenu > hr{
-        display: none;
-    }
-    .aaMenu button,
-    .aaMenu input[type=button]{
-        /*all: initial;*/
-        font-family: var(--font-family);
-        font-size: 14px;
-        background: transparent;
-        border: 0px solid transparent;
-    }
-    .aaMenu ul{
-        margin: 0;
-        padding: 0px;
-        /*padding-left: 32px;*/
-        list-style: none;
-    }
-    .aaMenu > ul{
-        position: relative;
-        /*margin: 0px auto;*/
-        padding: 0px;
-        /*width: 960px;*/
-    }
-    .aaMenu > ul > li{
-        position: relative;
-        display: inline-block;
-        padding: 12px;
-    }
-    .aaMenu > ul > li:hover{
-        /*background: var(--submit-bg-color);*/
-    }
-    .aaMenu > ul > li:hover > button{
-        /*color: #fff;*/
-    }
-
-    .aaMenu > ul > li:first-child{
-        padding-left: 8px;
-    }
-    .aaMenu > ul > li > button,
-    .aaMenu > ul > li > input[type=button]{
-        padding: 0px;
-        white-space: nowrap;
-        font-size: 14px;
-    }
-    .aaMenu > ul > li.flash{
-        background: var(--submit-bg-color);
-    }
-    .aaMenu > ul > li.flash > button,
-    .aaMenu > ul > li.flash > input[type=button]{
-        color: #fff;
-    }
-    .aaMenu > ul > li > ul{
-        z-index: 1;
-        display: table;
-        display: none;
-        position: absolute;
-        top: 40px;
-        left: 0px;
-        padding: 4px 0px;
-        background: #fff;
-        border-radius: 2px;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
-        box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
-    }
-    .aaMenu > ul > li:hover > ul{
-        display: table;
-    }
-    .aaMenu > ul > li.flash ul{
-        display: none;
-    }
-    .aaMenu > ul > li ul li{
-        display: block;
-        position: relative;
-    }
-    .aaMenu > ul > li ul li.shortcut::before{
-        content: attr(data-shortcut);
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        display: table-cell;
-        float: right;
-        font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-size: 14px;
-        color: var(--menu-shortcut-color);
-        color: var(--submit-bg-color);
-    }
-    .aaMenu > ul > li ul li.shortcut:hover::before{
-        color: var(--menu-shortcut-color);
-    }
-    .aaMenu > ul > li ul li.expand::before{
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        display: table-cell;
-        float: right;
-        /*content: '▶';*/
-        /*content: '►';*/
-        content: '▸';
-        color: #000;
-    }
-    .aaMenu > ul > li ul li.expand:hover::before{
-        color: #fff;
-    }
-    .aaMenu > ul > li > ul li ul{
-        z-index: 2;
-        display: none;
-        position: absolute;
-        top: -4px;
-        left: 100%;
-        padding: 4px 0px;
-        background: #fff;
-        border-radius: 2px;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
-    }
-    .aaMenu > ul > li > ul li button,
-    .aaMenu > ul > li > ul li input[type=button]{
-        margin: 0;
-        padding: 4px 8px;
-        padding-right: 64px;
-        min-width: 180px;
-        width: 100%;
-        background: transparent;
-        white-space: nowrap;
-        text-align: left;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-        border-radius: 0;
-        border: 0px;
-        box-sizing: border-box;
-        box-shadow: 0px 0px 0px transparent;
-    }
-    .aaMenu > ul > li ul li > button > span.fa.icon{
-        color: var(--menu-disabled-color);
-    }
-    .aaMenu > ul > li ul li > button > span.fa.checked{
-        color: #000;
-    }
-    .aaMenu > ul > li ul li > button > span.fa.icon.critical{
-        color: var(--button-red-bg-color);
-    }
-    .aaMenu > ul > li ul li:hover > button > span.fa.icon.critical{
-        color: #844;
-    }
-    .aaMenu > ul > li ul li > button > span.fa.icon.warning,
-    .aaMenu > ul > li ul li:hover > button > span.fa.icon.warning{
-        color: var(--warning-color);
-    }
-    .aaMenu > ul > li ul li > button > span.fa.icon.confirm,
-    .aaMenu > ul > li ul li > button > span.fa.icon.information{
-        color: var(--confirm-color);
-    }
-    .aaMenu > ul > li ul li > button > span.fa.icon.reset{
-        color: var(--reset-color);
-    }
-    .aaMenu > ul > li ul li:hover{
-        background: var(--submit-bg-color);
-    }
-    .aaMenu > ul > li ul li:hover > button,
-    .aaMenu > ul > li ul li:hover > input[type=button]{
-        color: #fff;
-    }
-    .aaMenu > ul > li ul li:hover > button > span.fa.icon{
-        color: var(--submit-color);
-        color: var(--color-blue-darker);
-        color: var(--menu-shortcut-color);
-    }
-    .aaMenu > ul > li ul li:hover > ul{
-        display: table;
-    }
-    .aaMenu > ul > li > ul > li > ul > li > ul{
-        display: none;
-        z-index: 3;
-    }
-    .aaMenu > ul > li > ul > li > ul > li:hover > ul{
-        display: table;
-    }
-    .aaMenu > ul > li > button:disabled,
-    .aaMenu > ul > li > input[type=button]:disabled,
-    .aaMenu > ul > li > button:disabled:hover,
-    .aaMenu > ul > li > input[type=button]:disabled:hover{
-        font-family: var(--font-family);
-        background: transparent;
-        color: var(--menu-disabled-color);
-    }
-    .aaMenu > ul > li > ul li button:disabled,
-    .aaMenu > ul > li > ul li input[type=button]:disabled,
-    .aaMenu > ul > li > ul li button:disabled:hover,
-    .aaMenu > ul > li > ul li input[type=button]:disabled:hover{
-        font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        background: #fff;
-        color: var(--menu-disabled-color);
-    }
-    .aaMenu > ul > li ul li.disabled{
-        background: transparent;
-    }
-    .aaMenu > ul > li ul li.disabled button,
-    .aaMenu > ul > li ul li.disabled input[type=button]{
-        font-family: var(--font-family);
-        background: transparent;
-        color: var(--menu-disabled-color);
-    }
-    .aaMenu > ul > li ul li.disabled > button > span.fa.icon{
-        color: var(--menu-disabled-color);
-    }
-    .aaMenu > ul > li ul li.disabled ul{
-        display: none;
-    }
-    .aaMenu > ul > li ul li.disabled.shortcut::before{
-        color: #e8e8e8;
-    }
-    /****************/
-    /* Context menu */
-    /****************/
-    body.aaContextMenuFreeze {
-        overflow: hidden;
-    }
-    #aaContextMenuBG {
-        background: rgba(128,128,128,0.1);
-    }
-    #aaContextMenu {
-        position: fixed;
-        top: 1px;
-        left: 1px;
-    }
-    #aaContextMenu ul{
-        cursor: default;
-        margin: 0px;
-        padding: 4px 0px;
-        min-width: 160px;
-        color: #666;
-
-        z-index: 2;
-        display: none;
-        position: absolute;
-        top: -4px;
-        left: 100%;
-        padding: 4px 0px;
-        background: #fff;
-        border-radius: 2px;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
-        box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
-    }
-    #aaContextMenu ul hr{
-        margin: 4px 0px;
-        padding: 0px;
-        border: 0px solid transparent;
-        border-top: 1px solid rgba(128,128,128,0.1);
-    }
-    #aaContextMenu ul li{
-        cursor: default;
-        list-style: none;
-        display: block;
-        position: relative;
-        width: 100%;
-    }
-    #aaContextMenu ul li div.disabled{
-        padding: 4px 8px;
-        background: transparent;
-        color: #aaa;
-        color: rgba(0,0,0,0.4);
-        text-align: left;
-        border: 0px;
-        box-shadow: 0px 0px 0px transparent;
-    }
-    #aaContextMenu ul li button:active,
-    #aaContextMenu ul li input[type="button"]:active{
-        border: 0;
-    }
-    #aaContextMenu ul li button:focus > span.fa.icon,
-    #aaContextMenu ul li:hover button > span.fa.icon {
-        color: var(--submit-color);
-        color: var(--color-blue-darker);
-        color: var(--menu-shortcut-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.critical {
-        color: var(--button-red-bg-color);
-    }
-    #aaContextMenu ul li:hover button > span.fa.icon.critical,
-    #aaContextMenu ul li button:focus > span.fa.icon.critical {
-        color: #f8f;
-    }
-    #aaContextMenu ul li button > span.fa.icon.warning {
-        color: var(--warning-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.confirm,
-    #aaContextMenu ul li button > span.fa.icon.information {
-        color: var(--confirm-color);
-    }
-    #aaContextMenu ul li button > span.fa.icon.reset {
-        color: var(--reset-color);
-    }
-    #aaContextMenu ul li.shortcut::before {
-        content: attr(data-shortcut);
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        display: table-cell;
-        float: right;
-        font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-size: 12px;
-        color: var(--menu-shortcut-color);
-    }
-    #aaContextMenu ul li.expand::before {
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        display: table-cell;
-        float: right;
-        /*content: '▶';*/
-        /*content: '►';*/
-        content: '▸';
-        color: #000;
-    }
-    #aaContextMenu ul li.expand:hover::before {
-        color: #fff;
-    }
-    #aaContextMenu > ul {
-        display: table;
-    }
-    #aaContextMenu > ul li button,
-    #aaContextMenu > ul li input[type=button] {
-        margin: 0;
-        padding: 4px 8px;
-        width: 100%;
-        background: transparent;
-        text-align: left;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-        white-space: nowrap;
-        border-radius: 0;
-        border: 0px;
-        box-sizing: border-box;
-        box-shadow: 0px 0px 0px transparent;
-
-        /*padding: 8px 24px;*/
-        padding-right: 64px;
-        min-width: 180px;
-        width: 100%;
-        text-align: left;
-    }
-    #aaContextMenu > ul li button:focus,
-    #aaContextMenu > ul li input[type=button]:focus {
-        background: var(--submit-bg-color);
-        color: var(--submit-color);
-    }
-    #aaContextMenu ul li:hover{
-        background: var(--submit-bg-color);
-    }
-    #aaContextMenu ul li:hover > button,
-    #aaContextMenu ul li:hover > input[type=button]{
-        color: var(--submit-color);
-    }
-    #aaContextMenu ul li.expand:hover > ul{
-        display: table;
-    }
-    #aaContextMenu > ul > li > ul > li:hover > button,
-    #aaContextMenu > ul > li > ul > li:hover > input[type=button]{
-        color: #fff;
-    }
-    #aaContextMenu > ul > li > ul > li > ul{
-        display: none;
-        z-index: 3;
-    }
-    #aaContextMenu > ul > li > ul > li:hover > ul{
-        display: table;
-    }
-    #aaContextMenu li.disabled ul{
-        display: none;
-    }
-    #aaContextMenu button:disabled,
-    #aaContextMenu input[type=button]:disabled,
-    #aaContextMenu button:disabled:hover,
-    #aaContextMenu input[type=button]:disabled:hover{
-        font-family: var(--font-family);
-        background: #fff;
-        color: var(--menu-disabled-color);
-    }
-    #aaContextMenu li button:disabled,
-    #aaContextMenu li input[type=button]:disabled,
-    #aaContextMenu li button:disabled:hover,
-    #aaContextMenu li input[type=button]:disabled:hover{
-        font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        background: #fff;
-        color: var(--menu-disabled-color);
-    }
-    #aaContextMenu li.disabled button,
-    #aaContextMenu li.disabled input[type=button]{
-        color: var(--menu-disabled-color);
-    }
-    #aaContextMenu li.disabled:hover{
-        background: transparent;
-    }
-    #aaContextMenu li.disabled:hover button,
-    #aaContextMenu li.disabled:hover input[type=button]{
-        color: var(--menu-disabled-color);
-    }
-    #aaContextMenu li.disabled.shortcut::before{
-        color: var(--menu-disabled-color);
-    }
-    #aaContextMenu ul li.disabled button > span.fa.icon,
-    #aaContextMenu ul li.disabled:hover button > span.fa.icon{
-        color: var(--menu-disabled-color);
-    }
-
-    /* Theme 'Dark' */
-    #aaContextMenu.dark ul{
-        background: rgba(0,0,0,0.8);
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.8);
-    }
-    #aaContextMenu.dark ul hr{
-        border-top: 1px solid rgba(0,0,0,0.4);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    #aaContextMenu.dark ul li div.disabled{
-        color: #666;
-    }
-    #aaContextMenu.dark ul li button,
-    #aaContextMenu.dark ul li input[type="button"]{
-        color: #ddd;
-    }
-    #aaContextMenu.dark ul li:hover > button,
-    #aaContextMenu.dark ul li:hover > input[type="button"]{
-        color: #fff;
-    }
-
-    /***********/
-    /* Dialogs */
-    /***********/
-    div.aaDialog *{
-        box-sizing: border-box;
-    }
-    div.aaDialog .red{
-        color: var(--button-red-bg-color);
-    }
-    div.aaDialog .green{
-        color: var(--color-green);
-    }
-    div.aaDialog .blue{
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog .hidden{
-        display: none;
-    }
-    div.aaDialog{
-        position: relative;
-        display: inline-block;
-        width: 480px;
-        max-height: calc(100vh - 32px);
-        overflow: hidden;
-        overflow-y: auto;
-        background: var(--bg-color);
-        background: #fff;
-        font-size: 13px;
-        font-size: 14px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-        text-align: left;
-        color: var(--color);
-        border-radius: 2px;
-        box-shadow: 0px 4px 16px rgba(0,0,0,0.4);
-    }
-    div.aaDialog.fullscreen{
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-    }
-    div.aaDialog div.menu{
-        vertical-align: middle;
-        padding: 0px 8px;
-        width: 100%;
-        height: auto;
-        background: var(--bg-color);
-        background: transparent;
-    }
-    div.aaDialog div.menu.fullscreen{
-        position: fixed;
-        width: 100%;
-    }
-    div.aaDialog div.menu label{
-        position: relative;
-        margin: 0px 4px;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-weight: normal;
-        line-height: 1.5;
-    }
-    div.aaDialog div.menu label:first-child{
-        margin-left: 0px;
-    }
-    div.aaDialog div.menu button,
-    div.aaDialog div.menu input[type="button"]{
-        box-sizing: border-box;
-        /*display: none;*/
-        margin: 8px 4px;
-        min-width: 35px;
-        background: #e8e8e8;
-        border-color: #e8e8e8;
-        box-shadow: 0 0 0 transparent;
-    }
-    div.aaDialog div.menu button.icon,
-    div.aaDialog div.menu input.icon[type="button"]{
-        min-width: 28px;
-        width: 28px;
-        height: 28px;
-    }
-    div.aaDialog div.menu button:first-child,
-    div.aaDialog div.menu input[type="button"]:first-child{
-        margin-left: 0;
-    }
-    div.aaDialog div.menu button:hover,
-    div.aaDialog div.menu input[type="button"]:hover{
-        background: #ddd;
-        border-color: #ddd;
-    }
-    div.aaDialog div.menu button:focus,
-    div.aaDialog div.menu input[type="button"]:focus{
-        border-color: #aaa;
-    }
-    div.aaDialog div.menu button.green,
-    div.aaDialog div.menu input[type="button"].green{
-        background: var(--color-green);
-        border-color: var(--color-green);
-    }
-    div.aaDialog div.menu button.green:focus,
-    div.aaDialog div.menu input[type="button"].green:focus{
-        border-color: #384;
-    }
-    div.aaDialog div.menu label input+span{
-        position: relative;
-        display: table-cell;
-        vertical-align: middle;
-        text-align: center;
-        width: 48px;
-        height: 48px;
-        background: var(--submit-bg-color);
-        color: #fff;
-        font-size: 24px;
-        border-radius: 3px;
-    }
-    div.aaDialog div.menu label input+span.dark{
-        background: #888;
-    }
-    div.aaDialog div.menu label input+span.green{
-        background: var(--color-green);
-    }
-    div.aaDialog div.menu label input+span.red{
-        background: #f88;
-    }
-    div.aaDialog div.menu label input:disabled+span{
-        background: #e8e8e8;
-        color: var(--bg-color);
-    }
-    div.aaDialog div.menu label input.icon{
-        color: transparent;
-    }
-    div.aaDialog div.menu label input+span+div.tooltip{
-        display: none;
-        position: absolute;
-        top: 32px;
-        left: 0px;
-        padding: 4px 8px;
-        background: #444;
-        color: #fff;
-        white-space: nowrap;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
-    }
-    div.aaDialog div.menu label input+span:hover+div.tooltip{
-        display: block;
-    }
-    div.aaDialog div.menu label input+span+div.tooltip div.fleche{
-        position: absolute;
-        top: -6px;
-        left: 20px;
-        border: 4px solid transparent;
-        border-top: 0px solid transparent;
-        border-bottom: 6px solid #444;
-    }
-    div.aaDialog div.menu div.fa-icon {
-        padding: 8px 0px;
-        text-align: center;
-    }
-    div.aaDialog div.menu div.fa-icon.with-custom-icon {
-        padding: 16px 0 0 0;
-    }
-    div.aaDialog div.menu span.icon{
-        display: inline-block;
-        margin: 0px auto;
-    }
-    div.aaDialog div.menu span.icon.prompt,
-    div.aaDialog div.menu span.icon.confirm,
-    div.aaDialog div.menu span.icon.information{
-        color: var(--button-bg-color);
-    }
-    div.aaDialog div.menu span.icon.warning{
-        margin-top: 4px;
-        color: var(--warning-color);
-    }
-    div.aaDialog div.menu span.icon.critical{
-        color: var(--critical-color);
-    }
-    div.aaDialog div.icon{
-        display: table-cell;
-        display: block;
-        margin: 0px;
-        width: 100%;
-        height: 64px;
-        background-color: transparent;
-        background-position: top;
-        background-size: contain;
-        background-repeat: no-repeat;
-    }
-    div.aaDialog div.icon.information{
-        background-image: url(images/dialog_information.png);
-    }
-    div.aaDialog div.icon.warning{
-        background-image: url(images/dialog_warning.png);
-    }
-    div.aaDialog div.icon.critical{
-        background-image: url(images/dialog_critical.png);
-    }
-    div.aaDialog div.icon.prompt,
-    div.aaDialog div.icon.confirm{
-        background-image: url(images/dialog_confirm.png);
-    }
-    div.aaDialog div.aaDialogIcon {
-        display: inline-block;
-        margin-top: 8px;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background-color: transparent;
-        background-position: center;
-        background-size: cover;
-    }
-    div.aaDialog form div.buttons{
-        position: sticky;
-        bottom: 0px;
-        background: #fff;
-    }
-    div.aaDialog form{
-        position: relative;
-    }
-    div.aaDialog form div.loading{
-        padding: 16px;
-        text-align: center;
-    }
-    div.aaDialog form.with-details{
-        display: table;
-    }
-    div.aaDialog h2{
-        display: block;
-        margin: 0px;
-        padding: 0px;
-        /*padding-bottom: 8px;*/
-        color: #000;
-        text-align: center;
-        font-weight: bold;
-    }
-    div.aaDialog h2.title{
-        z-index: 1;
-        position: sticky;
-        top: 0;
-        background: #fff;
-        padding: 16px 0 8px 0;
-    }
-    div.aaDialog div.message{
-        display: block;
-        padding: 32px 16px;
-        padding: 16px;
-        width: auto;
-        background: #fff;
-        line-height: 1.5;
-        /*text-align: justify;*/
-    }
-    div.aaDialog div.message hr{
-        border: 0px solid transparent;
-        border-top: 1px solid #eee;
-    }
-    div.aaDialog div.message h1,
-    div.aaDialog div.message h2,
-    div.aaDialog div.message h3,
-    div.aaDialog div.message h4,
-    div.aaDialog div.message h5,
-    div.aaDialog div.message h6{
-        margin: 4px 0px;
-        color: var(--color-black);
-    }
-    div.aaDialog code{
-        padding: 2px 4px;
-        background: #444;
-        border-radius: 2px;
-        color: var(--submit-bg-color);
-        color: #8f8;
-    }
-    div.aaDialog code span.operator{
-        color: #aaa;
-    }
-    div.aaDialog div.message .grey{
-        color: #ccc;
-    }
-    div.aaDialog div.message .blue{
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog div.message .pad{
-        padding-left: 16px;
-    }
-    div.aaDialog div.message label.align{
-        display: table-row;
-        margin: 0px;
-    }
-    div.aaDialog div.message label.align > span{
-        display: table-cell;
-        text-align: right;
-    }
-    div.aaDialog div.message label.align > span + span{
-        text-align: left;
-    }
-    div.aaDialog div.message label.align > input{
-        /*margin-bottom: 4px;*/
-    }
-    div.aaDialog div.message.with-details{
-        display: table-cell;
-        width: 75%;
-    }
-    div.aaDialog div.details{
-        position: fixed;
-        bottom: 0px;
-        right: 0px;
-        display: table;
-        padding: 16px;
-        width: 25%;
-        height: 100%;
-        overflow: auto;
-        background: var(--bg-color);
-    }
-    div.aaDialog ol,
-    div.aaDialog ul{
-        margin: 0px;
-    }
-    div.aaDialog .message fieldset{
-        margin: 0px;
-        padding: 16px;
-        border-radius: 3px;
-        border: 1px solid var(--button-disabled-bg-color);
-    }
-    div.aaDialog .message fieldset legend{
-        position: relative;
-        display: block;
-        margin: 0px;
-        padding: 0px;
-        font-size: 16px;
-        font-weight: bold;
-        border-collapse: collapse;
-    }
-    div.aaDialog .message fieldset legend.onglets{
-        text-align: center;
-    }
-    div.aaDialog .message fieldset legend label{
-        display: inline-block;
-        position: relative;
-        top: 14px;
-        top: 0px;
-        padding: 2px 8px;
-        padding: 0px;
-        font-size: 14px;
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog .message fieldset legend label:first-child{
-        border-top-left-radius: 16px;
-        border-bottom-left-radius: 16px;
-        border-left: 1px solid var(--button-disabled-bg-color);
-    }
-    div.aaDialog .message fieldset legend label:last-child{
-        border-top-right-radius: 16px;
-        border-bottom-right-radius: 16px;
-    }
-    div.aaDialog .message fieldset legend label input[type="radio"]{
-        display: none;
-    }
-    div.aaDialog .message fieldset legend label input[type="radio"] + span{
-        display: inline-block;
-        top: 3px;
-        padding: 2px 12px;
-        background: #fff;
-        color: #444;
-        font-size: 14px;
-        border: 1px solid var(--button-disabled-bg-color);
-        border-left: 0px solid transparent;
-    }
-    div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span{
-    }
-    div.aaDialog .message fieldset legend label:first-child input[type="radio"] + span{
-        border-top-left-radius: 16px;
-        border-bottom-left-radius: 16px;
-    }
-    div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span{
-        border-top-right-radius: 16px;
-        border-bottom-right-radius: 16px;
-    }
-    div.aaDialog .message fieldset legend label input[type="radio"] + span:hover{
-        cursor: pointer;
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog .message fieldset legend label input[type="radio"]:checked + span{
-        margin: 0px 0px;
-        background: var(--submit-bg-color);
-        color: #fff;
-        text-decoration: none;
-        border-color: var(--submit-bg-color);
-    }
-    div.aaDialog .message fieldset legend label:first-child input[type="radio"]:checked + span{
-    }
-    div.aaDialog .message fieldset legend label input[type="radio"]:disabled + span{
-        cursor: default;
-        color: var(--color-grey);
-    }
-    div.aaDialog .message input.wrong{
-        background: var(--error-bg-color);
-        color: var(--error-color);
-    }
-    div.aaDialog .message input.wrong:focus{
-        border-color: var(--error-color);
-    }
-    div.aaDialog .message fieldset.scrollable{
-        overflow-y: auto;
-        /*padding: 4px 8px;*/
-        max-height: 240px;
-        overflow: auto;
-        box-sizing: border-box;
-        width: 100%;
-        background: var(--color-light-blue);
-        color: #000;
-        font-family: var(--font-family);
-        /*font-size: 13px;*/
-        line-height: 1.5;
-        border-radius: 3px;
-        border: 1px solid #fff;
-        box-shadow: inset 1px 1px 1px var(--color-blue-fade);
-    }
-    div.aaDialog .message fieldset.scrollable .grey{
-        color: var(--form-placeholder-color);
-    }
-    div.aaDialog .message fieldset.scrollable table{
-        margin: 8px 0px;
-        width: 100%;
-        border-spacing: 0;
-    }
-    div.aaDialog .message fieldset.scrollable tr:hover{
-        background: #def;
-    }
-    div.aaDialog .message fieldset.scrollable table td{
-        padding: 2px 8px;
-        vertical-align: middle;
-    }
-    div.aaDialog .message fieldset.scrollable table td:first-child{
-        padding-right: 0px;
-        white-space: nowrap;
-    }
-    div.aaDialog .message fieldset.scrollable table td:last-child{
-        width: 100%;
-    }
-    div.aaDialog .message fieldset.scrollable button.key,
-    div.aaDialog .message fieldset.scrollable button.key:hover{
-        background-color: transparent;
-        border-color: transparent;
-        border-width: 0;
-    }
-    div.aaDialog .message fieldset.scrollable button.key::before{
-        content: '|';
-        display: inline-block;
-        padding: 0 4px;
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog .message fieldset.scrollable button.key:first-child::before{
-        content: none;
-        padding: 0;
-    }
-    div.aaDialog .message fieldset.scrollable tr.shade{
-        opacity: 0.2;
-    }
-    div.aaDialog .message fieldset.scrollable tr.shade:hover{
-        background: transparent;
-    }
-    div.aaDialog .message fieldset.scrollable .gris{
-        display: inline-block;
-        padding: 0 4px;
-        color: var(--submit-bg-color);
-    }
-    div.aaDialog .message fieldset.scrollable button.key:focus .keyboardKey{
-        border-color: var(--color-blue-darker);
-    }
-    div.aaDialog span.w{
-        display: inline-block;
-        text-align: right;
-    }
-    div.aaDialog span.w3{
-        min-width: 64px;
-    }
-    .aa select{
-        margin-top: 1px;
-        margin-bottom: 8px;
-        height: 28px;
-        background: var(--color-light-blue);
-        border: 1px solid #fff;
-        box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-        box-shadow: inset 1px 1px 1px var(--color-blue-fade);
-    }
-    .aa select:focus{
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa select:disabled{
-        background: var(--bg-color);
-        color: var(--form-placeholder-color);
-        color: #ccc;
-        box-shadow: inset 1px 1px 1px transparent;
-    }
-    .aa button.input,
-    .aa button.textarea,
-    .aa select,
-    .aa textarea,
-    .aa input[type="date"],
-    .aa input[type="email"],
-    .aa input[type="number"],
-    .aa input[type="password"],
-    .aa input[type="text"]{
-        display: block;
-        margin: 0px;
-        text-decoration: none;
-        margin-bottom: 8px;
-        padding: 4px 8px;
-        box-sizing: border-box;
-        width: 100%;
-        min-width: auto;
-        background: var(--color-light-blue);
-        color: #000;
-        font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        font-weight: normal;
-        font-style: normal;
-        font-size: 13px;
-        line-height: 1.5;
-        border-radius: 3px;
-        border: 1px solid #fff;
-        box-shadow: inset 1px 1px 1px var(--color-blue-fade);
-    }
-    .aa input[type="date"]::placeholder,
-    .aa input[type="email"]::placeholder,
-    .aa input[type="number"]::placeholder,
-    .aa input[type="password"]::placeholder,
-    .aa input[type="text"]::placeholder,
-    .aa textarea::placeholder{
-        color: var(--form-placeholder-color);
-        font-style: italic;
-        font-weight: normal;
-        padding-right: 4px;
-    }
-    .aa input[type="date"]:focus,
-    .aa input[type="email"]:focus,
-    .aa input[type="number"]:focus,
-    .aa input[type="password"]:focus,
-    .aa input[type="text"]:focus{
-        border: 1px solid var(--submit-bg-color);
-        box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-    }
-    .aa input[type="text"]::placeholder,
-    .aa input[type="text"]::-moz-placeholder,
-    .aa input[type="text"]::-webkit-placeholder,
-    /*.aa input[type="text"]:-ms-input-placeholder,*/
-    .aa input[type="text"]::-webkit-input-placeholder{
-        font-style: italic;
-    }
-    .aa textarea:invalid,
-    .aa textarea.invalid,
-    .aa input[type="date"]:invalid,
-    .aa input[type="date"].invalid,
-    .aa input[type="email"]:invalid,
-    .aa input[type="email"].invalid,
-    .aa input[type="number"]:invalid,
-    .aa input[type="number"].invalid,
-    .aa input[type="text"]:invalid,
-    .aa input[type="text"].invalid{
-        background: #fff0f0;
-        color: #c00;
-        box-shadow: 1px 1px 2px rgba(128,64,64,0.2) inset;
-    }
-    .aa textarea:invalid:focus,
-    .aa textarea.invalid:focus,
-    .aa input[type="date"]:invalid:focus,
-    .aa input[type="date"].invalid:focus,
-    .aa input[type="email"]:invalid:focus,
-    .aa input[type="email"].invalid:focus,
-    .aa input[type="number"]:invalid:focus,
-    .aa input[type="number"].invalid:focus,
-    .aa input[type="text"]:invalid:focus,
-    .aa input[type="text"].invalid:focus{
-        border: 1px solid #c00;
-    }
-    .aa textarea:invalid::placeholder,
-    .aa textarea.invalid::placeholder,
-    .aa input[type="date"]:invalid::placeholder,
-    .aa input[type="date"].invalid::placeholder,
-    .aa input[type="email"]:invalid::placeholder,
-    .aa input[type="email"].invalid::placeholder,
-    .aa input[type="number"]:invalid::placeholder,
-    .aa input[type="number"].invalid::placeholder,
-    .aa input[type="text"]:invalid::placeholder,
-    .aa input[type="text"].invalid::placeholder{
-        color: #faa;
-    }
-    .aa textarea:invalid::placeholder,
-    .aa textarea:invalid::-moz-placeholder,
-    .aa textarea:invalid::-webkit-placeholder,
-    .aa textarea:invalid:-ms-input-placeholder,
-    .aa textarea:invalid::-webkit-input-placeholder,
-    .aa textarea.invalid::placeholder,
-    .aa textarea.invalid::-moz-placeholder,
-    .aa textarea.invalid::-webkit-placeholder,
-    .aa textarea.invalid:-ms-input-placeholder,
-    .aa textarea.invalid::-webkit-input-placeholder,
-
-    .aa input[type="date"]:invalid::placeholder,
-    .aa input[type="date"]:invalid::-moz-placeholder,
-    .aa input[type="date"]:invalid::-webkit-placeholder,
-    .aa input[type="date"]:invalid:-ms-input-placeholder,
-    .aa input[type="date"]:invalid::-webkit-input-placeholder,
-
-    .aa input[type="email"]:invalid::placeholder,
-    .aa input[type="email"]:invalid::-moz-placeholder,
-    .aa input[type="email"]:invalid::-webkit-placeholder,
-    .aa input[type="email"]:invalid:-ms-input-placeholder,
-    .aa input[type="email"]:invalid::-webkit-input-placeholder,
-
-    .aa input[type="number"]:invalid::placeholder,
-    .aa input[type="number"]:invalid::-moz-placeholder,
-    .aa input[type="number"]:invalid::-webkit-placeholder,
-    .aa input[type="number"]:invalid:-ms-input-placeholder,
-    .aa input[type="number"]:invalid::-webkit-input-placeholder,
-
-    .aa input[type="text"]:invalid::placeholder,
-    .aa input[type="text"]:invalid::-moz-placeholder,
-    .aa input[type="text"]:invalid::-webkit-placeholder,
-    .aa input[type="text"]:invalid:-ms-input-placeholder,
-    .aa input[type="text"]:invalid::-webkit-input-placeholder,
-
-    .aa input[type="text"].invalid::placeholder,
-    .aa input[type="text"].invalid::-moz-placeholder,
-    .aa input[type="text"].invalid::-webkit-placeholder,
-    .aa input[type="text"].invalid:-ms-input-placeholder,
-    .aa input[type="text"].invalid::-webkit-input-placeholder{
-        color: #faa;
-    }
-    /* Round buttons */
-    .aa button.round{
-        padding: 1px 12px 0 2px;
-        color: var(--color-white);
-        border-radius: 16px;
-        border: 1px solid transparent;
-    }
-    .aa button.round span.icon{
-        margin-right: 4px;
-        color: var(--submit-bg-color);
-    }
-    /* Blue */
-    .aa button.round.blue{
-        background-color: var(--color-blue);
-        border-color: var(--color-blue);
-    }
-    .aa button.round.blue:focus{
-        border-color: var(--dark-color-blue);
-    }
-    .aa button.round.blue span.icon{
-        color: var(--dark-color-blue);
-    }
-    /* Green */
-    .aa button.round.green{
-        background-color: var(--color-green);
-        border-color: var(--color-green);
-    }
-    .aa button.round.green:focus{
-        border-color: var(--dark-color-green);
-    }
-    .aa button.round.green span.icon{
-        color: var(--dark-color-green);
-    }
-    /* Orange */
-    .aa button.round.orange{
-        background-color: var(--color-orange);
-        border-color: var(--color-orange);
-    }
-    .aa button.round.orange:focus{
-        border-color: var(--dark-color-orange);
-    }
-    .aa button.round.orange span.icon{
-        color: var(--dark-color-orange);
-    }
-    /* Red */
-    .aa button.round.red{
-        background-color: var(--color-red);
-        border-color: var(--color-red);
-    }
-    .aa button.round.red:focus{
-        border-color: var(--dark-color-red);
-    }
-    .aa button.round.red span.icon{
-        color: var(--dark-color-red);
-    }
-    /* Common */
-    .aa button.round:disabled{
-        background-color: var(--color-light-grey);
-        border-color: var(--color-light-grey);
-        color: var(--color-grey);
-        box-shadow: 0 0 0 transparent;
-    }
-    .aa button.round:disabled span.icon{
-        color: var(--color-grey);
-    }
-    /* Labels */
-    div.aaDialog label.full{
-        display: block;
-        width: 100%;
-    }
-    div.aaDialog label.right{
-        text-align: right;
-        font-size: 13px;
-    }
-    div.aaDialog .message button.mixed{
-        margin-left: 4px;
-    }
-    div.aaDialog label input[type="radio"] + span,
-    div.aaDialog label input[type="checkbox"] + span{
-        display: inline-block; padding-left: 4px;
-    }
-    div.aaDialog label input[type="radio"]:disabled + span,
-    div.aaDialog label input[type="checkbox"]:disabled + span{
-        color: #ccc;
-    }
-    div.aaDialog label input[type="checkbox"].highlighter + span{
-        color: #ccc;
-    }
-    div.aaDialog label input[type="checkbox"].highlighter:checked + span{
-        color: #666;
-    }
-    div.aaDialog label select.half,
-    div.aaDialog label input[type=email].half,
-    div.aaDialog label input[type=number].half,
-    div.aaDialog label input[type=password].half,
-    div.aaDialog label input[type=text].half{
-        display: inline-block;
-        width: 50%;
-    }
-    div.aaDialog label.right select.half,
-    div.aaDialog label.right input[type=email].half,
-    div.aaDialog label.right input[type=number].half,
-    div.aaDialog label.right input[type=password].half,
-    div.aaDialog label.right input[type=text].half{
-        margin-left: 4px;
-    }
-    div.aaDialog label > span.half {
-        display: inline-block;
-        width: 50%;
-    }
-    div.aaDialog label > span.half:first-child {
-        padding-right: .4em;
-        text-align: right;
-    }
-    .aa label.cooked{
-        display: inline-block;
-        width: fit-content;
-    }
-    .aa label.cooked.disabled{
-        color: var(--color-grey);
-    }
-    .aa button.mixed{
-        text-align: left;
-        color: var(--color-gold);
-    }
-    .aa button.mixed span.fa{
-        margin-right: 4px;
-        color: var(--submit-bg-color);
-        color: var(--color-gold);
-    }
-    .aa button.mixed:hover span.fa,
-    .aa button.mixed:focus span.fa{
-        color: #36e;
-        color: #ba8e4d;
-        color: #862;
-    }
-    .aa label.cooked input[type=radio],
-    .aa label.cooked input[type=checkbox]{
-        display: none;
-    }
-    .aa button.mixed,
-    .aa label.cooked input[type=radio] + button,
-    .aa label.cooked input[type=checkbox] + button{
-        border: 0 !important;
-        background: transparent !important;
-        margin-left: 4px;
-        margin-right: 4px;
-    }
-    .aa label.cooked input[type=radio] + button > span.mixed,
-    .aa label.cooked input[type=checkbox] + button > span.mixed,
-    .aa label.cooked input[type=radio] + button > span.checked,
-    .aa label.cooked input[type=checkbox] + button > span.checked,
-    .aa label.cooked input[type=radio] + button > span.disabled,
-    .aa label.cooked input[type=checkbox] + button > span.disabled,
-    .aa label.cooked input[type=radio] + button > span.unchecked,
-    .aa label.cooked input[type=checkbox] + button > span.unchecked{
-        display: none;
-    }
-    .aa label.cooked input[type=radio] + button > span,
-    .aa label.cooked input[type=checkbox] + button > span{
-        color: var(--color-grey);
-    }
-    .aa label.cooked:hover input[type=radio] + button > span,
-    .aa label.cooked:hover input[type=checkbox] + button > span,
-    .aa label.cooked input[type=radio] + button:focus > span,
-    .aa label.cooked input[type=checkbox] + button:focus > span{
-        color: #aaa;
-    }
-    .aa label.cooked input[type=radio] + button > span.checked,
-    .aa label.cooked input[type=checkbox] + button > span.checked{
-        color: var(--submit-bg-color);
-    }
-    .aa label.cooked:hover input[type=radio] + button > span.checked,
-    .aa label.cooked:hover input[type=checkbox] + button > span.checked,
-    .aa label.cooked input[type=radio] + button:focus > span.checked,
-    .aa label.cooked input[type=checkbox] + button:focus > span.checked{
-        color:  var(--form-focus-color);
-    }
-    .aa label.cooked input[type=radio]:disabled + button > span.disabled,
-    .aa label.cooked input[type=checkbox]:disabled + button > span.disabled{
-        display: inline-block;
-    }
-    .aa label.cooked input[type=radio] + button > span.unchecked,
-    .aa label.cooked input[type=checkbox] + button > span.unchecked{
-        display: inline-block;
-    }
-    .aa label.cooked input[type=radio]:checked + button > span.unchecked,
-    .aa label.cooked input[type=checkbox]:checked + button > span.unchecked{
-        display: none;
-    }
-    .aa label.cooked input[type=radio]:checked + button > span.checked,
-    .aa label.cooked input[type=checkbox]:checked + button > span.checked{
-        display: inline-block;
-    }
-    .aa label.cooked input[type=radio]:disabled:checked + button > span.checked,
-    .aa label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
-    .aa label.cooked input[type=radio]:disabled + button > span,
-    .aa label.cooked input[type=checkbox]:disabled + button > span{
-        color: var(--color-grey);
-    }
-    .aa button.textarea.mixed{
-        height: 120px;
-    }
-    .aa button.textarea.mixed > div.table{
-        height: 100%;
-        display: table;
-        vertical-align: top;
-    }
-    .aa button.textarea.mixed > div.table > div.cell{
-        display: table-cell;
-        vertical-align: top;
-    }
-    .aa button.textarea.mixed,
-    .aa button.input.mixed{
-        cursor: pointer;
-        margin-left: 0;
-        font-style: italic;
-        color: var(--color-gold);
-        background: var(--color-light-grey);
-        box-shadow: inset 1px 1px 1px var(--color-grey);
-    }
-    .aa button.textarea.mixed:focus,
-    .aa button.input.mixed:focus{
-        border: 1px solid var(--color-gold);
-    }
-    .aa button.textarea.mixed span.fa,
-    .aa button.input.mixed span.fa{
-        color: var(--color-gold);
-    }
-    .aa button.textarea.mixed:hover span.fa,
-    .aa button.textarea.mixed:focus span.fa,
-    .aa button.input.mixed:hover span.fa,
-    .aa button.input.mixed:focus span.fa{
-        color: #862;
-    }
-    .aa button.mixed:disabled,
-    .aa button.textarea.mixed:disabled span.fa,
-    .aa button.input.mixed:disabled span.fa{
-        cursor: default;
-        color: var(--color-grey);
-    }
-    div.aaDialog div.buttons{
-        width: 100%;
-        padding: 12px;
-        background: var(--bg-color);
-        background: transparent;
-        text-align: center;
-    }
-    div.aaDialog div.buttons.fullscreen{
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        width: 100%;
-    }
-    div.aaDialog div.buttons.with-details{
-        width: 75%;
-    }
-    .aa button,
-    .aa input[type="submit"],
-    .aa input[type="reset"],
-    .aa input[type="button"]{
-        display: inline-block;
-        margin: 0px 2px;
-        padding: 4px 16px;
-        min-width: 96px;
-        background: var(--submit-bg-color);
-        text-align: center;
-        color: #fff;
-        border-radius: 2px;
-        border: 1px solid var(--submit-bg-color);
-    }
-    .aa input[type="submit"]:disabled{
-        background: var(--button-disabled-bg-color);
-        color: var(--button-disabled-color);
-        border: 1px solid var(--button-disabled-bg-color);
-        text-shadow: 0px 0px 0px transparent;
-    }
-    .aa input[type="submit"]:disabled:hover,
-    .aa input[type="submit"]:disabled:focus{
-        border: 1px solid var(--button-disabled-bg-color);
-    }
-    .aa button:hover,
-    .aa button:focus,
-    .aa input[type="submit"]:hover,
-    .aa input[type="submit"]:focus,
-    .aa input[type="button"]:hover,
-    .aa input[type="button"]:focus{
-        background: var(--submit-bg-color);
-        border-color: var(--color-blue-darker);
-    }
-    .aa button,
-    .aa button.reset,
-    .aa input[type="reset"],
-    .aa input[type="button"],
-    .aa input[type="button"].reset{
-        background: var(--reset-bg-color);
-        color: var(--reset-color);
-        color: var(--button-color);
-        border-color: var(--reset-bg-color);
-        text-shadow: 0px 0px 0px transparent;
-    }
-    .aa button:hover,
-    .aa button:focus,
-    .aa button.reset:hover,
-    .aa button.reset:focus,
-    .aa input[type="reset"]:hover,
-    .aa input[type="reset"]:focus,
-    .aa input[type="button"]:hover,
-    .aa input[type="button"]:focus,
-    .aa input[type="button"].reset:hover,
-    .aa input[type="button"].reset:focus{
-        border-color: #ddd;
-        background: #ddd;
-    }
-    .aa button[type=submit]:hover,
-    .aa button[type=submit]:focus{
-        background: var(--submit-bg-color);
-        border-color: var(--color-blue-darker);
-    }
-    .aa input[type=submit]:disabled,
-    .aa button[type=submit]:disabled{
-        color: var(--button-disabled-color);
-        background: var(--button-disabled-bg-color);
-        border-color: var(--button-disabled-bg-color);
-        box-shadow: 0 0 0 transparent;
-    }
-    div.aaDialog div.message div.grid{
-        display: table;
-    }
-    div.aaDialog div.message div.row{
-        display: table-row;
-    }
-    div.aaDialog div.message div.row.hidden{
-        display: none;
-    }
-    div.aaDialog div.message div.grid > div.row > div.cell{
-        display: table-cell;
-        padding-left: 8px;
-        /*min-width: 216px;*/
-    }
-    div.aaDialog div.message div.grid > div.row > div.cell:first-child{
-        padding-left: 0px;
-        text-align: right;
-        min-width: 216px;
-    }
-    div.aaDialog div.message div.grid > div.row > div.cell textarea,
-    div.aaDialog div.message div.grid > div.row > div.cell input[type=password],
-    div.aaDialog div.message div.grid > div.row > div.cell input[type=number],
-    div.aaDialog div.message div.grid > div.row > div.cell input[type=text]{
-        min-width: 192px;
-        min-width: 216px;
-    }
-    div.aaDialog div.message div.grid > div.row > div.cell select{
-        width: 100%;
-    }
+    --inset: inset 1px 1px 1px var(--color-blue-fade);
 
     /* --------------------------------
-    Progress:
+    Dark
     -------------------------------- */
 
-    div.aaDialog.progress {
-        padding: 16px;
-    }
-    div.aaDialog.progress div.item {
-        display: flex;
-        position: relative;
-    }
+    --dark-color: #aaa;
+    --dark-color-darker: #888;
+
+    --dark-submit-bg-color: #49f;
+    --dark-button-disabled-bg-color: #444;
+    --dark-button-disabled-color: #bbb;
+    
+    --dark-color-bg-lighter: #333;
+    --dark-color-bg: #222;
+    --dark-color-bg-darker: #111;
+    
+    --dark-color-grey: #444;
+    --dark-color-blue: #248;
+    --dark-color-green: #384;
+    --dark-color-orange: #c40;
+    --dark-color-red: #c00;
+    --dark-color-cyan: #1ed;
+}
+body.aaFrameworkFreeze{
+    overflow: hidden;
+}
+@charset "utf-8";
+/* -------------------------------- */
+@font-face {
+    font-family: 'Fira UL';
+    src: url('vendors/fonts/fira-sans/FiraSans-UltraLight.ttf');
+}
+@font-face {
+    font-family: 'Fira EL';
+    src: url('vendors/fonts/fira-sans/FiraSans-ExtraLight.ttf');
+}
+@font-face {
+    font-family: 'Fira L';
+    src: url('vendors/fonts/fira-sans/FiraSans-Light.ttf');
+}
+@font-face {
+    font-family: 'Fira L-i';
+    src: url('vendors/fonts/fira-sans/FiraSans-LightItalic.ttf');
+}
+@font-face {
+    font-family: 'Fira';
+    src: url('vendors/fonts/fira-sans/FiraSans-Regular.ttf');
+}
+@font-face {
+    font-family: 'Fira-i';
+    src: url('vendors/fonts/fira-sans/FiraSans-RegularItalic.ttf');
+}
+@font-face {
+    font-family: 'pencilkaisho';
+    src: url('./vendors/fonts/pencilkaisho/080/g_pencilkaisho_JISlimit_R.ttf');
+}
+@font-face {
+    font-family: 'aoyagi';
+    src: url('./vendors/fonts/aoyagireisyosimo_ttf_2_01/aoyagireisyosimo_ttf_2_01.ttf');
+}
+@font-face {
+    font-family: 'katyou';
+    src: url('./vendors/fonts/katyou/katyou-p.ttf');
+}
+/* -------------------------------- */
+/**/
+*{
+    outline: 0;
+    font-family: var(--font-family);
+}
+.center {
+    text-align: center;
+}
+.aaBlur {
+    /*filter: blur(1px);*/
+}
+.waitAndFadeOut {
+    animation: aaFadeOut 1s 1;
+    animation-fill-mode: forwards;
+    animation-delay: 2s;
+}
+.fadeOut {
+    -webkit-animation: aaFadeOut var(--duration) 1;
+    -moz-animation: aaFadeOut var(--duration) 1;
+    -o-animation: aaFadeOut var(--duration) 1;
+    animation: aaFadeOut var(--duration) 1;
+
+    animation-fill-mode: forwards;
+    animation-delay: 0s;
+}
+.aa {
+    font-size: 13px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+
+    -webkit-touch-callout: none;
+      -webkit-user-select: none;
+       -khtml-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+}
+.aa a {
+    color: var(--color-blue);
+}
+.aa b,
+.aa strong {
+    font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+}
+.aa code,
+.aa code *{
+    font-family: Courier New;
+}
+.aa button,
+.aa input[type="button"],
+.aa input[type="submit"],
+.aa input[type="reset"],
+.aa input[type="password"],
+.aa input[type="number"],
+.aa input[type="text"]{
+    all: initial;
+    white-space: nowrap;
+}
+.aa input[type="password"],
+.aa input[type="number"],
+.aa input[type="text"]{
+    font-size: 13px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
+}
+.aa input[type="number"]{
+    text-align: right;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
+}
+.aa button,
+.aa input[type="submit"],
+.aa input[type="reset"],
+.aa input[type="button"]{
+    font-size: 13px;
+    font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+.aa button.small:disabled,
+.aa input.small[type="submit"]:disabled,
+.aa input.small[type="reset"]:disabled,
+.aa input.small[type="button"]:disabled{
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-color);
+    border-color: var(--button-disabled-bg-color);
+    box-shadow: 0 0 0 transparent;
+}
+.aa button.small,
+.aa input.small[type="submit"],
+.aa input.small[type="reset"],
+.aa input.small[type="button"]{
+    margin: 0px 2px;
+    padding: 1px 8px;
+    min-width: auto;
+    font-size: 13px;
+    line-height: 1;
+}
+.aa button.icon {
+    position: relative;
+    padding: 0 0 0 1px;
+    min-width: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 16px;
+}
+.aa button.small.icon,
+.aa input.small.icon[type="submit"],
+.aa input.small.icon[type="reset"],
+.aa input.small.icon[type="button"]{
+    padding: 1px;
+    min-width: 16px;
+}
+.aa *.with-tooltip {
+    position: relative;
+}
+.aa .fa {
+    font-family: FontAwesome;
+}
+.aa.bg{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+.aa.bg.vanish{
+    -webkit-animation: fadeToNone var(--duration) ease-in;
+    -moz-animation: fadeToNone var(--duration) ease-in;
+    -o-animation: fadeToNone var(--duration) ease-in;
+    animation: fadeToNone var(--duration) ease-in;
+}
+.aa.bg.fade{
+    -webkit-animation: fadeFromNone var(--duration) ease-out;
+    -moz-animation: fadeFromNone var(--duration) ease-out;
+    -o-animation: fadeFromNone var(--duration) ease-out;
+    animation: fadeFromNone var(--duration) ease-out;
+}
+.aa.bg.shade{
+    background: rgba(0,0,0,0.4);
+}
+.aa.bg.shade.transparent{
+    background: transparent;
+}
+.aa.bg.shortcut{
+    background: rgba(16,32,64,0.88);
+    background: rgba(0,8,16,0.88);
+    font-size: 24px;
+    color: var(--submit-bg-color);
+}
+.aa.bg.loading .icon{
+    color: var(--color-white);
+    font-size: 64px;
+}
+.aa.shortcut div.hotkey{
+    margin-top: 16px;
+    font-size: 48px;
+    color: #fff;
+}
+.aa.shortcut div.hotkey.placeholder{
+    color: var(--color-blue-fade);
+    color: var(--color-blue-darker);
+}
+.aa .keyboardKey{
+    display: inline-block;
+    margin: 0 0.1em;
+    padding: 0 0.4em;
+    min-width: 26px;
+    background: #acf;
+    color: var(--color-blue-darker);
+    border-radius: 0.2em;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+.aa .keyboardKey:first-child{ margin-left: 0; }
+.aa .keyboardKey:last-child{ margin-right: 0; }
+.aa.shortcut .keyboardKey{
+    /* active */
+    background: #acf;
+    color: var(--color-blue-darker);
+}
+.aa.shortcut div.placeholder .keyboardKey{
+    /* placeholder */
+    background: var(--color-blue-darker);
+    color: #124;
+}
+.aa.shortcut button{
+    background-color: var(--submit-bg-color);
+    border-color: var(--submit-bg-color);
+    color: #def;
+}
+.aa.shortcut button:focus{
+    border-color: #def;
+}
+.aa.shortcut button[disabled]{
+    color: #124;
+    background-color: var(--color-blue-darker);
+    border-color: var(--color-blue-darker);
+}
+.aa .right{
+    text-align: right;
+}
+.aa .fa.gris:before{
+    color: #ccc;
+}
+div.aaTable{
+    display: table;
+}
+div.aaTable.fullscreen{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+div.aaTable.fullscreen div.td{
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+/****************/
+/*   Boutons    */
+/****************/
+.aa select{
+    padding: 4px 12px;
+    min-width: 120px;
+    height: 24px;
+    line-height: 24px;
+    background: #fff;
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.2);
+    border: 1px solid #fff;
+}
+.aa select:focus{
+    border: 1px solid var(--submit-bg-color);
+}
+.aa input[type=radio],
+.aa input[type=checkbox]{
+    margin: 2px 0px;
+    margin-bottom: 3px;
+}
+.aa textarea,
+.aa input[type=text],
+.aa input[type=password]{
+    display: table-cell;
+    padding: 6px 8px 4px 8px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    min-width: 240px;
+    border-radius: 2px;
+    border: 1px solid var(--bg-color);
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.1) inset;
+}
+.aa textarea:focus,
+.aa input[type=text]:focus,
+.aa input[type=password]:focus{
+    border: 1px solid var(--submit-bg-color);
+}
+.aa textarea{
+    width: 640px;
+    height: 120px;
+    min-height: 46px;
+    resize: vertical;
+
+    -webkit-touch-callout: text;
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
+}
+.aa textarea::placeholder,
+.aa input[type=text]::placeholder,
+.aa input[type=password]::placeholder{
+    font-style: italic;
+    color: #aaa;
+}
+.aa button,
+.aa input[type=button],
+.aa input[type=reset],
+.aa input[type=submit]{
+    margin: 2px;
+    padding: 6px 8px;
+    min-width: 124px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    background: var(--button-disabled-color);
+    text-align: center;
+    border-radius: 2px;
+    border: 1px solid var(--button-disabled-color);
+}
+.aa button:hover,
+.aa input[type=button]:hover,
+.aa input[type=reset]:hover,
+.aa input[type=submit]:hover{
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+}
+.aa button:focus,
+.aa input[type=button]:focus,
+.aa input[type=reset]:focus,
+.aa input[type=submit]:focus{
+    border: 1px solid #aaa;
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+}
+.aa button[type=submit],
+.aa input[type=submit]{
+    background: var(--submit-bg-color);
+    color: #fff;
+    border: 1px solid var(--submit-bg-color);
+}
+.aa button[type=submit]:hover,
+.aa input[type=submit]:hover,
+.aa button[type=submit]:focus,
+.aa input[type=submit]:focus{
+    background: var(--submit-bg-color);
+    border: 1px solid var(--color-blue-darker);
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+}
+.aa button.transparent {
+    margin: 0px;
+    padding: 0px;
+    min-width: auto;
+    background: transparent;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    border: 0px solid transparent;
+    box-shadow: 0px 0px 0px transparent;
+    text-decoration: none;
+}
+.aa button.transparent:hover,
+.aa button.transparent:focus {
+    background: transparent;
+    border: 0px solid transparent;
+}
+.aa button.text,
+.aa input[type=button].text,
+.aa button.link,
+.aa input[type=button].link{
+    margin: 0px;
+    padding: 0px;
+    min-width: auto;
+    background: transparent;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    /*font-size: 14px;*/
+    border: 0px solid transparent;
+    box-shadow: 0px 0px 0px transparent;
+    text-decoration: none;
+}
+.aa button.text,
+.aa input[type=button].text{
+    cursor: default;
+    color: var(--color);
+}
+.aa button.link,
+.aa input[type=button].link{
+    cursor: pointer;
+    color: var(--submit-bg-color);
+}
+.aa button.link:hover,
+.aa button.link:focus,
+.aa input[type=button].link:hover,
+.aa input[type=button].link:focus{
+    border: 0px solid transparent;
+    background-color: transparent;
+    text-decoration: underline;
+}
+.aa button.link:disabled,
+.aa input[type=button].link:disabled{
+    color: var(--button-disabled-color);
+    text-decoration: none;
+}
+.aa button.link.red,
+.aa input[type=button].link.red{
+    color: var(--button-red-bg-color);
+}
+.aa button.link.red:disabled,
+.aa input[type=button].link.red:disabled{
+    color: var(--button-disabled-color);
+    color: #fcc;
+    text-decoration: line-through;
+}
+.aa button.btn-ico,
+.aa input[type=button].btn-ico{
+    padding: 0px;
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+    line-height: 16px;
+    font-size: 24px;
+    text-align: center;
+    /*box-shadow: 0px 0px 0px transparent;*/
+}
+.aa button.btn-2x,
+.aa input[type=button].btn-2x{
+    min-width: 64px;
+    width: 64px;
+    height: 64px;
+    line-height: 32px;
+    font-size: 48px;
+    border-radius: 32px;
+}
+.aa button.btn-small,
+.aa input[type=button].btn-small{
+    min-width: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 8px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+.aa button.btn-ico:hover,
+.aa input[type=button].btn-ico:hover{
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.2);
+}
+.aa button.btn-round,
+.aa input[type=button].btn-round{
+    border-radius: 16px;
+}
+.aa button.btn-round.btn-2x,
+.aa input[type=button].btn-round.btn-2x{
+    border-radius: 32px;
+}
+.aa button.btn-squar,
+.aa input[type=button].btn-squaree{
+}
+.aa button.btn-transparent,
+.aa input[type=button].btn-transparent{
+    color: transparent;
+    /*color: rgba(255,255,255,0.5);*/
+    background: transparent;
+    /*background: rgba(255,0,0,0.5);*/
+    border: 1px solid transparent;
+    box-shadow: 0px 0px 0px transparent;
+}
+.aa button.btn-blue,
+.aa input[type=button].btn-blue{
+    color: #fff;
+    background: var(--submit-bg-color);
+    border: 1px solid var(--submit-bg-color);
+}
+.aa button.btn-blue span.fa,
+.aa input[type=button].btn-blue span.fa{
+    color: var(--dark-color-blue);
+}
+.aa button.btn-blue:focus,
+.aa input[type=button].btn-blue:focus{
+    border: 1px solid var(--color-blue-darker);
+}
+.aa button.btn-red,
+.aa input[type=button].btn-red{
+    color: #fff;
+    background: #f66;
+    border: 1px solid #f66;
+}
+.aa button.btn-red span.fa,
+.aa input[type=button].btn-red span.fa{
+    color: var(--dark-color-red);
+}
+.aa button.btn-red:focus,
+.aa input[type=button].btn-red:focus{
+    border: 1px solid #b33;
+}
+.aa button.btn-green,
+.aa input[type=button].btn-green{
+    color: #fff;
+    background: var(--color-green);
+    border: 1px solid var(--color-green);
+}
+.aa button.btn-green span.fa,
+.aa input[type=button].btn-green span.fa{
+    color: var(--dark-color-green);
+}
+.aa button.btn-green:focus,
+.aa input[type=button].btn-green:focus{
+    border: 1px solid #384;
+}
+.aa button.btn-plus:before,
+.aa input[type=button].btn-plus:before{
+    content: "\f00e";
+}
+.aa button.btn-ico:disabled,
+.aa input[type=button].btn-ico:disabled{
+    background: var(--button-disabled-bg-color);
+    border: 1px solid transparent;
+    box-shadow: 0px 0px 0px transparent;
+}
+
+.aa table.sticky {
+    position: relative;
+}
+.aa table.sticky > tr > td,
+.aa table.sticky > tr > th,
+.aa table.sticky > thead > tr > td,
+.aa table.sticky > thead > tr > th,
+.aa table.sticky > tbody > tr > td,
+.aa table.sticky > tbody > tr > th {
+    /*white-space: nowrap;*/
+}
+.aa table.sticky > tr > td.stick-top,
+.aa table.sticky > tr > th.stick-top,
+.aa table.sticky > thead > tr > td.stick-top,
+.aa table.sticky > thead > tr > th.stick-top,
+.aa table.sticky > tbody > tr > td.stick-top,
+.aa table.sticky > tbody > tr > th.stick-top {
+    position: sticky;
+    top: 0px;
+    z-index: 2;
+}
+.aa table.sticky > tr > td.stick-bottom,
+.aa table.sticky > tr > th.stick-bottom,
+.aa table.sticky > thead > tr > td.stick-bottom,
+.aa table.sticky > thead > tr > th.stick-bottom,
+.aa table.sticky > tbody > tr > td.stick-bottom,
+.aa table.sticky > tbody > tr > th.stick-bottom {
+    position: sticky;
+    bottom: 0px;
+    z-index: 2;
+}
+.aa table.sticky > tr > td.stick-left,
+.aa table.sticky > tr > th.stick-left,
+.aa table.sticky > thead > tr > td.stick-left,
+.aa table.sticky > thead > tr > th.stick-left,
+.aa table.sticky > tbody > tr > td.stick-left,
+.aa table.sticky > tbody > tr > th.stick-left {
+    position: sticky;
+    left: 0px;
+    z-index: 2;
+}
+.aa table.sticky > tr > td.stick-right,
+.aa table.sticky > tr > th.stick-right,
+.aa table.sticky > thead > tr > td.stick-right,
+.aa table.sticky > thead > tr > th.stick-right,
+.aa table.sticky > tbody > tr > td.stick-right,
+.aa table.sticky > tbody > tr > th.stick-right {
+    position: sticky;
+    right: 0px;
+    z-index: 2;
+}
+.aa table.sticky > tr > td.stick-top-left,
+.aa table.sticky > tr > th.stick-top-left,
+.aa table.sticky > thead > tr > td.stick-top-left,
+.aa table.sticky > thead > tr > th.stick-top-left,
+.aa table.sticky > tbody > tr > td.stick-top-left,
+.aa table.sticky > tbody > tr > th.stick-top-left {
+    position: sticky;
+    top: 0px;
+    left: 0px;
+    z-index: 3;
+}
+.aa table.sticky > tr > td.stick-top-right,
+.aa table.sticky > tr > th.stick-top-right,
+.aa table.sticky > thead > tr > td.stick-top-right,
+.aa table.sticky > thead > tr > th.stick-top-right,
+.aa table.sticky > tbody > tr > td.stick-top-right,
+.aa table.sticky > tbody > tr > th.stick-top-right {
+    position: sticky;
+    top: 0px;
+    right: 0px;
+    z-index: 3;
+}
+.aa table.sticky > tr > td.stick-bottom-left,
+.aa table.sticky > tr > th.stick-bottom-left,
+.aa table.sticky > thead > tr > td.stick-bottom-left,
+.aa table.sticky > thead > tr > th.stick-bottom-left,
+.aa table.sticky > tbody > tr > td.stick-bottom-left,
+.aa table.sticky > tbody > tr > th.stick-bottom-left {
+    position: sticky;
+    bottom: 0px;
+    left: 0px;
+    z-index: 3;
+}
+.aa table.sticky > tr > td.stick-bottom-right,
+.aa table.sticky > tr > th.stick-bottom-right,
+.aa table.sticky > thead > tr > td.stick-bottom-right,
+.aa table.sticky > thead > tr > th.stick-bottom-right,
+.aa table.sticky > tbody > tr > td.stick-bottom-right,
+.aa table.sticky > tbody > tr > th.stick-bottom-right {
+    position: sticky;
+    bottom: 0px;
+    right: 0px;
+    z-index: 3;
+}
+.aa .pannel table.sticky > tr > td,
+.aa .pannel table.sticky > tr > th,
+.aa .pannel table.sticky > thead > tr > td,
+.aa .pannel table.sticky > thead > tr > th,
+.aa .pannel table.sticky > tbody > tr > td,
+.aa .pannel table.sticky > tbody > tr > th {
+    background-color: var(--bg-color);
+}
+
+
+/****************/
+/* Menu */
+/****************/
+.aaMenu > ul{
+    margin: 0;
+    padding: 0;
+}
+.aaMenu > ul > li{
+    display: inline-block;
+    list-style: none;
+}
+.aaMenu > ul > li > button,
+.aaMenu > ul > li > input[type=button]{
+    min-width: fit-content;
+    margin: 0;
+    border-width: 0;
+    background: transparent;
+    box-shadow: 0 0 0 transparent;
+}
+.aaMenu > ul > li:hover > button,
+.aaMenu > ul > li:hover > input[type=button]{
+    color: var(--submit-bg-color);
+}
+/********************************/
+.aaMenu hr{
+    margin: 4px 0px;
+    border: 0px;
+    border-top: 1px solid #eee;
+}
+.aaMenu > hr{
+    display: none;
+}
+.aaMenu button,
+.aaMenu input[type=button]{
+    /*all: initial;*/
+    font-family: var(--font-family);
+    font-size: 14px;
+    background: transparent;
+    border: 0px solid transparent;
+}
+.aaMenu ul{
+    margin: 0;
+    padding: 0px;
+    /*padding-left: 32px;*/
+    list-style: none;
+}
+.aaMenu > ul{
+    position: relative;
+    /*margin: 0px auto;*/
+    padding: 0px;
+    /*width: 960px;*/
+}
+.aaMenu > ul > li{
+    position: relative;
+    display: inline-block;
+    padding: 12px;
+}
+.aaMenu > ul > li:hover{
+    /*background: var(--submit-bg-color);*/
+}
+.aaMenu > ul > li:hover > button{
+    /*color: #fff;*/
+}
+
+.aaMenu > ul > li:first-child{
+    padding-left: 8px;
+}
+.aaMenu > ul > li > button,
+.aaMenu > ul > li > input[type=button]{
+    padding: 0px;
+    white-space: nowrap;
+    font-size: 14px;
+}
+.aaMenu > ul > li.flash{
+    background: var(--submit-bg-color);
+}
+.aaMenu > ul > li.flash > button,
+.aaMenu > ul > li.flash > input[type=button]{
+    color: #fff;
+}
+.aaMenu > ul > li > ul{
+    z-index: 1;
+    display: table;
+    display: none;
+    position: absolute;
+    top: 40px;
+    left: 0px;
+    padding: 4px 0px;
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
+    box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
+}
+.aaMenu > ul > li:hover > ul{
+    display: table;
+}
+.aaMenu > ul > li.flash ul{
+    display: none;
+}
+.aaMenu > ul > li ul li{
+    display: block;
+    position: relative;
+}
+.aaMenu > ul > li ul li.shortcut::before{
+    content: attr(data-shortcut);
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: table-cell;
+    float: right;
+    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--menu-shortcut-color);
+    color: var(--submit-bg-color);
+}
+.aaMenu > ul > li ul li.shortcut:hover::before{
+    color: var(--menu-shortcut-color);
+}
+.aaMenu > ul > li ul li.expand::before{
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: table-cell;
+    float: right;
+    /*content: '▶';*/
+    /*content: '►';*/
+    content: '▸';
+    color: #000;
+}
+.aaMenu > ul > li ul li.expand:hover::before{
+    color: #fff;
+}
+.aaMenu > ul > li > ul li ul{
+    z-index: 2;
+    display: none;
+    position: absolute;
+    top: -4px;
+    left: 100%;
+    padding: 4px 0px;
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
+}
+.aaMenu > ul > li > ul li button,
+.aaMenu > ul > li > ul li input[type=button]{
+    margin: 0;
+    padding: 4px 8px;
+    padding-right: 64px;
+    min-width: 180px;
+    width: 100%;
+    background: transparent;
+    white-space: nowrap;
+    text-align: left;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    border-radius: 0;
+    border: 0px;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 0px transparent;
+}
+.aaMenu > ul > li ul li > button > span.fa.icon{
+    color: var(--menu-disabled-color);
+}
+.aaMenu > ul > li ul li > button > span.fa.checked{
+    color: #000;
+}
+.aaMenu > ul > li ul li > button > span.fa.icon.critical{
+    color: var(--button-red-bg-color);
+}
+.aaMenu > ul > li ul li:hover > button > span.fa.icon.critical{
+    color: #844;
+}
+.aaMenu > ul > li ul li > button > span.fa.icon.warning,
+.aaMenu > ul > li ul li:hover > button > span.fa.icon.warning{
+    color: var(--warning-color);
+}
+.aaMenu > ul > li ul li > button > span.fa.icon.confirm,
+.aaMenu > ul > li ul li > button > span.fa.icon.information{
+    color: var(--confirm-color);
+}
+.aaMenu > ul > li ul li > button > span.fa.icon.reset{
+    color: var(--reset-color);
+}
+.aaMenu > ul > li ul li:hover{
+    background: var(--submit-bg-color);
+}
+.aaMenu > ul > li ul li:hover > button,
+.aaMenu > ul > li ul li:hover > input[type=button]{
+    color: #fff;
+}
+.aaMenu > ul > li ul li:hover > button > span.fa.icon{
+    color: var(--submit-color);
+    color: var(--color-blue-darker);
+    color: var(--menu-shortcut-color);
+}
+.aaMenu > ul > li ul li:hover > ul{
+    display: table;
+}
+.aaMenu > ul > li > ul > li > ul > li > ul{
+    display: none;
+    z-index: 3;
+}
+.aaMenu > ul > li > ul > li > ul > li:hover > ul{
+    display: table;
+}
+.aaMenu > ul > li > button:disabled,
+.aaMenu > ul > li > input[type=button]:disabled,
+.aaMenu > ul > li > button:disabled:hover,
+.aaMenu > ul > li > input[type=button]:disabled:hover{
+    font-family: var(--font-family);
+    background: transparent;
+    color: var(--menu-disabled-color);
+}
+.aaMenu > ul > li > ul li button:disabled,
+.aaMenu > ul > li > ul li input[type=button]:disabled,
+.aaMenu > ul > li > ul li button:disabled:hover,
+.aaMenu > ul > li > ul li input[type=button]:disabled:hover{
+    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    background: #fff;
+    color: var(--menu-disabled-color);
+}
+.aaMenu > ul > li ul li.disabled{
+    background: transparent;
+}
+.aaMenu > ul > li ul li.disabled button,
+.aaMenu > ul > li ul li.disabled input[type=button]{
+    font-family: var(--font-family);
+    background: transparent;
+    color: var(--menu-disabled-color);
+}
+.aaMenu > ul > li ul li.disabled > button > span.fa.icon{
+    color: var(--menu-disabled-color);
+}
+.aaMenu > ul > li ul li.disabled ul{
+    display: none;
+}
+.aaMenu > ul > li ul li.disabled.shortcut::before{
+    color: #e8e8e8;
+}
+/****************/
+/* Context menu */
+/****************/
+body.aaContextMenuFreeze {
+    overflow: hidden;
+}
+#aaContextMenuBG {
+    background: rgba(128,128,128,0.1);
+}
+#aaContextMenu {
+    position: fixed;
+    top: 1px;
+    left: 1px;
+}
+#aaContextMenu ul{
+    cursor: default;
+    margin: 0px;
+    padding: 4px 0px;
+    min-width: 160px;
+    color: #666;
+
+    z-index: 2;
+    display: none;
+    position: absolute;
+    top: -4px;
+    left: 100%;
+    padding: 4px 0px;
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
+    box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
+}
+#aaContextMenu ul hr{
+    margin: 4px 0px;
+    padding: 0px;
+    border: 0px solid transparent;
+    border-top: 1px solid rgba(128,128,128,0.1);
+}
+#aaContextMenu ul li{
+    cursor: default;
+    list-style: none;
+    display: block;
+    position: relative;
+    width: 100%;
+}
+#aaContextMenu ul li div.disabled{
+    padding: 4px 8px;
+    background: transparent;
+    color: #aaa;
+    color: rgba(0,0,0,0.4);
+    text-align: left;
+    border: 0px;
+    box-shadow: 0px 0px 0px transparent;
+}
+#aaContextMenu ul li button:active,
+#aaContextMenu ul li input[type="button"]:active{
+    border: 0;
+}
+#aaContextMenu ul li button:focus > span.fa.icon,
+#aaContextMenu ul li:hover button > span.fa.icon {
+    color: var(--submit-color);
+    color: var(--color-blue-darker);
+    color: var(--menu-shortcut-color);
+}
+#aaContextMenu ul li button > span.fa.icon.critical {
+    color: var(--button-red-bg-color);
+}
+#aaContextMenu ul li:hover button > span.fa.icon.critical,
+#aaContextMenu ul li button:focus > span.fa.icon.critical {
+    color: #f8f;
+}
+#aaContextMenu ul li button > span.fa.icon.warning {
+    color: var(--warning-color);
+}
+#aaContextMenu ul li button > span.fa.icon.confirm,
+#aaContextMenu ul li button > span.fa.icon.information {
+    color: var(--confirm-color);
+}
+#aaContextMenu ul li button > span.fa.icon.reset {
+    color: var(--reset-color);
+}
+#aaContextMenu ul li.shortcut::before {
+    content: attr(data-shortcut);
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: table-cell;
+    float: right;
+    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    color: var(--menu-shortcut-color);
+}
+#aaContextMenu ul li.expand::before {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: table-cell;
+    float: right;
+    /*content: '▶';*/
+    /*content: '►';*/
+    content: '▸';
+    color: #000;
+}
+#aaContextMenu ul li.expand:hover::before {
+    color: #fff;
+}
+#aaContextMenu > ul {
+    display: table;
+}
+#aaContextMenu > ul li button,
+#aaContextMenu > ul li input[type=button] {
+    margin: 0;
+    padding: 4px 8px;
+    width: 100%;
+    background: transparent;
+    text-align: left;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    white-space: nowrap;
+    border-radius: 0;
+    border: 0px;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 0px transparent;
+
+    /*padding: 8px 24px;*/
+    padding-right: 64px;
+    min-width: 180px;
+    width: 100%;
+    text-align: left;
+}
+#aaContextMenu > ul li button:focus,
+#aaContextMenu > ul li input[type=button]:focus {
+    background: var(--submit-bg-color);
+    color: var(--submit-color);
+}
+#aaContextMenu ul li:hover{
+    background: var(--submit-bg-color);
+}
+#aaContextMenu ul li:hover > button,
+#aaContextMenu ul li:hover > input[type=button]{
+    color: var(--submit-color);
+}
+#aaContextMenu ul li.expand:hover > ul{
+    display: table;
+}
+#aaContextMenu > ul > li > ul > li:hover > button,
+#aaContextMenu > ul > li > ul > li:hover > input[type=button]{
+    color: #fff;
+}
+#aaContextMenu > ul > li > ul > li > ul{
+    display: none;
+    z-index: 3;
+}
+#aaContextMenu > ul > li > ul > li:hover > ul{
+    display: table;
+}
+#aaContextMenu li.disabled ul{
+    display: none;
+}
+#aaContextMenu button:disabled,
+#aaContextMenu input[type=button]:disabled,
+#aaContextMenu button:disabled:hover,
+#aaContextMenu input[type=button]:disabled:hover{
+    font-family: var(--font-family);
+    background: #fff;
+    color: var(--menu-disabled-color);
+}
+#aaContextMenu li button:disabled,
+#aaContextMenu li input[type=button]:disabled,
+#aaContextMenu li button:disabled:hover,
+#aaContextMenu li input[type=button]:disabled:hover{
+    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    background: #fff;
+    color: var(--menu-disabled-color);
+}
+#aaContextMenu li.disabled button,
+#aaContextMenu li.disabled input[type=button]{
+    color: var(--menu-disabled-color);
+}
+#aaContextMenu li.disabled:hover{
+    background: transparent;
+}
+#aaContextMenu li.disabled:hover button,
+#aaContextMenu li.disabled:hover input[type=button]{
+    color: var(--menu-disabled-color);
+}
+#aaContextMenu li.disabled.shortcut::before{
+    color: var(--menu-disabled-color);
+}
+#aaContextMenu ul li.disabled button > span.fa.icon,
+#aaContextMenu ul li.disabled:hover button > span.fa.icon{
+    color: var(--menu-disabled-color);
+}
+
+/* Theme 'Dark' */
+#aaContextMenu.dark ul{
+    background: rgba(0,0,0,0.8);
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.8);
+}
+#aaContextMenu.dark ul hr{
+    border-top: 1px solid rgba(0,0,0,0.4);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#aaContextMenu.dark ul li div.disabled{
+    color: #666;
+}
+#aaContextMenu.dark ul li button,
+#aaContextMenu.dark ul li input[type="button"]{
+    color: #ddd;
+}
+#aaContextMenu.dark ul li:hover > button,
+#aaContextMenu.dark ul li:hover > input[type="button"]{
+    color: #fff;
+}
+
+/***********/
+/* Dialogs */
+/***********/
+div.aaDialog *{
+    box-sizing: border-box;
+}
+div.aaDialog .red{
+    color: var(--button-red-bg-color);
+}
+div.aaDialog .green{
+    color: var(--color-green);
+}
+div.aaDialog .blue{
+    color: var(--submit-bg-color);
+}
+div.aaDialog .hidden{
+    display: none;
+}
+div.aaDialog{
+    position: relative;
+    display: inline-block;
+    width: 480px;
+    max-height: calc(100vh - 32px);
+    overflow: hidden;
+    overflow-y: auto;
+    background: var(--bg-color);
+    background: #fff;
+    font-size: 13px;
+    font-size: 14px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    text-align: left;
+    color: var(--color);
+    border-radius: 2px;
+    box-shadow: 0px 4px 16px rgba(0,0,0,0.4);
+}
+div.aaDialog.fullscreen{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+div.aaDialog div.menu{
+    vertical-align: middle;
+    padding: 0px 8px;
+    width: 100%;
+    height: auto;
+    background: var(--bg-color);
+    background: transparent;
+}
+div.aaDialog div.menu.fullscreen{
+    position: fixed;
+    width: 100%;
+}
+div.aaDialog div.menu label{
+    position: relative;
+    margin: 0px 4px;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    line-height: 1.5;
+}
+div.aaDialog div.menu label:first-child{
+    margin-left: 0px;
+}
+div.aaDialog div.menu button,
+div.aaDialog div.menu input[type="button"]{
+    box-sizing: border-box;
+    /*display: none;*/
+    margin: 8px 4px;
+    min-width: 35px;
+    background: #e8e8e8;
+    border-color: #e8e8e8;
+    box-shadow: 0 0 0 transparent;
+}
+div.aaDialog div.menu button.icon,
+div.aaDialog div.menu input.icon[type="button"]{
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+}
+div.aaDialog div.menu button:first-child,
+div.aaDialog div.menu input[type="button"]:first-child{
+    margin-left: 0;
+}
+div.aaDialog div.menu button:hover,
+div.aaDialog div.menu input[type="button"]:hover{
+    background: #ddd;
+    border-color: #ddd;
+}
+div.aaDialog div.menu button:focus,
+div.aaDialog div.menu input[type="button"]:focus{
+    border-color: #aaa;
+}
+div.aaDialog div.menu button.green,
+div.aaDialog div.menu input[type="button"].green{
+    background: var(--color-green);
+    border-color: var(--color-green);
+}
+div.aaDialog div.menu button.green:focus,
+div.aaDialog div.menu input[type="button"].green:focus{
+    border-color: #384;
+}
+div.aaDialog div.menu label input+span{
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    width: 48px;
+    height: 48px;
+    background: var(--submit-bg-color);
+    color: #fff;
+    font-size: 24px;
+    border-radius: 3px;
+}
+div.aaDialog div.menu label input+span.dark{
+    background: #888;
+}
+div.aaDialog div.menu label input+span.green{
+    background: var(--color-green);
+}
+div.aaDialog div.menu label input+span.red{
+    background: #f88;
+}
+div.aaDialog div.menu label input:disabled+span{
+    background: #e8e8e8;
+    color: var(--bg-color);
+}
+div.aaDialog div.menu label input.icon{
+    color: transparent;
+}
+div.aaDialog div.menu label input+span+div.tooltip{
+    display: none;
+    position: absolute;
+    top: 32px;
+    left: 0px;
+    padding: 4px 8px;
+    background: #444;
+    color: #fff;
+    white-space: nowrap;
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
+}
+div.aaDialog div.menu label input+span:hover+div.tooltip{
+    display: block;
+}
+div.aaDialog div.menu label input+span+div.tooltip div.fleche{
+    position: absolute;
+    top: -6px;
+    left: 20px;
+    border: 4px solid transparent;
+    border-top: 0px solid transparent;
+    border-bottom: 6px solid #444;
+}
+div.aaDialog div.menu div.fa-icon {
+    padding: 8px 0px;
+    text-align: center;
+}
+div.aaDialog div.menu div.fa-icon.with-custom-icon {
+    padding: 16px 0 0 0;
+}
+div.aaDialog div.menu span.icon{
+    display: inline-block;
+    margin: 0px auto;
+}
+div.aaDialog div.menu span.icon.prompt,
+div.aaDialog div.menu span.icon.confirm,
+div.aaDialog div.menu span.icon.information{
+    color: var(--button-bg-color);
+}
+div.aaDialog div.menu span.icon.warning{
+    margin-top: 4px;
+    color: var(--warning-color);
+}
+div.aaDialog div.menu span.icon.critical{
+    color: var(--critical-color);
+}
+div.aaDialog div.icon{
+    display: table-cell;
+    display: block;
+    margin: 0px;
+    width: 100%;
+    height: 64px;
+    background-color: transparent;
+    background-position: top;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+div.aaDialog div.icon.information{
+    background-image: url(images/dialog_information.png);
+}
+div.aaDialog div.icon.warning{
+    background-image: url(images/dialog_warning.png);
+}
+div.aaDialog div.icon.critical{
+    background-image: url(images/dialog_critical.png);
+}
+div.aaDialog div.icon.prompt,
+div.aaDialog div.icon.confirm{
+    background-image: url(images/dialog_confirm.png);
+}
+div.aaDialog div.aaDialogIcon {
+    display: inline-block;
+    margin-top: 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: transparent;
+    background-position: center;
+    background-size: cover;
+}
+div.aaDialog form div.buttons{
+    position: sticky;
+    bottom: 0px;
+    background: #fff;
+}
+div.aaDialog form{
+    position: relative;
+}
+div.aaDialog form div.loading{
+    padding: 16px;
+    text-align: center;
+}
+div.aaDialog form.with-details{
+    display: table;
+}
+div.aaDialog h2{
+    display: block;
+    margin: 0px;
+    padding: 0px;
+    /*padding-bottom: 8px;*/
+    color: #000;
+    text-align: center;
+    font-weight: bold;
+}
+div.aaDialog h2.title{
+    z-index: 1;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 16px 0 8px 0;
+}
+div.aaDialog div.message{
+    display: block;
+    padding: 32px 16px;
+    padding: 16px;
+    width: auto;
+    background: #fff;
+    line-height: 1.5;
+    /*text-align: justify;*/
+}
+div.aaDialog div.message hr{
+    border: 0px solid transparent;
+    border-top: 1px solid #eee;
+}
+div.aaDialog div.message h1,
+div.aaDialog div.message h2,
+div.aaDialog div.message h3,
+div.aaDialog div.message h4,
+div.aaDialog div.message h5,
+div.aaDialog div.message h6{
+    margin: 4px 0px;
+    color: var(--color-black);
+}
+div.aaDialog code{
+    padding: 2px 4px;
+    background: #444;
+    border-radius: 2px;
+    color: var(--submit-bg-color);
+    color: #8f8;
+}
+div.aaDialog code span.operator{
+    color: #aaa;
+}
+div.aaDialog div.message .grey{
+    color: #ccc;
+}
+div.aaDialog div.message .blue{
+    color: var(--submit-bg-color);
+}
+div.aaDialog div.message .pad{
+    padding-left: 16px;
+}
+div.aaDialog div.message label.align{
+    display: table-row;
+    margin: 0px;
+}
+div.aaDialog div.message label.align > span{
+    display: table-cell;
+    text-align: right;
+}
+div.aaDialog div.message label.align > span + span{
+    text-align: left;
+}
+div.aaDialog div.message label.align > input{
+    /*margin-bottom: 4px;*/
+}
+div.aaDialog div.message.with-details{
+    display: table-cell;
+    width: 75%;
+}
+div.aaDialog div.details{
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    display: table;
+    padding: 16px;
+    width: 25%;
+    height: 100%;
+    overflow: auto;
+    background: var(--bg-color);
+}
+div.aaDialog ol,
+div.aaDialog ul{
+    margin: 0px;
+}
+div.aaDialog .message fieldset{
+    margin: 0px;
+    padding: 16px;
+    border-radius: 3px;
+    border: 1px solid var(--button-disabled-bg-color);
+}
+div.aaDialog .message fieldset legend{
+    position: relative;
+    display: block;
+    margin: 0px;
+    padding: 0px;
+    font-size: 16px;
+    font-weight: bold;
+    border-collapse: collapse;
+}
+div.aaDialog .message fieldset legend.onglets{
+    text-align: center;
+}
+div.aaDialog .message fieldset legend label{
+    display: inline-block;
+    position: relative;
+    top: 14px;
+    top: 0px;
+    padding: 2px 8px;
+    padding: 0px;
+    font-size: 14px;
+    color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset legend label:first-child{
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+    border-left: 1px solid var(--button-disabled-bg-color);
+}
+div.aaDialog .message fieldset legend label:last-child{
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+div.aaDialog .message fieldset legend label input[type="radio"]{
+    display: none;
+}
+div.aaDialog .message fieldset legend label input[type="radio"] + span{
+    display: inline-block;
+    top: 3px;
+    padding: 2px 12px;
+    background: #fff;
+    color: #444;
+    font-size: 14px;
+    border: 1px solid var(--button-disabled-bg-color);
+    border-left: 0px solid transparent;
+}
+div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span{
+}
+div.aaDialog .message fieldset legend label:first-child input[type="radio"] + span{
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+}
+div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span{
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+div.aaDialog .message fieldset legend label input[type="radio"] + span:hover{
+    cursor: pointer;
+    color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset legend label input[type="radio"]:checked + span{
+    margin: 0px 0px;
+    background: var(--submit-bg-color);
+    color: #fff;
+    text-decoration: none;
+    border-color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset legend label:first-child input[type="radio"]:checked + span{
+}
+div.aaDialog .message fieldset legend label input[type="radio"]:disabled + span{
+    cursor: default;
+    color: var(--color-grey);
+}
+div.aaDialog .message input.wrong{
+    background: var(--error-bg-color);
+    color: var(--error-color);
+}
+div.aaDialog .message input.wrong:focus{
+    border-color: var(--error-color);
+}
+div.aaDialog .message fieldset.scrollable{
+    overflow-y: auto;
+    /*padding: 4px 8px;*/
+    max-height: 240px;
+    overflow: auto;
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--color-light-blue);
+    color: #000;
+    font-family: var(--font-family);
+    /*font-size: 13px;*/
+    line-height: 1.5;
+    border-radius: 3px;
+    border: 1px solid #fff;
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
+}
+div.aaDialog .message fieldset.scrollable .grey{
+    color: var(--form-placeholder-color);
+}
+div.aaDialog .message fieldset.scrollable table{
+    margin: 8px 0px;
+    width: 100%;
+    border-spacing: 0;
+}
+div.aaDialog .message fieldset.scrollable tr:hover{
+    background: #def;
+}
+div.aaDialog .message fieldset.scrollable table td{
+    padding: 2px 8px;
+    vertical-align: middle;
+}
+div.aaDialog .message fieldset.scrollable table td:first-child{
+    padding-right: 0px;
+    white-space: nowrap;
+}
+div.aaDialog .message fieldset.scrollable table td:last-child{
+    width: 100%;
+}
+div.aaDialog .message fieldset.scrollable button.key,
+div.aaDialog .message fieldset.scrollable button.key:hover{
+    background-color: transparent;
+    border-color: transparent;
+    border-width: 0;
+}
+div.aaDialog .message fieldset.scrollable button.key::before{
+    content: '|';
+    display: inline-block;
+    padding: 0 4px;
+    color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset.scrollable button.key:first-child::before{
+    content: none;
+    padding: 0;
+}
+div.aaDialog .message fieldset.scrollable tr.shade{
+    opacity: 0.2;
+}
+div.aaDialog .message fieldset.scrollable tr.shade:hover{
+    background: transparent;
+}
+div.aaDialog .message fieldset.scrollable .gris{
+    display: inline-block;
+    padding: 0 4px;
+    color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset.scrollable button.key:focus .keyboardKey{
+    border-color: var(--color-blue-darker);
+}
+div.aaDialog span.w{
+    display: inline-block;
+    text-align: right;
+}
+div.aaDialog span.w3{
+    min-width: 64px;
+}
+.aa select{
+    margin-top: 1px;
+    margin-bottom: 8px;
+    height: 28px;
+    background: var(--color-light-blue);
+    border: 1px solid #fff;
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
+}
+.aa select:focus{
+    border: 1px solid var(--submit-bg-color);
+}
+.aa select:disabled{
+    background: var(--bg-color);
+    color: var(--form-placeholder-color);
+    color: #ccc;
+    box-shadow: inset 1px 1px 1px transparent;
+}
+.aa button.input,
+.aa button.textarea,
+.aa select,
+.aa textarea,
+.aa input[type="date"],
+.aa input[type="email"],
+.aa input[type="number"],
+.aa input[type="password"],
+.aa input[type="text"]{
+    display: block;
+    margin: 0px;
+    text-decoration: none;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: auto;
+    background: var(--color-light-blue);
+    color: #000;
+    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 3px;
+    border: 1px solid #fff;
+    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
+}
+.aa input[type="date"]::placeholder,
+.aa input[type="email"]::placeholder,
+.aa input[type="number"]::placeholder,
+.aa input[type="password"]::placeholder,
+.aa input[type="text"]::placeholder,
+.aa textarea::placeholder{
+    color: var(--form-placeholder-color);
+    font-style: italic;
+    font-weight: normal;
+    padding-right: 4px;
+}
+.aa input[type="date"]:focus,
+.aa input[type="email"]:focus,
+.aa input[type="number"]:focus,
+.aa input[type="password"]:focus,
+.aa input[type="text"]:focus{
+    border: 1px solid var(--submit-bg-color);
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
+}
+.aa input[type="text"]::placeholder,
+.aa input[type="text"]::-moz-placeholder,
+.aa input[type="text"]::-webkit-placeholder,
+/*.aa input[type="text"]:-ms-input-placeholder,*/
+.aa input[type="text"]::-webkit-input-placeholder{
+    font-style: italic;
+}
+.aa textarea:invalid,
+.aa textarea.invalid,
+.aa input[type="date"]:invalid,
+.aa input[type="date"].invalid,
+.aa input[type="email"]:invalid,
+.aa input[type="email"].invalid,
+.aa input[type="number"]:invalid,
+.aa input[type="number"].invalid,
+.aa input[type="text"]:invalid,
+.aa input[type="text"].invalid{
+    background: #fff0f0;
+    color: #c00;
+    box-shadow: 1px 1px 2px rgba(128,64,64,0.2) inset;
+}
+.aa textarea:invalid:focus,
+.aa textarea.invalid:focus,
+.aa input[type="date"]:invalid:focus,
+.aa input[type="date"].invalid:focus,
+.aa input[type="email"]:invalid:focus,
+.aa input[type="email"].invalid:focus,
+.aa input[type="number"]:invalid:focus,
+.aa input[type="number"].invalid:focus,
+.aa input[type="text"]:invalid:focus,
+.aa input[type="text"].invalid:focus{
+    border: 1px solid #c00;
+}
+.aa textarea:invalid::placeholder,
+.aa textarea.invalid::placeholder,
+.aa input[type="date"]:invalid::placeholder,
+.aa input[type="date"].invalid::placeholder,
+.aa input[type="email"]:invalid::placeholder,
+.aa input[type="email"].invalid::placeholder,
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"].invalid::placeholder,
+.aa input[type="text"]:invalid::placeholder,
+.aa input[type="text"].invalid::placeholder{
+    color: #faa;
+}
+.aa textarea:invalid::placeholder,
+.aa textarea:invalid::-moz-placeholder,
+.aa textarea:invalid::-webkit-placeholder,
+.aa textarea:invalid:-ms-input-placeholder,
+.aa textarea:invalid::-webkit-input-placeholder,
+.aa textarea.invalid::placeholder,
+.aa textarea.invalid::-moz-placeholder,
+.aa textarea.invalid::-webkit-placeholder,
+.aa textarea.invalid:-ms-input-placeholder,
+.aa textarea.invalid::-webkit-input-placeholder,
+
+.aa input[type="date"]:invalid::placeholder,
+.aa input[type="date"]:invalid::-moz-placeholder,
+.aa input[type="date"]:invalid::-webkit-placeholder,
+.aa input[type="date"]:invalid:-ms-input-placeholder,
+.aa input[type="date"]:invalid::-webkit-input-placeholder,
+
+.aa input[type="email"]:invalid::placeholder,
+.aa input[type="email"]:invalid::-moz-placeholder,
+.aa input[type="email"]:invalid::-webkit-placeholder,
+.aa input[type="email"]:invalid:-ms-input-placeholder,
+.aa input[type="email"]:invalid::-webkit-input-placeholder,
+
+.aa input[type="number"]:invalid::placeholder,
+.aa input[type="number"]:invalid::-moz-placeholder,
+.aa input[type="number"]:invalid::-webkit-placeholder,
+.aa input[type="number"]:invalid:-ms-input-placeholder,
+.aa input[type="number"]:invalid::-webkit-input-placeholder,
+
+.aa input[type="text"]:invalid::placeholder,
+.aa input[type="text"]:invalid::-moz-placeholder,
+.aa input[type="text"]:invalid::-webkit-placeholder,
+.aa input[type="text"]:invalid:-ms-input-placeholder,
+.aa input[type="text"]:invalid::-webkit-input-placeholder,
+
+.aa input[type="text"].invalid::placeholder,
+.aa input[type="text"].invalid::-moz-placeholder,
+.aa input[type="text"].invalid::-webkit-placeholder,
+.aa input[type="text"].invalid:-ms-input-placeholder,
+.aa input[type="text"].invalid::-webkit-input-placeholder{
+    color: #faa;
+}
+/* Round buttons */
+.aa button.round{
+    padding: 1px 12px 0 2px;
+    color: var(--color-white);
+    border-radius: 16px;
+    border: 1px solid transparent;
+}
+.aa button.round span.icon{
+    margin-right: 4px;
+    color: var(--submit-bg-color);
+}
+/* Blue */
+.aa button.round.blue{
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+}
+.aa button.round.blue:focus{
+    border-color: var(--dark-color-blue);
+}
+.aa button.round.blue span.icon{
+    color: var(--dark-color-blue);
+}
+/* Green */
+.aa button.round.green{
+    background-color: var(--color-green);
+    border-color: var(--color-green);
+}
+.aa button.round.green:focus{
+    border-color: var(--dark-color-green);
+}
+.aa button.round.green span.icon{
+    color: var(--dark-color-green);
+}
+/* Orange */
+.aa button.round.orange{
+    background-color: var(--color-orange);
+    border-color: var(--color-orange);
+}
+.aa button.round.orange:focus{
+    border-color: var(--dark-color-orange);
+}
+.aa button.round.orange span.icon{
+    color: var(--dark-color-orange);
+}
+/* Red */
+.aa button.round.red{
+    background-color: var(--color-red);
+    border-color: var(--color-red);
+}
+.aa button.round.red:focus{
+    border-color: var(--dark-color-red);
+}
+.aa button.round.red span.icon{
+    color: var(--dark-color-red);
+}
+/* Common */
+.aa button.round:disabled{
+    background-color: var(--color-light-grey);
+    border-color: var(--color-light-grey);
+    color: var(--color-grey);
+    box-shadow: 0 0 0 transparent;
+}
+.aa button.round:disabled span.icon{
+    color: var(--color-grey);
+}
+/* Labels */
+div.aaDialog label.full{
+    display: block;
+    width: 100%;
+}
+div.aaDialog label.right{
+    text-align: right;
+    font-size: 13px;
+}
+div.aaDialog .message button.mixed{
+    margin-left: 4px;
+}
+div.aaDialog label input[type="radio"] + span,
+div.aaDialog label input[type="checkbox"] + span{
+    display: inline-block; padding-left: 4px;
+}
+div.aaDialog label input[type="radio"]:disabled + span,
+div.aaDialog label input[type="checkbox"]:disabled + span{
+    color: #ccc;
+}
+div.aaDialog label input[type="checkbox"].highlighter + span{
+    color: #ccc;
+}
+div.aaDialog label input[type="checkbox"].highlighter:checked + span{
+    color: #666;
+}
+div.aaDialog label select.half,
+div.aaDialog label input[type=email].half,
+div.aaDialog label input[type=number].half,
+div.aaDialog label input[type=password].half,
+div.aaDialog label input[type=text].half{
+    display: inline-block;
+    width: 50%;
+}
+div.aaDialog label.right select.half,
+div.aaDialog label.right input[type=email].half,
+div.aaDialog label.right input[type=number].half,
+div.aaDialog label.right input[type=password].half,
+div.aaDialog label.right input[type=text].half{
+    margin-left: 4px;
+}
+div.aaDialog label > span.half {
+    display: inline-block;
+    width: 50%;
+}
+div.aaDialog label > span.half:first-child {
+    padding-right: .4em;
+    text-align: right;
+}
+.aa label.cooked{
+    display: inline-block;
+    width: fit-content;
+}
+.aa label.cooked.disabled{
+    color: var(--color-grey);
+}
+.aa button.mixed{
+    text-align: left;
+    color: var(--color-gold);
+}
+.aa button.mixed span.fa{
+    margin-right: 4px;
+    color: var(--submit-bg-color);
+    color: var(--color-gold);
+}
+.aa button.mixed:hover span.fa,
+.aa button.mixed:focus span.fa{
+    color: #36e;
+    color: #ba8e4d;
+    color: #862;
+}
+.aa label.cooked input[type=radio],
+.aa label.cooked input[type=checkbox]{
+    display: none;
+}
+.aa button.mixed,
+.aa label.cooked input[type=radio] + button,
+.aa label.cooked input[type=checkbox] + button{
+    border: 0 !important;
+    background: transparent !important;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+.aa label.cooked input[type=radio] + button > span.mixed,
+.aa label.cooked input[type=checkbox] + button > span.mixed,
+.aa label.cooked input[type=radio] + button > span.checked,
+.aa label.cooked input[type=checkbox] + button > span.checked,
+.aa label.cooked input[type=radio] + button > span.disabled,
+.aa label.cooked input[type=checkbox] + button > span.disabled,
+.aa label.cooked input[type=radio] + button > span.unchecked,
+.aa label.cooked input[type=checkbox] + button > span.unchecked{
+    display: none;
+}
+.aa label.cooked input[type=radio] + button > span,
+.aa label.cooked input[type=checkbox] + button > span{
+    color: var(--color-grey);
+}
+.aa label.cooked:hover input[type=radio] + button > span,
+.aa label.cooked:hover input[type=checkbox] + button > span,
+.aa label.cooked input[type=radio] + button:focus > span,
+.aa label.cooked input[type=checkbox] + button:focus > span{
+    color: #aaa;
+}
+.aa label.cooked input[type=radio] + button > span.checked,
+.aa label.cooked input[type=checkbox] + button > span.checked{
+    color: var(--submit-bg-color);
+}
+.aa label.cooked:hover input[type=radio] + button > span.checked,
+.aa label.cooked:hover input[type=checkbox] + button > span.checked,
+.aa label.cooked input[type=radio] + button:focus > span.checked,
+.aa label.cooked input[type=checkbox] + button:focus > span.checked{
+    color:  var(--form-focus-color);
+}
+.aa label.cooked input[type=radio]:disabled + button > span.disabled,
+.aa label.cooked input[type=checkbox]:disabled + button > span.disabled{
+    display: inline-block;
+}
+.aa label.cooked input[type=radio] + button > span.unchecked,
+.aa label.cooked input[type=checkbox] + button > span.unchecked{
+    display: inline-block;
+}
+.aa label.cooked input[type=radio]:checked + button > span.unchecked,
+.aa label.cooked input[type=checkbox]:checked + button > span.unchecked{
+    display: none;
+}
+.aa label.cooked input[type=radio]:checked + button > span.checked,
+.aa label.cooked input[type=checkbox]:checked + button > span.checked{
+    display: inline-block;
+}
+.aa label.cooked input[type=radio]:disabled:checked + button > span.checked,
+.aa label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
+.aa label.cooked input[type=radio]:disabled + button > span,
+.aa label.cooked input[type=checkbox]:disabled + button > span{
+    color: var(--color-grey);
+}
+.aa button.textarea.mixed{
+    height: 120px;
+}
+.aa button.textarea.mixed > div.table{
+    height: 100%;
+    display: table;
+    vertical-align: top;
+}
+.aa button.textarea.mixed > div.table > div.cell{
+    display: table-cell;
+    vertical-align: top;
+}
+.aa button.textarea.mixed,
+.aa button.input.mixed{
+    cursor: pointer;
+    margin-left: 0;
+    font-style: italic;
+    color: var(--color-gold);
+    background: var(--color-light-grey);
+    box-shadow: inset 1px 1px 1px var(--color-grey);
+}
+.aa button.textarea.mixed:focus,
+.aa button.input.mixed:focus{
+    border: 1px solid var(--color-gold);
+}
+.aa button.textarea.mixed span.fa,
+.aa button.input.mixed span.fa{
+    color: var(--color-gold);
+}
+.aa button.textarea.mixed:hover span.fa,
+.aa button.textarea.mixed:focus span.fa,
+.aa button.input.mixed:hover span.fa,
+.aa button.input.mixed:focus span.fa{
+    color: #862;
+}
+.aa button.mixed:disabled,
+.aa button.textarea.mixed:disabled span.fa,
+.aa button.input.mixed:disabled span.fa{
+    cursor: default;
+    color: var(--color-grey);
+}
+div.aaDialog div.buttons{
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-color);
+    background: transparent;
+    text-align: center;
+}
+div.aaDialog div.buttons.fullscreen{
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+}
+div.aaDialog div.buttons.with-details{
+    width: 75%;
+}
+.aa button,
+.aa input[type="submit"],
+.aa input[type="reset"],
+.aa input[type="button"]{
+    display: inline-block;
+    margin: 0px 2px;
+    padding: 4px 16px;
+    min-width: 96px;
+    background: var(--submit-bg-color);
+    text-align: center;
+    color: #fff;
+    border-radius: 2px;
+    border: 1px solid var(--submit-bg-color);
+}
+.aa input[type="submit"]:disabled{
+    background: var(--button-disabled-bg-color);
+    color: var(--button-disabled-color);
+    border: 1px solid var(--button-disabled-bg-color);
+    text-shadow: 0px 0px 0px transparent;
+}
+.aa input[type="submit"]:disabled:hover,
+.aa input[type="submit"]:disabled:focus{
+    border: 1px solid var(--button-disabled-bg-color);
+}
+.aa button:hover,
+.aa button:focus,
+.aa input[type="submit"]:hover,
+.aa input[type="submit"]:focus,
+.aa input[type="button"]:hover,
+.aa input[type="button"]:focus{
+    background: var(--submit-bg-color);
+    border-color: var(--color-blue-darker);
+}
+.aa button,
+.aa button.reset,
+.aa input[type="reset"],
+.aa input[type="button"],
+.aa input[type="button"].reset{
+    background: var(--reset-bg-color);
+    color: var(--reset-color);
+    color: var(--button-color);
+    border-color: var(--reset-bg-color);
+    text-shadow: 0px 0px 0px transparent;
+}
+.aa button:hover,
+.aa button:focus,
+.aa button.reset:hover,
+.aa button.reset:focus,
+.aa input[type="reset"]:hover,
+.aa input[type="reset"]:focus,
+.aa input[type="button"]:hover,
+.aa input[type="button"]:focus,
+.aa input[type="button"].reset:hover,
+.aa input[type="button"].reset:focus{
+    border-color: #ddd;
+    background: #ddd;
+}
+.aa button[type=submit]:hover,
+.aa button[type=submit]:focus{
+    background: var(--submit-bg-color);
+    border-color: var(--color-blue-darker);
+}
+.aa input[type=submit]:disabled,
+.aa button[type=submit]:disabled{
+    color: var(--button-disabled-color);
+    background: var(--button-disabled-bg-color);
+    border-color: var(--button-disabled-bg-color);
+    box-shadow: 0 0 0 transparent;
+}
+div.aaDialog div.message div.grid{
+    display: table;
+}
+div.aaDialog div.message div.row{
+    display: table-row;
+}
+div.aaDialog div.message div.row.hidden{
+    display: none;
+}
+div.aaDialog div.message div.grid > div.row > div.cell{
+    display: table-cell;
+    padding-left: 8px;
+    /*min-width: 216px;*/
+}
+div.aaDialog div.message div.grid > div.row > div.cell:first-child{
+    padding-left: 0px;
+    text-align: right;
+    min-width: 216px;
+}
+div.aaDialog div.message div.grid > div.row > div.cell textarea,
+div.aaDialog div.message div.grid > div.row > div.cell input[type=password],
+div.aaDialog div.message div.grid > div.row > div.cell input[type=number],
+div.aaDialog div.message div.grid > div.row > div.cell input[type=text]{
+    min-width: 192px;
+    min-width: 216px;
+}
+div.aaDialog div.message div.grid > div.row > div.cell select{
+    width: 100%;
+}
+
+/* --------------------------------
+Progress:
+-------------------------------- */
+
+div.aaDialog.progress {
+    padding: 16px;
+}
+div.aaDialog.progress div.item {
+    display: flex;
+    position: relative;
+}
+div.aaDialog.progress div.item input[type=range] {
+    -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+    flex: none;
+}
+div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb { /* Special styling for WebKit/Blink */
+    -webkit-appearance: none;
+    margin-top: 0px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+}
+div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb {
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.progress div.item input[type=range]::-moz-range-thumb { /* All the same stuff for Firefox */
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.progress div.item input[type=range]::-ms-thumb { /* All the same stuff for IE */
+    width: 0;
+    height: 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/*Chrome*/
+@media screen and (-webkit-min-device-pixel-ratio:0) {
     div.aaDialog.progress div.item input[type=range] {
-        -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
-        width: 100%; /* Specific width is required for Firefox. */
-        background: transparent; /* Otherwise white in Chrome */
-        flex: none;
-    }
-    div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb { /* Special styling for WebKit/Blink */
+        overflow: hidden;
+        width: 320px;
         -webkit-appearance: none;
-        margin-top: 0px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+        background-color: var(--color-light-grey);
+    }
+    div.aaDialog.progress div.item input[type=range]::-webkit-slider-runnable-track {
+        height: 4px;
+        -webkit-appearance: none;
+        color: #13bba4;
+        margin-top: -1px;
     }
     div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
         width: 0;
         height: 4px;
         background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        box-shadow: -320px 0 0 320px var(--submit-bg-color);
     }
-    div.aaDialog.progress div.item input[type=range]::-moz-range-thumb { /* All the same stuff for Firefox */
-        width: 0;
-        height: 4px;
-        background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    div.aaDialog.progress div.item input[type=range].complete::-webkit-slider-thumb {
+        box-shadow: -320px 0 0 320px var(--color-green);
     }
-    div.aaDialog.progress div.item input[type=range]::-ms-thumb { /* All the same stuff for IE */
-        width: 0;
-        height: 4px;
-        background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
+}
+/** FF*/
+div.aaDialog.progress div.item input[type=range]::-moz-range-progress {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.progress div.item input[type=range].complete::-moz-range-progress {
+    background-color: var(--color-green);
+}
+div.aaDialog.progress div.item input[type=range]::-moz-range-track {  
+    background-color: var(--color-light-grey);
+}
+/* IE*/
+div.aaDialog.progress div.item input[type=range]::-ms-fill-lower {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.progress div.item input[type=range].complete::-ms-fill-lower {
+    background-color: var(--color-green);
+}
+div.aaDialog.progress div.item input[type=range]::-ms-fill-upper {  
+    background-color: var(--color-light-grey);
+}
+div.aaDialog.progress div.item div:first-child,
+div.aaDialog.progress div.item div:last-child {
+    flex: auto;
+    display: inline-block;
+}
+div.aaDialog.progress div.item div.percent span {
+    text-align: right;
+    display: inline-block;
+    width: 48px;
+}
+div.aaDialog.progress div.item div.percent span::after {
+    content: ' %';
+    color: var(--color-grey);
+}
+div.aaDialog.progress div.item label {
+    display: flex;
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    background: #faa;
+    border-radius: 2px;
+}
+div.aaDialog.progress div.item:hover label {
+    display: flex;
+}
+div.aaDialog.progress div.item label > div {
+    position: relative;
+}
+div.aaDialog.progress div.item label > div > div{
+    position: absolute;
+    top: 0;
+    left: 4px;
+    padding: 2px 8px;
+    background: var(--dark-color-bg);
+    color: var(--dark-color);
+}
 
-    /*Chrome*/
-    @media screen and (-webkit-min-device-pixel-ratio:0) {
-        div.aaDialog.progress div.item input[type=range] {
-            overflow: hidden;
-            width: 320px;
-            -webkit-appearance: none;
-            background-color: var(--color-light-grey);
-        }
-        div.aaDialog.progress div.item input[type=range]::-webkit-slider-runnable-track {
-            height: 4px;
-            -webkit-appearance: none;
-            color: #13bba4;
-            margin-top: -1px;
-        }
-        div.aaDialog.progress div.item input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 0;
-            height: 4px;
-            background: #fff;
-            box-shadow: -320px 0 0 320px var(--submit-bg-color);
-        }
-        div.aaDialog.progress div.item input[type=range].complete::-webkit-slider-thumb {
-            box-shadow: -320px 0 0 320px var(--color-green);
-        }
-    }
-    /** FF*/
-    div.aaDialog.progress div.item input[type=range]::-moz-range-progress {
-        background-color: var(--submit-bg-color); 
-    }
-    div.aaDialog.progress div.item input[type=range].complete::-moz-range-progress {
-        background-color: var(--color-green);
-    }
-    div.aaDialog.progress div.item input[type=range]::-moz-range-track {  
-        background-color: var(--color-light-grey);
-    }
-    /* IE*/
-    div.aaDialog.progress div.item input[type=range]::-ms-fill-lower {
-        background-color: var(--submit-bg-color); 
-    }
-    div.aaDialog.progress div.item input[type=range].complete::-ms-fill-lower {
-        background-color: var(--color-green);
-    }
-    div.aaDialog.progress div.item input[type=range]::-ms-fill-upper {  
-        background-color: var(--color-light-grey);
-    }
-    div.aaDialog.progress div.item div:first-child,
-    div.aaDialog.progress div.item div:last-child {
-        flex: auto;
-        display: inline-block;
-    }
-    div.aaDialog.progress div.item div.percent span {
-        text-align: right;
-        display: inline-block;
-        width: 48px;
-    }
-    div.aaDialog.progress div.item div.percent span::after {
-        content: ' %';
-        color: var(--color-grey);
-    }
-    div.aaDialog.progress div.item label {
-        display: flex;
-        display: none;
-        position: absolute;
-        top: 0;
-        right: 0;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: fit-content;
-        background: #faa;
-        border-radius: 2px;
-    }
-    div.aaDialog.progress div.item:hover label {
-        display: flex;
-    }
-    div.aaDialog.progress div.item label > div {
-        position: relative;
-    }
-    div.aaDialog.progress div.item label > div > div{
-        position: absolute;
-        top: 0;
-        left: 4px;
-        padding: 2px 8px;
-        background: var(--dark-color-bg);
-        color: var(--dark-color);
-    }
+/* --------------------------------
+Tooltip:
+-------------------------------- */
 
-    /* --------------------------------
-    Tooltip:
-    -------------------------------- */
+.aa .tooltip-container {
+    z-index: 8;
+    position: absolute;
+    display: block;
+}
+.aa .tooltip-container.left,
+.aa .tooltip-container.right {
+    top: 0;
+}
+.aa .tooltip-container.bottom,
+.aa .tooltip-container.top {
+    left: 0;
+}
+.aa .tooltip-container.right {
+    right: 0;
+}
+.aa .tooltip-container.left {
+    left: 0;
+}
+.aa .tooltip-container.top {
+    top: 0;
+}
+.aa .tooltip-container.bottom {
+    bottom: 0;
+}
+.aa .tooltip-container > div.tooltip-anchor {
+    position: relative;
+}
+.aa .tooltip-container > div.tooltip-anchor > div.tooltip {
+    position: absolute;
+    display: flex;
+    flex-wrap: nowrap;
+}
+.aa .tooltip-container.right > div.tooltip-anchor > div.tooltip {
+    left: 4px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+.aa .tooltip-container.left > div.tooltip-anchor > div.tooltip {
+    right: 4px;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+}
+.aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.top > div.tooltip-anchor > div.tooltip {
+    bottom: 24px;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+}
+.aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
+    top: 4px;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.aa .tooltip-container.top > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
+    align-items: flex-start;
+}
+.aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
+.aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip {
+    right: -32px;
+    align-items: flex-end;
+}
+.aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.arrow {
+    width: 1px;
+    height: 1px;
+}
+.aa .tooltip-container.left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
+    display: inline-block;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+.aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
+    display: block;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+.aa .tooltip-container.left > div.tooltip-anchor > div.tooltip > div.arrow {
+    border-left: 8px solid var(--tooltip-bg);
+}
+.aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
+    border-right: 8px solid var(--tooltip-bg);
+}
+.aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow {
+    border-top: 8px solid var(--tooltip-bg);
+}
+.aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
+    border-bottom: 8px solid var(--tooltip-bg);
+}
+.aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow {
+    margin-right: 16px;
+}
+.aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow,
+.aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow {
+    margin-left: 8px;
+}
+.aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text {
+    display: inline-block;
+    padding: 2px 8px;
+    white-space: nowrap;
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    border-radius: 2px;
+}
+.aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text:after {
+    padding-left: 16px;
+    content: attr(data-shortcut);
+    color: var(--tooltip-grey);
+}
+.aa button > .tooltip-container,
+.aa button > .tooltip-container {
+    display: none;
+}
+.aa button:hover > .tooltip-container,
+.aa button:hover > .tooltip-container,
+.aa button:focus > .tooltip-container,
+.aa button:focus > .tooltip-container {
+    display: block;
+}
+.aa button:focus > .tooltip-container.hidden {
+    display: none;
+}
 
-    .aa .tooltip-container {
-        z-index: 8;
-        position: absolute;
-        display: block;
-    }
-    .aa .tooltip-container.left,
-    .aa .tooltip-container.right {
-        top: 0;
-    }
-    .aa .tooltip-container.bottom,
-    .aa .tooltip-container.top {
-        left: 0;
-    }
-    .aa .tooltip-container.right {
-        right: 0;
-    }
-    .aa .tooltip-container.left {
-        left: 0;
-    }
-    .aa .tooltip-container.top {
-        top: 0;
-    }
-    .aa .tooltip-container.bottom {
-        bottom: 0;
-    }
-    .aa .tooltip-container > div.tooltip-anchor {
-        position: relative;
-    }
-    .aa .tooltip-container > div.tooltip-anchor > div.tooltip {
-        position: absolute;
-        display: flex;
-        flex-wrap: nowrap;
-    }
-    .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip {
-        left: 4px;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
-    }
-    .aa .tooltip-container.left > div.tooltip-anchor > div.tooltip {
-        right: 4px;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        align-items: center;
-    }
-    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip {
-        bottom: 24px;
-        flex-direction: column-reverse;
-        justify-content: flex-end;
-    }
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
-        top: 4px;
-        flex-direction: column;
-        justify-content: flex-start;
-    }
-    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip {
-        align-items: flex-start;
-    }
-    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip,
-    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip {
-        right: -32px;
-        align-items: flex-end;
-    }
-    .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.arrow {
-        width: 1px;
-        height: 1px;
-    }
-    .aa .tooltip-container.left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
-        display: inline-block;
-        border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent;
-    }
-    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
-        display: block;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-    }
-    .aa .tooltip-container.left > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-left: 8px solid var(--tooltip-bg);
-    }
-    .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-right: 8px solid var(--tooltip-bg);
-    }
-    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-top: 8px solid var(--tooltip-bg);
-    }
-    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow {
-        border-bottom: 8px solid var(--tooltip-bg);
-    }
-    .aa .tooltip-container.top-left > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom-left > div.tooltip-anchor > div.tooltip > div.arrow {
-        margin-right: 16px;
-    }
-    .aa .tooltip-container.top > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.top-right > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom > div.tooltip-anchor > div.tooltip > div.arrow,
-    .aa .tooltip-container.bottom-right > div.tooltip-anchor > div.tooltip > div.arrow {
-        margin-left: 8px;
-    }
-    .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text {
-        display: inline-block;
-        padding: 2px 8px;
-        white-space: nowrap;
-        background: var(--tooltip-bg);
-        color: var(--tooltip-text);
-        border-radius: 2px;
-    }
-    .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text:after {
-        padding-left: 16px;
-        content: attr(data-shortcut);
-        color: var(--tooltip-grey);
-    }
-    .aa button > .tooltip-container,
-    .aa button > .tooltip-container {
-        display: none;
-    }
-    .aa button:hover > .tooltip-container,
-    .aa button:hover > .tooltip-container,
-    .aa button:focus > .tooltip-container,
-    .aa button:focus > .tooltip-container {
-        display: block;
-    }
-    .aa button:focus > .tooltip-container.hidden {
-        display: none;
-    }
+/* Selection matrix */
 
-    /* Selection matrix */
+section.SelectionMatrix {
+    --item-top: rgba(64,128,255,.1);
+    --item-left: rgba(64,128,255,.2);
+    --item-right: rgba(64,128,255,.3);
+    --item-top-selected: rgba(64,128,255,.8);
+    --item-left-selected: rgba(64,128,255,.9);
+    --item-right-selected: rgba(64,128,255,1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,.8);
 
-    section.SelectionMatrix {
-        --item-top: rgba(64,128,255,.1);
-        --item-left: rgba(64,128,255,.2);
-        --item-right: rgba(64,128,255,.3);
-        --item-top-selected: rgba(64,128,255,.8);
-        --item-left-selected: rgba(64,128,255,.9);
-        --item-right-selected: rgba(64,128,255,1);
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(255,255,255,.8);
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+}
+section.SelectionMatrix div.diamond {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
 
-        display: flex;
-        flex-flow: column nowrap;
-        justify-content: center;
-        align-items: center;
-    }
-    section.SelectionMatrix div.diamond {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: center;
-        align-items: center;
+    position: relative;
+}
 
-        position: relative;
-    }
-    
-    section.SelectionMatrix div.diamond > span.diamond {
-        position: absolute;
-        display: inline-block;
-        border-style: solid;
-        border-color: transparent;
-    }
+section.SelectionMatrix div.diamond > span.diamond {
+    position: absolute;
+    display: inline-block;
+    border-style: solid;
+    border-color: transparent;
+}
 
-    section.SelectionMatrix div.diamond > span.diamond.top-left {
-        top: 0;
-        left: -12px;
-        border-width: 6px 12px 6px 0px;
-        border-right-color: var(--item-top);
-    }
-    section.SelectionMatrix div.diamond > span.diamond.top-right {
-        top: 0;
-        right: -12px;
-        border-width: 6px 0px 6px 12px;
-        border-left-color: var(--item-top);
-    }
-    section.SelectionMatrix div.diamond > span.diamond.left,
-    section.SelectionMatrix div.diamond > span.diamond.right {
-        height: 16px;
-    }
-    section.SelectionMatrix div.diamond > span.diamond.left {
-        top: 6px;
-        left: -12px;
-        border-width: 6px 0 0 12px;
-        border-left-color: var(--item-left);
-    }
-    section.SelectionMatrix div.diamond > span.diamond.right {
-        top: 6px;
-        right: -12px;
-        border-width: 6px 12px 0 0;
-        border-right-color: var(--item-right);
-    }
-    section.SelectionMatrix div.diamond > span.diamond.bottom-left {
-        top: 22px;
-        left: -12px;
-        border-width: 6px 0 0 12px;
-        border-top-color: var(--item-left);
-    }
-    section.SelectionMatrix div.diamond > span.diamond.bottom-right {
-        top: 22px;
-        right: -12px;
-        border-width: 6px 12px 0 0;
-        border-top-color: var(--item-right);
-    }
+section.SelectionMatrix div.diamond > span.diamond.top-left {
+    top: 0;
+    left: -12px;
+    border-width: 6px 12px 6px 0px;
+    border-right-color: var(--item-top);
+}
+section.SelectionMatrix div.diamond > span.diamond.top-right {
+    top: 0;
+    right: -12px;
+    border-width: 6px 0px 6px 12px;
+    border-left-color: var(--item-top);
+}
+section.SelectionMatrix div.diamond > span.diamond.left,
+section.SelectionMatrix div.diamond > span.diamond.right {
+    height: 16px;
+}
+section.SelectionMatrix div.diamond > span.diamond.left {
+    top: 6px;
+    left: -12px;
+    border-width: 6px 0 0 12px;
+    border-left-color: var(--item-left);
+}
+section.SelectionMatrix div.diamond > span.diamond.right {
+    top: 6px;
+    right: -12px;
+    border-width: 6px 12px 0 0;
+    border-right-color: var(--item-right);
+}
+section.SelectionMatrix div.diamond > span.diamond.bottom-left {
+    top: 22px;
+    left: -12px;
+    border-width: 6px 0 0 12px;
+    border-top-color: var(--item-left);
+}
+section.SelectionMatrix div.diamond > span.diamond.bottom-right {
+    top: 22px;
+    right: -12px;
+    border-width: 6px 12px 0 0;
+    border-top-color: var(--item-right);
+}
 
-    section.SelectionMatrix div.diamond.selected > span.diamond.top-left {
-        border-right-color: var(--item-top-selected);
-    }
-    section.SelectionMatrix div.diamond.selected > span.diamond.top-right {
-        border-left-color: var(--item-top-selected);
-    }
-    section.SelectionMatrix div.diamond.selected > span.diamond.left {
-        border-left-color: var(--item-left-selected);
-    }
-    section.SelectionMatrix div.diamond.selected > span.diamond.right {
-        border-right-color: var(--item-right-selected);
-    }
-    section.SelectionMatrix div.diamond.selected > span.diamond.bottom-left {
-        border-top-color: var(--item-left-selected);
-    }
-    section.SelectionMatrix div.diamond.selected > span.diamond.bottom-right {
-        border-top-color: var(--item-right-selected);
-    }
+section.SelectionMatrix div.diamond.selected > span.diamond.top-left {
+    border-right-color: var(--item-top-selected);
+}
+section.SelectionMatrix div.diamond.selected > span.diamond.top-right {
+    border-left-color: var(--item-top-selected);
+}
+section.SelectionMatrix div.diamond.selected > span.diamond.left {
+    border-left-color: var(--item-left-selected);
+}
+section.SelectionMatrix div.diamond.selected > span.diamond.right {
+    border-right-color: var(--item-right-selected);
+}
+section.SelectionMatrix div.diamond.selected > span.diamond.bottom-left {
+    border-top-color: var(--item-left-selected);
+}
+section.SelectionMatrix div.diamond.selected > span.diamond.bottom-right {
+    border-top-color: var(--item-right-selected);
+}
 
-    .aa table.diff {
-        --radius: 6px;
-        margin: 0 auto;
-        border-spacing: 0;
-    }
-    .aa table.diff tr > th {
-        background: #eee;
-    }
-    .aa table.diff > thead > tr > th {
-        padding: var(--radius) 0;
-        text-align: center;
-        vertical-align: bottom;
-        border-bottom: 1px solid var(--color-grey-darker);
-    }
-    .aa table.diff > thead > tr > th:first-child {
-        border-top-left-radius: var(--radius);
-    }
-    .aa table.diff > thead > tr > th:last-child {
-        border-top-right-radius: var(--radius);
-    }
-    .aa table.diff > thead > tr > th:first-child {
-        border-bottom-width: 0px;
-    }
-    .aa table.diff > tbody > tr > th {
-        padding: var(--radius);
-        white-space: nowrap;
-        text-align: right;
-        border-right: 1px solid var(--color-grey-darker);
-    }
-    .aa table.diff > tbody > tr:last-child > th:first-child {
-        border-bottom-left-radius: var(--radius);
-    }
-    .aa table.diff > tbody > tr:last-child > td:last-child {
-        border-bottom-right-radius: var(--radius);
-    }
-    .aa table.diff tr > th > span::after {
-        content: attr(data-index);
-        color: var(--color-orange);
-    }
-    .aa table.diff thead > tr > th > span::after {
-        display: block;
-    }
-    .aa table.diff td {
-        padding: 0;
-        width: 28px;
-        height: 28px;
-        background: #eee;
-        vertical-align: middle;
-        text-align: center;
-    }
-    .aa table.diff td {
-        color: var(--color-grey);
-    }
-    .aa table.diff td.path {
-        opacity: .5;
-        background: var(--color-blue-lighter);
-        color: var(--color-blue-darker);
-    }
-    .aa table.diff td.selected {
-        background: var(--color-blue-lighter);
-    }
-    .aa table.diff td.matched {
-        opacity: 1;
-        color: #000;
-    }
-    .aa table.diff td.removed {
-        background: var(--error-bg-color);
-        color: var(--error-color);
-    }
-    .aa table.diff td.added {
-        background: var(--color-green-lighter);
-        color: var(--color-green-darker);
-    }
-    .aa .diff.lines {
-        display: block;
-        margin: 16px auto;
-        width: fit-content;
-        color: initial;
-        color: var(--color-black);
-    }
-    .aa .diff.lines * {
-        font-family: Courier New;
-    }
-    .aa .diff.lines > .line {
-        margin: 0;
-        padding: 0 4px 0 8px;
-        line-height: 1.5;
-        display: block;
-        background: #eee;
-    }
-    .aa .diff.lines > .line:before {
-        content: ' ';
-        display: inline-block;
-        margin-right: 2px;
-        padding-right: 8px;
-        border-right: 1px solid #bbb;
-    }
-    .aa .diff.lines > .added {
-        background: var(--color-green-lighter);
-/*        color: var(--color-green-darker);*/
-    }
-    .aa .diff.lines > .added:before {
-        content: '+';
-        border-right-color: var(--color-green);
-    }
-    .aa .diff.lines > .removed {
-        background: var(--error-bg-color);
-        color: var(--error-color);
-    }
-    .aa .diff.lines > .removed:before {
-        content: '-';
-        border-right-color: var(--color-red);
-    }
+.aa table.diff {
+    --radius: 6px;
+    --sep-color: var(--color-grey);
 
-    /* --------------------------------
-    Dark version:
-    -------------------------------- */
+    margin: 0 auto;
+    border-spacing: 0;
+}
+.aa table.diff tr > th {
+    background: #eee;
+}
+.aa table.diff > thead > tr > th {
+    padding: var(--radius) 0;
+    text-align: center;
+    vertical-align: bottom;
+    border-bottom: 1px solid var(--sep-color);
+}
+.aa table.diff > thead > tr > th:first-child {
+    border-top-left-radius: var(--radius);
+}
+.aa table.diff > thead > tr > th:last-child {
+    border-top-right-radius: var(--radius);
+}
+.aa table.diff > thead > tr > th:first-child {
+    border-bottom-width: 0px;
+}
+.aa table.diff > tbody > tr > th {
+    padding: var(--radius);
+    white-space: nowrap;
+    text-align: right;
+    border-right: 1px solid var(--sep-color);
+}
+.aa table.diff > tbody > tr:last-child > th:first-child {
+    border-bottom-left-radius: var(--radius);
+}
+.aa table.diff > tbody > tr:last-child > td:last-child {
+    border-bottom-right-radius: var(--radius);
+}
+.aa table.diff tr > th > span::after {
+    content: attr(data-index);
+    color: var(--color-orange);
+}
+.aa table.diff thead > tr > th > span::after {
+    display: block;
+}
+.aa table.diff td {
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    background: #eee;
+    vertical-align: middle;
+    text-align: center;
+}
+.aa table.diff td {
+    color: var(--color-grey);
+}
+.aa table.diff td.path {
+    opacity: .5;
+    background: var(--color-blue-lighter);
+    color: var(--color-blue-darker);
+}
+.aa table.diff td.selected {
+    background: var(--color-blue-lighter);
+}
+.aa table.diff td.matched {
+    color: #000;
+}
+.aa table.diff td.deleted {
+    opacity: .5;
+    background: var(--error-bg-color);
+    color: var(--error-color);
+}
+.aa table.diff td.inserted {
+    opacity: .5;
+    background: var(--color-green-lighter);
+    color: var(--color-green-darker);
+}
+.aa table.diff td.deleted.inserted {
+    opacity: .5;
+    background: #aabe88;
+    color: #718e49;
+}
+.aa table.diff td.matched {
+    opacity: 1;
+}
 
-    .aa.dark.bg.shade,
-    .aa.dark .bg.shade{
-        background-color: rgba(255,255,255,0.4);
-    }
-    div.aaDialog.dark{
-        background: var(--dark-color-bg);
-        color: var(--dark-color);
-    }
-    div.aaDialog.dark form div.buttons{
-        background-color: var(--dark-color-bg);
-    }
-    div.aaDialog.dark h2{
-        color: #fff;
-    }
-    div.aaDialog.dark div.menu{
-        background: transparent;
-    }
-    div.aaDialog.dark div.message{
-        background: transparent;
-        border-top: 1px solid transparent;
-        border-bottom: 1px solid transparent;
-    }
-    div.aaDialog.dark div.message hr{
-        border-top: 1px solid #333;
-    }
-    .aa.dark textarea,
-    .aa.dark input[type="password"],
-    .aa.dark input[type="number"],
-    .aa.dark input[type="email"],
-    .aa.dark input[type="text"]{
-        background: #111;
-        color: var(--submit-bg-color);
-        color: var(--color-white);
-        border: 1px solid #222;
-        box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2), inset -1px -1px 0px #444;
-    }
-    .aa.dark textarea:focus,
-    .aa.dark input[type="password"]:focus,
-    .aa.dark input[type="number"]:focus,
-    .aa.dark input[type="email"]:focus,
-    .aa.dark input[type="text"]:focus{
-        border: 1px solid var(--submit-bg-color);
-        box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2);
-    }
-    .aa.dark div.buttons{
-        background: transparent;
-    }
-    .aa.dark button,
-    .aa.dark button[type="reset"],
-    .aa.dark input[type="reset"],
-    .aa.dark input[type="button"],
-    .aa.dark button.reset,
-    .aa.dark button[type="reset"],
-    .aa.dark input[type="reset"],
-    .aa.dark input[type="button"].reset{
-        background: var(--dark-color-grey);
-        color: var(--dark-button-disabled-color);
-        border-color: var(--dark-color-grey);
-    }
-    .aa.dark button[type="submit"]:hover,
-    .aa.dark button[type="submit"]:focus,
-    .aa.dark input[type="submit"]:hover,
-    .aa.dark input[type="submit"]:focus,
-    .aa.dark input[type="button"]:hover,
-    .aa.dark input[type="button"]:focus{
-        border: 1px solid var(--form-placeholder-color);
-        box-shadow: 0px 0px 1px var(--form-placeholder-color);
-    }
-    .aa.dark button:hover,
-    .aa.dark button:focus,
-    .aa.dark button[type="reset"]:hover,
-    .aa.dark button[type="reset"]:focus,
-    .aa.dark input[type="reset"]:hover,
-    .aa.dark input[type="reset"]:focus,
-    .aa.dark input[type="button"]:hover,
-    .aa.dark input[type="button"]:focus,
-    .aa.dark button.reset:hover,
-    .aa.dark button.reset:focus,
-    .aa.dark button[type="reset"].reset:hover,
-    .aa.dark button[type="reset"].reset:focus,
-    .aa.dark input[type="reset"].reset:hover,
-    .aa.dark input[type="reset"].reset:focus,
-    .aa.dark input[type="button"].reset:hover,
-    .aa.dark input[type="button"].reset:focus{
-        border-color: #555;
-        background-color: #555;
-    }
-    .aa.dark button.btn-green,
-    .aa.dark input[type="button"].btn-green{
-        color: #fff;
-        background-color: var(--color-green);
-        border-color: var(--color-green);
-    }
-    div.aaDialog.dark .message fieldset{
-        border-color: var(--dark-button-disabled-bg-color);
-    }
-    div.aaDialog.dark .message fieldset legend{
-    }
-    div.aaDialog.dark .message fieldset legend label{
-        color: var(--dark-submit-bg-color);
-    }
-    div.aaDialog.dark .message fieldset legend label:first-child{
-        border-left-color: var(--dark-button-disabled-bg-color);
-    }
-    div.aaDialog.dark .message fieldset legend label:last-child{
-    }
-    div.aaDialog.dark .message fieldset legend label input[type="radio"]{
-    }
-    div.aaDialog.dark .message fieldset legend label input[type="radio"] + span{
-        background: #333;
-        color: #888;
-        border-color: var(--dark-button-disabled-bg-color);
-        border-left-color: transparent;
-    }
-    div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
-    }
-    div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"] + span{
-    }
-    div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
-    }
-    div.aaDialog.dark .message fieldset legend label input[type="radio"] + span:hover{
-        color: var(--dark-submit-bg-color);
-        color: #fff;
-    }
-    div.aaDialog.dark .message fieldset legend label input[type="radio"]:checked + span{
-        background-color: var(--dark-submit-bg-color);
-        color: #fff;
-        border-color: var(--dark-submit-bg-color);
-    }
-    div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"]:checked + span{
-    }
+/* --------------------------------
+Dark version:
+-------------------------------- */
 
+.aa.dark.bg.shade,
+.aa.dark .bg.shade{
+    background-color: rgba(255,255,255,0.4);
+}
+div.aaDialog.dark{
+    background: var(--dark-color-bg);
+    color: var(--dark-color);
+}
+div.aaDialog.dark form div.buttons{
+    background-color: var(--dark-color-bg);
+}
+div.aaDialog.dark h2{
+    color: #fff;
+}
+div.aaDialog.dark div.menu{
+    background: transparent;
+}
+div.aaDialog.dark div.message{
+    background: transparent;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+}
+div.aaDialog.dark div.message hr{
+    border-top: 1px solid #333;
+}
+.aa.dark textarea,
+.aa.dark input[type="password"],
+.aa.dark input[type="number"],
+.aa.dark input[type="email"],
+.aa.dark input[type="text"]{
+    background: #111;
+    color: var(--submit-bg-color);
+    color: var(--color-white);
+    border: 1px solid #222;
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2), inset -1px -1px 0px #444;
+}
+.aa.dark textarea:focus,
+.aa.dark input[type="password"]:focus,
+.aa.dark input[type="number"]:focus,
+.aa.dark input[type="email"]:focus,
+.aa.dark input[type="text"]:focus{
+    border: 1px solid var(--submit-bg-color);
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2);
+}
+.aa.dark div.buttons{
+    background: transparent;
+}
+.aa.dark button,
+.aa.dark button[type="reset"],
+.aa.dark input[type="reset"],
+.aa.dark input[type="button"],
+.aa.dark button.reset,
+.aa.dark button[type="reset"],
+.aa.dark input[type="reset"],
+.aa.dark input[type="button"].reset{
+    background: var(--dark-color-grey);
+    color: var(--dark-button-disabled-color);
+    border-color: var(--dark-color-grey);
+}
+.aa.dark button[type="submit"]:hover,
+.aa.dark button[type="submit"]:focus,
+.aa.dark input[type="submit"]:hover,
+.aa.dark input[type="submit"]:focus,
+.aa.dark input[type="button"]:hover,
+.aa.dark input[type="button"]:focus{
+    border: 1px solid var(--form-placeholder-color);
+    box-shadow: 0px 0px 1px var(--form-placeholder-color);
+}
+.aa.dark button:hover,
+.aa.dark button:focus,
+.aa.dark button[type="reset"]:hover,
+.aa.dark button[type="reset"]:focus,
+.aa.dark input[type="reset"]:hover,
+.aa.dark input[type="reset"]:focus,
+.aa.dark input[type="button"]:hover,
+.aa.dark input[type="button"]:focus,
+.aa.dark button.reset:hover,
+.aa.dark button.reset:focus,
+.aa.dark button[type="reset"].reset:hover,
+.aa.dark button[type="reset"].reset:focus,
+.aa.dark input[type="reset"].reset:hover,
+.aa.dark input[type="reset"].reset:focus,
+.aa.dark input[type="button"].reset:hover,
+.aa.dark input[type="button"].reset:focus{
+    border-color: #555;
+    background-color: #555;
+}
+.aa.dark button.btn-green,
+.aa.dark input[type="button"].btn-green{
+    color: #fff;
+    background-color: var(--color-green);
+    border-color: var(--color-green);
+}
+div.aaDialog.dark .message fieldset{
+    border-color: var(--dark-button-disabled-bg-color);
+}
+div.aaDialog.dark .message fieldset legend{
+}
+div.aaDialog.dark .message fieldset legend label{
+    color: var(--dark-submit-bg-color);
+}
+div.aaDialog.dark .message fieldset legend label:first-child{
+    border-left-color: var(--dark-button-disabled-bg-color);
+}
+div.aaDialog.dark .message fieldset legend label:last-child{
+}
+div.aaDialog.dark .message fieldset legend label input[type="radio"]{
+}
+div.aaDialog.dark .message fieldset legend label input[type="radio"] + span{
+    background: #333;
+    color: #888;
+    border-color: var(--dark-button-disabled-bg-color);
+    border-left-color: transparent;
+}
+div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
+}
+div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"] + span{
+}
+div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
+}
+div.aaDialog.dark .message fieldset legend label input[type="radio"] + span:hover{
+    color: var(--dark-submit-bg-color);
+    color: #fff;
+}
+div.aaDialog.dark .message fieldset legend label input[type="radio"]:checked + span{
+    background-color: var(--dark-submit-bg-color);
+    color: #fff;
+    border-color: var(--dark-submit-bg-color);
+}
+div.aaDialog.dark .message fieldset legend label:first-child input[type="radio"]:checked + span{
+}
+
+div.aaDialog.dark.progress div.item input[type=range]::-webkit-slider-thumb {
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.dark.progress div.item input[type=range]::-moz-range-thumb { /* All the same stuff for Firefox */
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+div.aaDialog.dark.progress div.item input[type=range]::-ms-thumb { /* All the same stuff for IE */
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/*Chrome*/
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    div.aaDialog.dark.progress div.item input[type=range] {
+        background-color: var(--dark-color-bg-lighter);
+    }
+    div.aaDialog.dark.progress div.item input[type=range]::-webkit-slider-runnable-track {
+        color: #13bba4;
+    }
     div.aaDialog.dark.progress div.item input[type=range]::-webkit-slider-thumb {
         background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        box-shadow: -320px 0 0 320px var(--submit-bg-color);
     }
-    div.aaDialog.dark.progress div.item input[type=range]::-moz-range-thumb { /* All the same stuff for Firefox */
-        background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    div.aaDialog.dark.progress div.item input[type=range].complete::-webkit-slider-thumb {
+        box-shadow: -320px 0 0 320px var(--color-green);
     }
-    div.aaDialog.dark.progress div.item input[type=range]::-ms-thumb { /* All the same stuff for IE */
-        background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    /*Chrome*/
-    @media screen and (-webkit-min-device-pixel-ratio:0) {
-        div.aaDialog.dark.progress div.item input[type=range] {
-            background-color: var(--dark-color-bg-lighter);
-        }
-        div.aaDialog.dark.progress div.item input[type=range]::-webkit-slider-runnable-track {
-            color: #13bba4;
-        }
-        div.aaDialog.dark.progress div.item input[type=range]::-webkit-slider-thumb {
-            background: #fff;
-            box-shadow: -320px 0 0 320px var(--submit-bg-color);
-        }
-        div.aaDialog.dark.progress div.item input[type=range].complete::-webkit-slider-thumb {
-            box-shadow: -320px 0 0 320px var(--color-green);
-        }
-    }
-    /** FF*/
-    div.aaDialog.dark.progress div.item input[type=range]::-moz-range-progress {
-        background-color: var(--submit-bg-color); 
-    }
-    div.aaDialog.dark.progress div.item input[type=range].complete::-moz-range-progress {
-        background-color: var(--color-green);
-    }
-    div.aaDialog.dark.progress div.item input[type=range]::-moz-range-track {  
-        background-color: var(--dark-color-bg-lighter);
-    }
-    /* IE*/
-    div.aaDialog.dark.progress div.item input[type=range]::-ms-fill-lower {
-        background-color: var(--submit-bg-color); 
-    }
-    div.aaDialog.dark.progress div.item input[type=range].complete::-ms-fill-lower {
-        background-color: var(--color-green);
-    }
-    div.aaDialog.dark.progress div.item input[type=range]::-ms-fill-upper {  
-        background-color: var(--dark-color-bg-lighter);
-    }
-    div.aaDialog.dark.progress div.item div.percent span {
-        color: var(--dark-color);
-    }
-    div.aaDialog.dark.progress div.item div.percent span::after {
-        color: var(--dark-color-darker);
-    }
-    div.aaDialog.dark.progress div.item label {
-        background: #faa;
-    }
-    div.aaDialog.dark.progress div.item label > div > div{
-        background: var(--dark-color-bg);
-        color: var(--dark-color);
-    }
+}
+/** FF*/
+div.aaDialog.dark.progress div.item input[type=range]::-moz-range-progress {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.dark.progress div.item input[type=range].complete::-moz-range-progress {
+    background-color: var(--color-green);
+}
+div.aaDialog.dark.progress div.item input[type=range]::-moz-range-track {  
+    background-color: var(--dark-color-bg-lighter);
+}
+/* IE*/
+div.aaDialog.dark.progress div.item input[type=range]::-ms-fill-lower {
+    background-color: var(--submit-bg-color); 
+}
+div.aaDialog.dark.progress div.item input[type=range].complete::-ms-fill-lower {
+    background-color: var(--color-green);
+}
+div.aaDialog.dark.progress div.item input[type=range]::-ms-fill-upper {  
+    background-color: var(--dark-color-bg-lighter);
+}
+div.aaDialog.dark.progress div.item div.percent span {
+    color: var(--dark-color);
+}
+div.aaDialog.dark.progress div.item div.percent span::after {
+    color: var(--dark-color-darker);
+}
+div.aaDialog.dark.progress div.item label {
+    background: #faa;
+}
+div.aaDialog.dark.progress div.item label > div > div{
+    background: var(--dark-color-bg);
+    color: var(--dark-color);
+}
 
 
-    .aa.dark input[type="text"]::placeholder,
-    .aa.dark input[type="password"]::placeholder,
-    .aa.dark input[type="number"]::placeholder,
-    .aa.dark textarea::placeholder{
-        color: var(--submit-bg-color);
-        color: #666;
-        color: #888;
-        color: #3265be;
-    }
-    .aa.dark label.cooked.disabled{
-        color: #444;
-    }
-    .aa.dark button.mixed{
-        color: var(--color-gold);
-    }
-    .aa.dark button.mixed.textarea:focus,
-    .aa.dark button.mixed.input:focus{
-        box-shadow: none;
-        border: 1px solid var(--color-gold);
-    }
-    .aa.dark button.mixed.textarea,
-    .aa.dark button.mixed.input{
-        background: #111;
-        border-color: #222;
-        box-shadow: 
-            inset 1px 1px 1px rgba(0,0,0,0.2),
-            inset -1px -1px 0px #444
-        ;
-    }
-    .aa.dark button.mixed span.fa,
-    .aa.dark button.mixed span.fa{
-        /*color: var(--color-gold);*/
-    }
-    .aa.dark button.mixed:hover span.fa,
-    .aa.dark button.mixed:focus span.fa{
-        color: #ca8;
-        color: #ddc7a7;
-    }
-    .aa.dark button.mixed:disabled,
-    .aa.dark button.mixed:disabled span.fa{
-        color: #666;
-    }
-    .aa.dark label.cooked input[type=radio] + button > span,
-    .aa.dark label.cooked input[type=checkbox] + button > span{
-        color: #666;
-    }
-    .aa.dark label.cooked:hover input[type=radio] + button > span,
-    .aa.dark label.cooked:hover input[type=checkbox] + button > span,
-    .aa.dark label.cooked input[type=radio] + button:focus > span,
-    .aa.dark label.cooked input[type=checkbox] + button:focus > span{
-        color: #888;
-    }
-    .aa.dark label.cooked input[type=radio] + button > span.checked,
-    .aa.dark label.cooked input[type=checkbox] + button > span.checked{
-        color: var(--submit-bg-color);
-    }
-    .aa.dark label.cooked input[type=radio] + button + span,
-    .aa.dark label.cooked input[type=checkbox] + button + span{
-        color: var(--color-white);
-    }
-    .aa.dark label.cooked:hover input[type=radio] + button > span.checked,
-    .aa.dark label.cooked:hover input[type=checkbox] + button > span.checked,
-    .aa.dark label.cooked input[type=radio] + button:focus > span.checked,
-    .aa.dark label.cooked input[type=checkbox] + button:focus > span.checked{
-        color: #8cf;
-    }
-    .aa.dark label.cooked input[type=radio]:disabled:checked + button > span.checked,
-    .aa.dark label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
-    .aa.dark label.cooked input[type=radio]:disabled + button > span,
-    .aa.dark label.cooked input[type=checkbox]:disabled + button > span,
-    .aa.dark label.cooked input[type=radio]:disabled + button + span,
-    .aa.dark label.cooked input[type=checkbox]:disabled + button + span{
-        color: #666;
-    }
+.aa.dark input[type="text"]::placeholder,
+.aa.dark input[type="password"]::placeholder,
+.aa.dark input[type="number"]::placeholder,
+.aa.dark textarea::placeholder{
+    color: var(--submit-bg-color);
+    color: #666;
+    color: #888;
+    color: #3265be;
+}
+.aa.dark label.cooked.disabled{
+    color: #444;
+}
+.aa.dark button.mixed{
+    color: var(--color-gold);
+}
+.aa.dark button.mixed.textarea:focus,
+.aa.dark button.mixed.input:focus{
+    box-shadow: none;
+    border: 1px solid var(--color-gold);
+}
+.aa.dark button.mixed.textarea,
+.aa.dark button.mixed.input{
+    background: #111;
+    border-color: #222;
+    box-shadow: 
+        inset 1px 1px 1px rgba(0,0,0,0.2),
+        inset -1px -1px 0px #444
+    ;
+}
+.aa.dark button.mixed span.fa,
+.aa.dark button.mixed span.fa{
+    /*color: var(--color-gold);*/
+}
+.aa.dark button.mixed:hover span.fa,
+.aa.dark button.mixed:focus span.fa{
+    color: #ca8;
+    color: #ddc7a7;
+}
+.aa.dark button.mixed:disabled,
+.aa.dark button.mixed:disabled span.fa{
+    color: #666;
+}
+.aa.dark label.cooked input[type=radio] + button > span,
+.aa.dark label.cooked input[type=checkbox] + button > span{
+    color: #666;
+}
+.aa.dark label.cooked:hover input[type=radio] + button > span,
+.aa.dark label.cooked:hover input[type=checkbox] + button > span,
+.aa.dark label.cooked input[type=radio] + button:focus > span,
+.aa.dark label.cooked input[type=checkbox] + button:focus > span{
+    color: #888;
+}
+.aa.dark label.cooked input[type=radio] + button > span.checked,
+.aa.dark label.cooked input[type=checkbox] + button > span.checked{
+    color: var(--submit-bg-color);
+}
+.aa.dark label.cooked input[type=radio] + button + span,
+.aa.dark label.cooked input[type=checkbox] + button + span{
+    color: var(--color-white);
+}
+.aa.dark label.cooked:hover input[type=radio] + button > span.checked,
+.aa.dark label.cooked:hover input[type=checkbox] + button > span.checked,
+.aa.dark label.cooked input[type=radio] + button:focus > span.checked,
+.aa.dark label.cooked input[type=checkbox] + button:focus > span.checked{
+    color: #8cf;
+}
+.aa.dark label.cooked input[type=radio]:disabled:checked + button > span.checked,
+.aa.dark label.cooked input[type=checkbox]:disabled:checked + button > span.checked,
+.aa.dark label.cooked input[type=radio]:disabled + button > span,
+.aa.dark label.cooked input[type=checkbox]:disabled + button > span,
+.aa.dark label.cooked input[type=radio]:disabled + button + span,
+.aa.dark label.cooked input[type=checkbox]:disabled + button + span{
+    color: #666;
+}
 
-    .aa.dark .pannel table.sticky > tr > td,
-    .aa.dark .pannel table.sticky > tr > th,
-    .aa.dark .pannel table.sticky > thead > tr > td,
-    .aa.dark .pannel table.sticky > thead > tr > th,
-    .aa.dark .pannel table.sticky > tbody > tr > td,
-    .aa.dark .pannel table.sticky > tbody > tr > th {
-        background-color: var(--dark-color-bg);
-    }
+.aa.dark .pannel table.sticky > tr > td,
+.aa.dark .pannel table.sticky > tr > th,
+.aa.dark .pannel table.sticky > thead > tr > td,
+.aa.dark .pannel table.sticky > thead > tr > th,
+.aa.dark .pannel table.sticky > tbody > tr > td,
+.aa.dark .pannel table.sticky > tbody > tr > th {
+    background-color: var(--dark-color-bg);
+}
 
 
-    /* --------------------------------
-        Notifications
-    -------------------------------- */
+/* --------------------------------
+    Notifications
+-------------------------------- */
 
-    div#aaNotifs{
-        position: fixed;
-        bottom: 8px;
-        right: 8px;
-        font-size: 11px;
-        font-family: 'Fira UL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-        line-height: 1.5;
-    }
-    div#aaNotifs button,
-    div#aaNotifs input[type="button"],
-    div#aaNotifs input[type="submit"],
-    div#aaNotifs input[type="reset"],
-    div#aaNotifs input[type="password"],
-    div#aaNotifs input[type="number"],
-    div#aaNotifs input[type="text"]{
-        all: initial;
-        font-size: 11px;
-        font-family: var(--font-family);
-    }
-    div#aaNotifs div.notif{
-        display: block;
-        overflow-y: auto;
-        margin-top: 8px;
-        padding: 0px;
-        width: 256px;
-        max-height: 96vh;
-        max-width: 256px;
-        background: var(--notif-bg);
-        color: var(--notif-text);
-        border-radius: 2px;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
-    }
-    div#aaNotifs div.icon{
-        position: relative;
-        /*top: -1px;*/
-        display: table-cell;
-        vertical-align: top;
-        padding: 8px 8px 8px 16px;
-        width: 16px;
-        height: 16px;
-        background-position: top;
-        background-size: contain;
-        background-repeat: no-repeat;
-        /*background-color: var(--bg-color);*/
-        color: var(--submit-bg-color);
-        border-top-left-radius: 2px;
-        border-bottom-left-radius: 2px;
-    }
-    div#aaNotifs div.notif.information div.icon{
-        /*background-color: #def;*/
-    }
-    div#aaNotifs div.notif.warning div.icon{
-        /*background-color: #fed;*/
-    }
-    div#aaNotifs div.notif.critical div.icon{
-        /*background-color: #fdd;*/
-    }
-    div#aaNotifs div.icon.warning{
-        color: var(--warning-color);
-    }
-    div#aaNotifs div.icon.critical{
-        color: var(--critical-color);
-    }
-    div#aaNotifs div.message{
-        display: table-cell;
-        vertical-align: top;
-        padding: 11px 8px 8px 8px;
-        text-align: left;
-    }
-    div#aaNotifs div.message div.buttons{
-        padding: 0px;
-        padding-top: 4px;
-    }
-    div#aaNotifs div.message pre,
-    div#aaNotifs div.message code{
-        box-sizing: border-box;
-        overflow: auto;
-        padding: 8px;
-        font-family: Courier New;
-        max-width: 200px;
-        background: #446;
-        color: var(--form-placeholder-color);
-    }
-    div#aaNotifs div.buttons input[type="submit"],
-    div#aaNotifs div.buttons input[type="button"]{
-        display: inline-block;
-        margin: 0px 2px;
-        padding: 2px 8px;
-        background: var(--submit-bg-color);
-        color: var(--submit-color);
-        border-radius: 2px;
-        border: 1px solid var(--submit-bg-color);
-    }
-    div#aaNotifs div.buttons input[type="button"]:focus{
-        border: 1px solid var(--color-blue-darker);
-    }
-    div#aaNotifs div.buttons button.reset,
-    div#aaNotifs div.buttons input[type="button"].reset{
-        background: var(--button-disabled-bg-color);
-        color: var(--reset-color);
-        border: 1px solid var(--button-disabled-bg-color);
-    }
-    div#aaNotifs div.buttons button.reset:focus,
-    div#aaNotifs div.buttons input[type="button"].reset:focus{
-        border: 1px solid var(--submit-bg-color);
-    }
+div#aaNotifs{
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-family: 'Fira UL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+div#aaNotifs button,
+div#aaNotifs input[type="button"],
+div#aaNotifs input[type="submit"],
+div#aaNotifs input[type="reset"],
+div#aaNotifs input[type="password"],
+div#aaNotifs input[type="number"],
+div#aaNotifs input[type="text"]{
+    all: initial;
+    font-size: 11px;
+    font-family: var(--font-family);
+}
+div#aaNotifs div.notif{
+    display: block;
+    overflow-y: auto;
+    margin-top: 8px;
+    padding: 0px;
+    width: 256px;
+    max-height: 96vh;
+    max-width: 256px;
+    background: var(--notif-bg);
+    color: var(--notif-text);
+    border-radius: 2px;
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
+}
+div#aaNotifs div.icon{
+    position: relative;
+    /*top: -1px;*/
+    display: table-cell;
+    vertical-align: top;
+    padding: 8px 8px 8px 16px;
+    width: 16px;
+    height: 16px;
+    background-position: top;
+    background-size: contain;
+    background-repeat: no-repeat;
+    /*background-color: var(--bg-color);*/
+    color: var(--submit-bg-color);
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+div#aaNotifs div.notif.information div.icon{
+    /*background-color: #def;*/
+}
+div#aaNotifs div.notif.warning div.icon{
+    /*background-color: #fed;*/
+}
+div#aaNotifs div.notif.critical div.icon{
+    /*background-color: #fdd;*/
+}
+div#aaNotifs div.icon.warning{
+    color: var(--warning-color);
+}
+div#aaNotifs div.icon.critical{
+    color: var(--critical-color);
+}
+div#aaNotifs div.message{
+    display: table-cell;
+    vertical-align: top;
+    padding: 11px 8px 8px 8px;
+    text-align: left;
+}
+div#aaNotifs div.message div.buttons{
+    padding: 0px;
+    padding-top: 4px;
+}
+div#aaNotifs div.message pre,
+div#aaNotifs div.message code{
+    box-sizing: border-box;
+    overflow: auto;
+    padding: 8px;
+    font-family: Courier New;
+    max-width: 200px;
+    background: #446;
+    color: var(--form-placeholder-color);
+}
+div#aaNotifs div.buttons input[type="submit"],
+div#aaNotifs div.buttons input[type="button"]{
+    display: inline-block;
+    margin: 0px 2px;
+    padding: 2px 8px;
+    background: var(--submit-bg-color);
+    color: var(--submit-color);
+    border-radius: 2px;
+    border: 1px solid var(--submit-bg-color);
+}
+div#aaNotifs div.buttons input[type="button"]:focus{
+    border: 1px solid var(--color-blue-darker);
+}
+div#aaNotifs div.buttons button.reset,
+div#aaNotifs div.buttons input[type="button"].reset{
+    background: var(--button-disabled-bg-color);
+    color: var(--reset-color);
+    border: 1px solid var(--button-disabled-bg-color);
+}
+div#aaNotifs div.buttons button.reset:focus,
+div#aaNotifs div.buttons input[type="button"].reset:focus{
+    border: 1px solid var(--submit-bg-color);
+}
 
-    /* Dark */
+/* Dark */
 
-    div#aaNotifs.dark div.notif{
-        background: var(--dark-color-bg-lighter);
-        color: var(--dark-color);
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.8);
-    }
-    div#aaNotifs.dark div.message pre,
-    div#aaNotifs.dark div.message code{
-        background: #446;
-        color: var(--form-placeholder-color);
-    }
-    div#aaNotifs.dark div.buttons input[type="submit"],
-    div#aaNotifs.dark div.buttons input[type="button"]{
-        background: var(--submit-bg-color);
-        color: #fff;
-        border-color: var(--submit-bg-color);
-    }
-    div#aaNotifs.dark div.buttons input[type="button"]:focus{
-        border-color: var(--color-blue-darker);
-    }
-    div#aaNotifs.dark div.buttons button.reset,
-    div#aaNotifs.dark div.buttons input[type="button"].reset{
-        background: var(--button-disabled-bg-color);
-        color: var(--reset-color);
-        border-color: var(--button-disabled-bg-color);
-    }
-    div#aaNotifs.dark div.buttons button.reset:focus,
-    div#aaNotifs.dark div.buttons input[type="button"].reset:focus{
-        border-color: var(--submit-bg-color);
-    }
+div#aaNotifs.dark div.notif{
+    background: var(--dark-color-bg-lighter);
+    color: var(--dark-color);
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.8);
+}
+div#aaNotifs.dark div.message pre,
+div#aaNotifs.dark div.message code{
+    background: #446;
+    color: var(--form-placeholder-color);
+}
+div#aaNotifs.dark div.buttons input[type="submit"],
+div#aaNotifs.dark div.buttons input[type="button"]{
+    background: var(--submit-bg-color);
+    color: #fff;
+    border-color: var(--submit-bg-color);
+}
+div#aaNotifs.dark div.buttons input[type="button"]:focus{
+    border-color: var(--color-blue-darker);
+}
+div#aaNotifs.dark div.buttons button.reset,
+div#aaNotifs.dark div.buttons input[type="button"].reset{
+    background: var(--button-disabled-bg-color);
+    color: var(--reset-color);
+    border-color: var(--button-disabled-bg-color);
+}
+div#aaNotifs.dark div.buttons button.reset:focus,
+div#aaNotifs.dark div.buttons input[type="button"].reset:focus{
+    border-color: var(--submit-bg-color);
+}
 
-    div.dependencyError{
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        display: table-cell;
-        width: 100%;
-        height: 100%;
-        padding-top: 128px;
-        background-color: rgba(16,32,64,0.96);
-        vertical-align: middle;
-        text-align: center;
-        font-family: var(--font-family);
-        font-size: 48px;
-        color: var(--critical-color);
-        color: #357;
+div.dependencyError{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+    padding-top: 128px;
+    background-color: rgba(16,32,64,0.96);
+    vertical-align: middle;
+    text-align: center;
+    font-family: var(--font-family);
+    font-size: 48px;
+    color: var(--critical-color);
+    color: #357;
+}
+@-webkit-keyframes aaFadeOut{
+    from{
+        opacity: 1;
     }
-    @-webkit-keyframes aaFadeOut{
-        from{
-            opacity: 1;
-        }
-        to{
-            opacity: 0;
-        }
+    to{
+        opacity: 0;
     }
-    @-moz-keyframes aaFadeOut{
-        from{
-            opacity: 1;
-        }
-        to{
-            opacity: 0;
-        }
+}
+@-moz-keyframes aaFadeOut{
+    from{
+        opacity: 1;
     }
-    @-o-keyframes aaFadeOut{
-        from{
-            opacity: 1;
-        }
-        to{
-            opacity: 0;
-        }
+    to{
+        opacity: 0;
     }
-    @keyframes aaFadeOut{
-        from{
-            opacity: 1;
-        }
-        to{
-            opacity: 0;
-        }
+}
+@-o-keyframes aaFadeOut{
+    from{
+        opacity: 1;
     }
-    @-webkit-keyframes fadeFromNone {
-        0% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-        1% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
+    to{
+        opacity: 0;
     }
-    @-moz-keyframes fadeFromNone {
-        0% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-        1% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
+}
+@keyframes aaFadeOut{
+    from{
+        opacity: 1;
     }
-    @-o-keyframes fadeFromNone {
-        0% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-        1% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
+    to{
+        opacity: 0;
     }
-    @keyframes fadeFromNone {
-        0% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-        1% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
-    }
-    @-webkit-keyframes fadeToNone {
-        0% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
-        99% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-    }
-    @-moz-keyframes fadeToNone {
-        0% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
-        99% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-    }
-    @-o-keyframes fadeToNone {
-        0% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
-        99% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-    }
-    @keyframes fadeToNone {
-        0% {
-            display: block;
-            opacity: 1;
-            left: 0;
-        }
-        99% {
-            display: block;
-            opacity: 0;
-            left: 0;
-        }
-        100% {
-            display: none;
-            opacity: 0;
-            left: -100%;
-        }
-    }
-
-    /* -------------------------------- */
-
-    .aa .hidden {
+}
+@-webkit-keyframes fadeFromNone {
+    0% {
         display: none;
+        opacity: 0;
+        left: -100%;
     }
+    1% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+}
+@-moz-keyframes fadeFromNone {
+    0% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+    1% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+}
+@-o-keyframes fadeFromNone {
+    0% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+    1% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+}
+@keyframes fadeFromNone {
+    0% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+    1% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+}
+@-webkit-keyframes fadeToNone {
+    0% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+    99% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+}
+@-moz-keyframes fadeToNone {
+    0% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+    99% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+}
+@-o-keyframes fadeToNone {
+    0% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+    99% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+}
+@keyframes fadeToNone {
+    0% {
+        display: block;
+        opacity: 1;
+        left: 0;
+    }
+    99% {
+        display: block;
+        opacity: 0;
+        left: 0;
+    }
+    100% {
+        display: none;
+        opacity: 0;
+        left: -100%;
+    }
+}
 
-    /* -------------------------------- */
+/* -------------------------------- */
+
+.aa .hidden {
+    display: none;
+}
+
+/* -------------------------------- */
 

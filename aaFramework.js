@@ -1132,7 +1132,7 @@
     };
     aa.Collection               = (() => {
         const {get, set} = aa.mapFactory();
-        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
+        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
 
         /**
          * Usage:
@@ -1192,7 +1192,7 @@
 
                 spec.sprinkle({ authenticate: aa.any });
 
-                const that = getAccessor(this);
+                const that = _(this);
                 let data = null;
                 if (spec.hasOwnProperty('data')) {
                     // aa.throwErrorIf(!aa.isArrayLike(spec.data), "'data' attribute must be an Array-like.");
@@ -1210,21 +1210,52 @@
         };
 
         // Publics:
-        aa.deploy(Collection.prototype, {
-            forEach:            function (callback /*, thisArg */) {
+        function methodFactory (methodName) {
+            const func = function (callback /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const that = getAccessor(this);
-                return that.data.forEach((item, i, list) => {
-                    return callback.call(thisArg, item, i, this);
+                const that = _(this);
+                return that.data[methodName]((item, i, list) => {
+                    const isVerified = callback.call(thisArg, item, i, this);
+                    if (aa.inEnum(
+                        'every',
+                        'filter',
+                        'find',
+                        'findIndex',
+                        'findLastIndex',
+                        'findReverse',
+                        'some',
+                    )(methodName) && !aa.isBool(isVerified)) {
+                        throw new TypeError(`Callback Function must return a Boolean.`);
+                    }
+                    return isVerified;
                 }, thisArg);
-            },
+            };
+            Object.defineProperty(func, 'name', {
+                get: () => methodName
+            });
+            return func;
+        };
+        function fromArrayPrototype (methodName) {
+            const func = function () {
+                const that = _(this);
+                return that.data[methodName](arguments);
+            };
+            Object.defineProperty(func, 'name', {
+                get: () => methodName
+            });
+            const obj = {};
+            obj[methodName] = func;
+            return obj;
+        }
+        aa.deploy(Collection.prototype, {
+            forEach:            methodFactory('forEach'),
             loopThrough:        function (callback /*, spec */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const spec = aa.arg.optional(arguments, 1, {});
                 
-                const that = getAccessor(this);
+                const that = _(this);
                 spec.sprinkle({context: undefined});
                 
                 return that.data.loopThrough((item, i, list) => {
@@ -1235,7 +1266,7 @@
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
-                const that = getAccessor(this);
+                const that = _(this);
                 const spec = {};
                 if (this.authenticate) {
                     spec.authenticate = this.authenticate;
@@ -1251,45 +1282,22 @@
                 set(collection, `listeners`, get(this, `listeners`));
                 return collection;
             },
-            find:               function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-
-                const that = getAccessor(this);
-                return that.data.find((item, i, list) => {
-                    return callback.call(thisArg, item, i, this);
-                }, thisArg);
-            },
-            map:                function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-
-                const that = getAccessor(this);
-                return that.data.map((item, i, list) => {
-                    return callback.call(thisArg, item, i, this);
-                }, thisArg);
-            },
+            find:               methodFactory('find'),
+            map:                methodFactory('map'),
+            ...fromArrayPrototype('pop'),
             reduce:             function (callback, accumulator /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
                 const thisArg = aa.arg.optional(arguments, 2, undefined);
 
-                // const data = get(this, "data");
-                // return data.reduce(callback, accumulator, thisArg);
-
-                const that = getAccessor(this);
+                const that = _(this);
                 return that.data.reduce((accumulator, item, i, list) => {
                     return callback.call(thisArg, accumulator, item, i, this);
                 }, accumulator, thisArg);
             },
-            some:               function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-
-                const that = getAccessor(this);
-                return that.data.some((item, i, list) => {
-                    return callback.call(thisArg, item, i, this);
-                }, thisArg);
-            },
+            some:               methodFactory('some'),
+            ...fromArrayPrototype('shift'),
+            ...fromArrayPrototype('splice'),
+            ...fromArrayPrototype('unshift'),
 
             // General:
             clear:              function () {
@@ -1307,8 +1315,14 @@
                 privates.emit.call(this, `datamodified`);
                 return items;
             },
+            copy:               function () {
+                const that = _(this);
+                return aa.Collection.fromArray(that.data, {
+                    authenticate: that.authenticate
+                });
+            },
             has:                function (value) {
-                const that = getAccessor(this);
+                const that = _(this);
                 return (that.data.indexOf(value) > -1);
             },
             hydrate:            function (spec) {
@@ -1322,7 +1336,7 @@
                  * 
                  * @return <int>
                  */
-                const that = getAccessor(this);
+                const that = _(this);
                 return Array.prototype.indexOf.apply(that.data, arguments);
             },
             insertAt:           function (position, ...items) {
@@ -1330,7 +1344,7 @@
                  * @param <int> position
                  * @param <any> ...items: The items to add to the collection from 'position' parameter.
                  */
-                const that = getAccessor(this);
+                const that = _(this);
 
                 aa.arg.test(position, aa.isInt, "'position'");
                 
@@ -1358,7 +1372,7 @@
             },
             on:                 aa.prototypes.events.getListener(get, "listeners"),
             push:               function (...items) {
-                const that = getAccessor(this);
+                const that = _(this);
 
                 items.forEach(item => {
                     aa.throwErrorIf(
@@ -1442,7 +1456,7 @@
                 return removedItems;
             },
             reverse:            function () {
-                const that = getAccessor(this);
+                const that = _(this);
                 
                 const spec = {};
                 if (that.authenticate) { spec.authenticate = that.authenticate; }
@@ -1487,7 +1501,7 @@
 
         // Iterator:
         Collection.prototype[Symbol.iterator] = function* () {
-            const that = getAccessor(this);
+            const that = _(this);
             for (let item of that.data) {
                 yield item;
             }
@@ -10028,9 +10042,59 @@
     aa.diff                     = Object.freeze((() => {
         const {get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {get, set}); }
-        const entryTypes = [null, 'added', 'removed'];
-        const diffTypes = ['Myers']; // first element will be used by default
+        const changeTypes = [null, 'deletion', 'insertion']; // The first element will be used as default type.
+        const diffTypes = ['Myers']; // The first element will be used as default type.
         // --------------------------------
+        function algorithmMethodFactory (methodName) {
+            const obj = {};
+            obj[methodName] = function () {
+                const that = _(this);
+
+                const type = that.type.toLowerCase();
+                if (algorithm.hasOwnProperty(type) && aa.isFunction(algorithm[type][methodName])) {
+                    return algorithm[type][methodName].call(this);
+                }
+                throw new TypeError(`Invalid Diff type`);
+            };
+            Object.defineProperty(obj[methodName], 'name', {
+                get: () => methodName
+            });
+            return obj;
+        }
+        // --------------------------------
+        const Operation = (() => {
+            function Operation () { get(Operation, 'construct').apply(this, arguments); }
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        index:  null,
+                        type:   null,
+                        value:  null,
+                    }
+                },
+                construct: function () {
+                    const that = _(this);
+                },
+                methods: {
+                    publics: {
+                        toObject: function () {
+                            return {
+                                index:  this.index,
+                                type:   this.type,
+                                value:  this.value,
+                            };
+                        },
+                    }
+                },
+                verifiers: {
+                    index:  aa.isPositiveInt,
+                    type:   aa.inArray(changeTypes),
+                    value:  aa.any,
+                }
+            };
+            aa.manufacture(Operation, blueprint, {get, set});
+            return Operation;
+        })();
         const Cell = (() => {
             function Cell () { get(Cell, 'construct').apply(this, arguments) }
             const blueprint = {
@@ -10040,36 +10104,147 @@
                         bIndex:     0,
                         index:      0,
                         matched:    false,
+                        operations: null,
                         path:       false,
                         selected:   false,
                         value:      null,
-                        type:       null,
                         weight:     0,
                     }
+                },
+                construct: function () {
+                    const that = _(this);
+                    that.operations = new aa.Collection({ authenticate: aa.instanceof(Operation) });
+                },
+                methods: {
+                    publics: {
+                        toObject:   function () {
+                            const that = _(this);
+                            return {
+                                aIndex:     that.aIndex,
+                                bIndex:     that.bIndex,
+                                index:      that.index,
+                                matched:    that.matched,
+                                path:       that.path,
+                                operations: that.operations,
+                                selected:   that.selected,
+                                value:      that.value,
+                                weight:     that.weight,
+                            };
+                        },
+                        copy:       function () {
+                            return new Cell(this.toObject());
+                        },
+                    },
                 },
                 verifiers: {
                     aIndex:     aa.isPositiveInt,
                     bIndex:     aa.isPositiveInt,
                     index:      aa.isPositiveInt,
                     matched:    aa.isBool,
+                    operations: arg => aa.isArrayLike(arg) && arg.every(aa.instanceof(Operation)),
                     path:       aa.isBool,
                     selected:   aa.isBool,
                     value:      aa.any,
-                    type:       aa.inArray(entryTypes),
                     weight:     aa.isPositiveInt,
                 },
             };
             aa.manufacture(Cell, blueprint, {get, set});
             return Cell;
         })();
+        const Diff = (() => {
+            function Diff () { get(Diff, 'construct').apply(this, arguments) }
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        entries: null
+                    },
+                    privates: {
+                        comparator: null,
+                        delimiter:  null,
+                        data:       null,
+                        next:       null,
+                        previous:   null,
+                        type:       null,
+                        paths:      null,
+                    }
+                },
+                construct: function (previous, next, options={}) {
+                    const that = _(this);
+                    aa.throwErrorIf(arguments.length > 3, `This constructor takes 3 arguments only.`);
+                    
+                    // Initialize attributes:
+                    that.data = {};
+                    that.entries = new aa.Collection({ authenticate: aa.instanceof(DiffEntry) });
+                    that.paths = new aa.Collection({ authenticate: path => aa.isArrayLike(path) && path.every(aa.instanceof(Cell)) });
+
+                    // Set attributes:
+                    that.setPrevious(previous);
+                    that.setNext(next);
+                    that.setOptions(options);
+
+                    // Default values:
+                    that.comparator ??= (a, b) => a === b;
+                    that.type ??= diffTypes[0];
+
+                    that.compare();
+                },
+                methods: {
+                    publics: {
+                        ...algorithmMethodFactory('getPreviewNode'),
+                        
+                        // Getters:
+                        toObject:   function () {
+                            return {
+                            };
+                        },
+                    },
+                    privates: {
+                        ...algorithmMethodFactory('compare'),
+
+                        // Setters:
+                        setNext:        function (next) {
+                            aa.arg.test(next, blueprint.verifiers.next, "'next'");
+                            const that = _(this);
+                            that.next = next;
+                        },
+                        setPrevious:    function (previous) {
+                            aa.arg.test(previous, blueprint.verifiers.previous, "'previous'");
+                            const that = _(this);
+                            that.previous = previous;
+                        },
+                        setOptions:        function (options={}) {
+                            aa.arg.test(options, aa.verifyObject({
+                                comparator: blueprint.verifiers.comparator,
+                                delimiter:  blueprint.verifiers.delimiter,
+                                type:       blueprint.verifiers.type,
+                            }), "'options'");
+                            const that = _(this);
+                            options.forEach((value, key) => {
+                                that[key] = value;
+                            });
+                        },
+                    }
+                },
+                verifiers: {
+                    comparator: aa.isFunction,
+                    delimiter:  arg => aa.isString(arg) || aa.isRegExp(arg),
+                    entries:    aa.instanceof(aa.Collection),
+                    next:       aa.isArrayLike,
+                    previous:   aa.isArrayLike,
+                    type:       aa.inArray(diffTypes),
+                },
+            };
+            aa.manufacture(Diff, blueprint, {get, set});
+            return Diff;
+        })();
         const DiffEntry = (() => {
             function DiffEntry () { get(DiffEntry, 'construct').apply(this, arguments) }
             const blueprint = {
                 accessors: {
                     read: {
-                        index:  null,
-                        type:   null,
-                        value:  null,
+                        index:      null,
+                        type:       null,
+                        value:      null,
                     }
                 },
                 construct: function (spec={}) {
@@ -10092,17 +10267,17 @@
                         },
                     },
                     privates: {
-                        setIndex: function (index) {
+                        setIndex:       function (index) {
                             aa.arg.test(index, blueprint.verifiers.index, "'index'");
                             const that = _(this);
                             that.index = index;
                         },
-                        setType: function (type) {
+                        setType:        function (type) {
                             aa.arg.test(type, blueprint.verifiers.type, "'type'");
                             const that = _(this);
                             that.type = type;
                         },
-                        setValue: function (value) {
+                        setValue:       function (value) {
                             aa.arg.test(value, blueprint.verifiers.value, "'value'");
                             const that = _(this);
                             that.value = value;
@@ -10110,9 +10285,9 @@
                     }
                 },
                 verifiers: {
-                    index:  aa.isPositiveInt,
-                    type:   aa.inArray(entryTypes),
-                    value:  aa.any,
+                    index:      aa.isPositiveInt,
+                    value:      aa.any,
+                    type:       aa.inArray(changeTypes),
                 },
             };
             aa.manufacture(DiffEntry, blueprint, {get, set});
@@ -10128,219 +10303,370 @@
          * @return {object}
          */
         function diff (previous, next, options={}) {
-            aa.arg.test(previous, arg => aa.isArrayLike(arg), "'previous'");
-            aa.arg.test(next, arg => aa.isArrayLike(arg), "'next'");
-            aa.arg.test(options, aa.verifyObject({
-                comparator: aa.isFunction,
-                render:     aa.isBool,
-                type:       aa.inArray(diffTypes),
-            }), "'options'");
-            options.sprinkle({
-                comparator: (a, b) => a === b,
-                render:     false,
-                type:       diffTypes[0]
-            });
+            return new Diff(previous, next, options);
+        };
+        const algorithm = {
+            /**
+             * A set of functions to run 'diff', inspired by Myers' algorithm.
+             * 
+             * Stored data:
+             * @param {cell[][]} that.data.virtual - A two-dimensions Array used to store 
+             */
+            myers: {
+                compare:                function () {
+                    const that = _(this);
+                    const entries = algorithm.myers.getResult.call(this);
+                    that.entries = Object.freeze(entries);
+                },
+                connectWithChanges:     function (cells) {
+                    aa.arg.test(cells, aa.isArrayLikeOf(aa.instanceof(Cell)), "'cells'");
+                    const that = _(this);
+                    
+                    const results = [];
 
-            let entries;
+                    const prevCell = {
+                        aIndex: -1,
+                        bIndex: -1,
+                    };
+                    const connect = (prevX, prevY, curX, curY) => {
+                        if (curX > prevX + 1 || curY > prevY + 1) {
+                            let x = prevX + 1;
+                            let y = prevY;
+                            if (curX > prevX) {
+                                deletions: for (; x < curX; x++) {
+                                    const virtualY = y.bound(0, that.next.length - 1);
+                                    const cell = that.data.virtual[x][virtualY];
+                                    cell.operations.push(new Operation({
+                                        index: x,
+                                        type: 'deletion',
+                                        value: that.previous[x]
+                                    }));
+                                    results.pushUnique(cell);
+                                }
+                                x--;
+                                y++;
+                            }
+                            if (curY > prevY) {
+                                insertions: for (; y < curY; y++) {
+                                    const virtualY = y.bound(0, that.next.length - 1);
+                                    const virtualX = x.bound(0, that.previous.length - 1);
+                                    const cell = that.data.virtual[virtualX][virtualY];
+                                    cell.operations.push(new Operation({
+                                        index: virtualY,
+                                        type: 'insertion',
+                                        value: that.next[virtualY]
+                                    }));
+                                    results.pushUnique(cell);
+                                }
+                            }
+                        }
+                    };
+                    cells.forEach(curCell => {
+                        // Push changes for every jump between cells:
+                        connect(prevCell.aIndex, prevCell.bIndex, curCell.aIndex, curCell.bIndex);
 
-            switch (options.type.toLowerCase()) {
-            case 'myers':
-                const result = getMyersResult(previous, next, options.comparator);
-                entries = result.entries;
+                        // Push 
+                        results.pushUnique(curCell);
 
-                if (options.render) {
-                    const node = getMyersNode(previous, next, result.virtual);
-                    Object.defineProperties(entries, {
-                        node: {get: () => node}
+                        prevCell.aIndex = curCell.aIndex;
+                        prevCell.bIndex = curCell.bIndex;
                     });
-                }
-                break;
-            }
+                    connect(prevCell.aIndex, prevCell.bIndex, that.previous.length, that.next.length);
+                    return results;
+                },
+                getEntries:             function () {
+                    const that = _(this);
 
+                    // Must contain one path at least:
+                    const path = new aa.Collection({ authenticate: aa.instanceof(Cell) });
+                    that.paths.push(path);
+                    
+                    // Find all possible paths going through matching items:
+                    algorithm.myers.getPossiblePaths.call(this, path);
 
-            return Object.freeze(entries);
-        };
-        function getMyersEntries (previous, next, virtual) {
-            const results = [];
+                    // Find the shortest path:
+                    const resultPath = algorithm.myers.getShortestPath.call(this, that.paths);
 
-            // Matching items:
-            let x = previous.length - 1;
-            let y = next.length - 1;
-            let i = x * y;
-            while (i > -1 && x > -1 && y > -1) {
-                const cell = virtual[y][x];
-                cell.values = true;
-                if (cell.matched) {
-                    cell.selected = true;
-                    results.push(cell);
-                    x--;
-                    y--;
-                } else {
-                    if ((virtual[y][x-1]?.weight) === cell.weight) {
-                        cell.value = previous[x];
-                        cell.type = 'removed';
-                        results.push(cell);
-                        x--;
-                    } else if ((virtual[y-1]?.[x].weight) === cell.weight) {
-                        cell.value = next[y];
-                        cell.type = 'added';
-                        results.push(cell);
-                        y--;
-                    } else {
-                        console.warn('?');
+                    // Selected matching cells in shortest path:
+                    const selectedCells = resultPath.reduce((list, cell) => {
+                        cell.selected = true;
+                        list.push(cell);
+                        return list;
+                    }, []);
+
+                    selectedCells.reverse();
+
+                    // Fill gaps with 'deletion' and/or 'insertion' changes:
+                    const results = algorithm.myers.connectWithChanges.call(this, selectedCells);
+
+                    return aa.Collection.fromArray(
+                        results
+                        .map(cell => {
+                            const list = [];
+
+                            const isInserted = cell.operations.some(op => op.type === 'insertion');
+                            const isDeleted = cell.operations.some(op => op.type === 'deletion');
+
+                            if (isDeleted) {
+                                list.push(new DiffEntry({
+                                    index:      cell.aIndex,
+                                    type:       'deletion',
+                                    value:      that.previous[cell.aIndex],
+                                }));
+                            }
+                            if (isInserted) {
+                                list.push(new DiffEntry({
+                                    index:      cell.bIndex,
+                                    type:       'insertion',
+                                    value:      that.next[cell.bIndex],
+                                }));
+                            }
+                            if (!isDeleted && !isInserted) {
+                                list.push(new DiffEntry({
+                                    index:      cell.aIndex,
+                                    value:      that.previous[cell.aIndex],
+                                }));
+                            }
+
+                            return list;
+                        })
+                        .flat()
+                        , { authenticate: aa.instanceof(DiffEntry) }
+                    );
+                },
+                getEntriesFromEmpty:    function () {
+                    const that = _(this);
+                    const results = new aa.Collection({ authenticate: aa.instanceof(DiffEntry) });
+
+                    aa.throwErrorIf(
+                        that.previous.length > 0 && that.next.length > 0,
+                        `Previous and next entries are not empty.`
+                    );
+
+                    deletions: for (let x = 0; x < that.previous.length; x++) {
+                        results.push(new DiffEntry({
+                            index: x,
+                            type:   'deletion',
+                            value:  that.previous[x],
+                        }));
                     }
-                }
-                i--;
-            }
+                    insertions: for (let y = 0; y < that.next.length; y++) {
+                        results.push(new DiffEntry({
+                            index: y,
+                            type:   'insertion',
+                            value:  that.next[y],
+                        }));
+                    }
+                    
+                    return results;
+                },
+                getPreviewNode:         function () {
+                    const that = _(this);
 
-            // Added:
-            if (y > -1) {
-                for (; y > -1; y--) {
-                    const cell = virtual[y][0];
-                    cell.type = 'added';
-                    cell.values = true;
-                    cell.value = next[y];
-                    results.push(cell);
-                }
-            }
-            
-            // Removed:
-            else if (x > -1) {
-                for (; x > -1; x--) {
-                    const cell = virtual[0][x];
-                    cell.values = true;
-                    cell.type = 'removed';
-                    cell.value = previous[x];
-                    results.push(cell);
-                }
-            }
+                    const header = $$('thead');
+                    const body = $$('tbody');
+                    const table = $$('table.diff.sticky',
+                        header,
+                        body
+                    );
+                    
+                    [...that.next].forEach((destItem, y) => {
 
-            results.reverse();
+                        // Top header:
+                        if (y === 0) {
+                            const cells = new DocumentFragment();
+                            cells.append($$('th.stick-top'));
+                            [...that.previous].forEach((srcItem, x) => {
+                                cells.append($$('th.stick-top',
+                                    $$('span', aa.isString(that.previous) ? srcItem : '', {dataset: {index: `[${x}]`}})),
+                                );
+                            });
+                            header.append($$('tr', cells));
+                        }
 
-            return aa.Collection.fromArray(sortRemovedBeforeAdded(results.map(cell => {
-                return new DiffEntry({
-                    index: cell.index,
-                    type: cell.type,
-                    value: cell.value,
-                });
-            })), {
-                authenticate: aa.instanceof(DiffEntry)
-            });
-        }
-        function getMyersNode (previous, next, virtual) {
-            const header = $$('thead');
-            const body = $$('tbody');
-            const table = $$('table.diff.sticky',
-                header,
-                body
-            );
-            [...next].forEach((destItem, y) => {
+                        // Row content:
+                        const row = $$('tr');
+                        body.append(row);
+                        [...that.previous].forEach((srcItem, x) => {
+                            const cell = that.data.virtual[x][y];
 
-                // Top header:
-                if (y === 0) {
-                    const cells = new DocumentFragment();
-                    cells.append($$('th'));
-                    [...previous].forEach((srcItem, x) => {
-                        cells.append($$('th.stick-top',
-                            $$('span', aa.isString(previous) ? srcItem : '', {dataset: {index: `[${x}]`}})),
-                        );
+                            // Left header:
+                            if (x === 0) {
+                                row.append($$('th.stick-left',
+                                    $$('span', aa.isString(that.next) ? destItem : '', {dataset: {index: ` [${y}]`}})),
+                                )
+                            }
+
+                            // Cell content:
+                            let weightNode = $$(`span`, `${cell.weight}`);
+                            const indexes = `[${cell.aIndex}][${cell.bIndex}]`;
+                            const isInserted = cell.operations.some(op => op.type === 'insertion');
+                            const isDeleted = cell.operations.some(op => op.type === 'deletion');
+                            const td = $$(`td`, weightNode, {
+                                on: {click: e => {
+                                    log('position', indexes, {
+                                        deleted:    isDeleted,
+                                        inserted:   isInserted,
+                                        matched:    cell.matched,
+                                        selected:   cell.selected
+                                    });
+                                }}
+                            });
+                            td.classList[cell.matched ? 'add' : 'remove']('matched');
+                            td.classList[cell.selected ? 'add' : 'remove']('selected');
+                            td.classList[isInserted ? 'add' : 'remove']('inserted');
+                            td.classList[isDeleted ? 'add' : 'remove']('deleted');
+                            row.append(td);
+                        });
                     });
-                    header.append($$('tr', cells));
-                }
+                    return table;
+                },
+                getPossiblePaths:       function (path) {
+                    aa.arg.test(path, aa.isArrayLike, "'path'");
+                    
+                    const that = _(this);
 
-                // Row content:
-                const row = $$('tr');
-                body.append(row);
-                [...previous].forEach((srcItem, x) => {
-                    const cell = virtual[y][x];
-
-                    // Left header:
-                    if (x === 0) {
-                        row.append($$('th.stick-left',
-                            $$('span', aa.isString(next) ? destItem : '', {dataset: {index: ` [${y}]`}})),
-                        )
+                    const originCell = path.last ?? null;
+                    if (originCell) {
+                        if (originCell.weight < 1) return;
+                        aa.throwErrorIf(!originCell.matched, ``);
                     }
 
-                    // Cell content:
-                    let cellContent = $$(`span`, `${cell.weight}`);
-                    const indexes = `[${cell.aIndex}][${cell.bIndex}]`;
-                    row.append($$(`td${cell.matched ? '.matched' : ''}${cell.selected ? '.selected' : ''}${cell.path ? '.path' : ''}${cell.type === 'removed' ? '.removed' : ''}${cell.type === 'added' ? '.added' : ''}`, cellContent, {
-                        on: {click: e => {
-                            log('position', indexes);
-                        }}
-                    }));
-                });
-            });
-            return table;
+                    // Get upper-left cell as the bottom-right one of the area to dig in:
+                    let x = originCell ? originCell.aIndex - 1 : that.previous.length - 1;
+                    let y = originCell ? originCell.bIndex - 1 : that.next.length - 1;
+                    if (x < 0 || y < 0) return;
+
+                    const start = {x, y};
+                    let {weight} = that.data.virtual[x][y];
+                    let matchedCells = [];
+                    let i = x * y;
+
+                    // Find matching cells with current weight:
+                    row: for (; x > -1; x--) {
+                        column: for (y = start.y; y > -1; y--) {
+                            const cell = that.data.virtual[x][y];
+                            if (!cell || cell.weight !== weight) {
+                                if (y === start.y) {
+                                    break row;
+                                }
+                                break column;
+                            }
+                            if (cell.matched) {
+                                matchedCells.pushUnique(cell);
+                            }
+                        }
+                    }
+
+                    matchedCells.forEachReverse((matchedCell, index) => {
+                        // If more than one path is found, insert another path:
+                        if (index > 0) {
+                            const copy = path.copy();
+                            copy.push(matchedCell);
+                            that.paths.push(copy);
+                            algorithm.myers.getPossiblePaths.call(this, copy);
+                        }
+                        // Or continue with current path:
+                        else {
+                            path.push(matchedCell);
+                            algorithm.myers.getPossiblePaths.call(this, path);
+                        }
+                    });
+                },
+                getResult:              function () {
+                    const that = _(this);
+
+                    if (that.previous.length === 0 || that.next.length === 0) return algorithm.myers.getEntriesFromEmpty.call(this);
+
+                    that.data.virtual = algorithm.myers.getVirtualTable.call(this, that.previous.length, that.next.length);
+                    algorithm.myers.weight.call(this);
+                    const entries = algorithm.myers.getEntries.call(this);
+                    return entries;
+                },
+                getShortestPath:        function (paths) {
+                    const that = _(this);
+
+                    let whichIndex = null;
+                    let lowestModificationsCount = null;
+                    const copyPaths = [...paths];
+                    copyPaths.reverse();
+                    copyPaths.forEach((path, index) => {
+                        const iterationPath = Array.from(path);
+                        iterationPath.push({
+                            aIndex: -1,
+                            bIndex: -1,
+                        });
+                        let modificationsCount = 0;
+                        const previousCell = {
+                            aIndex: that.previous.length,
+                            bIndex: that.next.length,
+                        };
+                        iterationPath.forEach(cell => {
+                            if (cell.aIndex < previousCell.aIndex - 1 || cell.bIndex < previousCell.bIndex - 1) {
+                                modificationsCount++;
+                            }
+                            previousCell.aIndex = cell.aIndex;
+                            previousCell.bIndex = cell.bIndex;
+                        });
+                        lowestModificationsCount ??= modificationsCount;
+                        whichIndex ??= index;
+                        if (modificationsCount < lowestModificationsCount) {
+                            lowestModificationsCount = modificationsCount;
+                            whichIndex = index;
+                        }
+                    });
+                    return copyPaths[whichIndex];
+                },
+                getVirtualTable:        function (columns, rows) {
+                    aa.arg.test(columns, aa.isPositiveInt, "'columns'");
+                    aa.arg.test(rows, aa.isPositiveInt, "'rows'");
+
+                    const table = new Array(columns);
+                    columns: for (let x = 0; x < columns; x++) {
+                        table[x] = new Array(rows);
+                        rows: for (let y = 0; y < rows; y++) {
+                            const cell = new Cell();
+                            cell.aIndex = x;
+                            cell.bIndex = y;
+                            table[x][y] = cell;
+                        }
+                    }
+                    return table;
+                },
+                hasNoMatch:             function () {
+                    const that = _(this);
+                    for (let y = 0; y < that.next.length; y++) {
+                        for (let x = 0; x < that.previous.length; x++) {
+                            if (that.next[y] === that.previous[x]) return false;
+                        }
+                    }
+                    return true;
+                },
+                weight:                 function () {
+                    const that = _(this);
+                    
+                    that.data.virtual.forEach((column, x) => {
+                        const previousItem = that.previous[x];
+                        column.forEach((cell, y) => {
+                            const nextItem = that.next[y];
+                            if (that.comparator(nextItem, previousItem)) {
+                                cell.matched = true;
+                                cell.value = nextItem;
+
+                                // Add 1 to the upper-left weight:
+                                cell.weight = (x > 0 && y > 0 ?
+                                    that.data.virtual[x-1][y-1].weight + 1
+                                    : 1
+                                );
+                            } else {
+                                // Retrieve the max weight from left or upper cells:
+                                cell.weight = Math.max(y > 0 ? that.data.virtual[x][y-1].weight : 0, x > 0 ? that.data.virtual[x-1][y].weight : 0);
+                            }
+                        })
+                    });
+                },
+            }
         };
-        function getMyersResult (previous, next, comparator) {
-            const virtual = getTableFromSize(next.length, previous.length);
-            getMyersWeighted(previous, next, virtual, comparator);
-            const entries = getMyersEntries(previous, next, virtual);
-
-            return {
-                entries,
-                virtual
-            };
-        };
-        function getTableFromSize (rows, columns) {
-            aa.arg.test(rows, aa.isPositiveInt, "'rows'");
-            aa.arg.test(columns, aa.isPositiveInt, "'columns'");
-
-            const table = [];
-            aa.repeat(rows, y => {
-                const virtualRow = [];
-                aa.repeat(columns, x => {
-                    const cell = new Cell();
-                    cell.aIndex = x;
-                    cell.bIndex = y;
-                    virtualRow.push(cell);
-                });
-                table.push(virtualRow);
-            });
-            return table;
-        }
-        function sortRemovedBeforeAdded (list) {
-            const results = [];
-            const added = [];
-
-            list.forEach(cell => {
-                if (cell.type === 'added') {
-                    added.push(cell);
-                } else {
-                    if (!cell.type) {
-                        results.push(...added);
-                        added.clear();
-                    }
-                    results.push(cell);
-                }
-            });
-            results.push(...added);
-            added.clear();
-
-            return results;
-        }
-        function getMyersWeighted (previous, next, virtual, comparator) {
-            virtual.forEach((row, y) => {
-                const nextItem = next[y];
-                row.forEach((cell, x) => {
-                    const previousItem = previous[x];
-                    if (comparator(nextItem, previousItem)) {
-                        cell.matched = true;
-                        cell.value = nextItem;
-
-                        // Add 1 to the upper-left weight:
-                        cell.weight = (x > 0 && y > 0 ?
-                            virtual[y-1][x-1].weight + 1
-                            : 1
-                        );
-                    } else {
-                        // Retrieve the max weight from left or upper cells:
-                        cell.weight = Math.max(y > 0 ? virtual[y-1][x].weight : 0, x > 0 ? virtual[y][x-1].weight : 0);
-                    }
-                })
-            });
-        }
         // --------------------------------
         return diff;
     })());

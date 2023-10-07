@@ -10156,16 +10156,18 @@
             const blueprint = {
                 accessors: {
                     publics: {
-                        entries: null
+                        entries:        null
                     },
                     privates: {
-                        comparator: null,
-                        delimiter:  null,
-                        data:       null,
-                        next:       null,
-                        previous:   null,
-                        type:       null,
-                        paths:      null,
+                        comparator:     null,
+                        delimiter:      null,
+                        data:           null,
+                        next:           null,
+                        offsetEnd:      null,
+                        offsetStart:    null,
+                        previous:       null,
+                        type:           null,
+                        paths:          null,
                     }
                 },
                 construct: function (previous, next, options={}) {
@@ -10212,6 +10214,16 @@
                             const that = _(this);
                             that.previous = previous;
                         },
+                        setOffsetEnd: function (offsetEnd) {
+                            aa.arg.test(offsetEnd, blueprint.verifiers.offsetEnd, "'offsetEnd'");
+                            const that = _(this);
+                            that.offsetEnd = offsetEnd;
+                        },
+                        setOffsetStart: function (offsetStart) {
+                            aa.arg.test(offsetStart, blueprint.verifiers.offsetStart, "'offsetStart'");
+                            const that = _(this);
+                            that.offsetStart = offsetStart;
+                        },
                         setOptions:        function (options={}) {
                             aa.arg.test(options, aa.verifyObject({
                                 comparator: blueprint.verifiers.comparator,
@@ -10230,6 +10242,8 @@
                     delimiter:  arg => aa.isString(arg) || aa.isRegExp(arg),
                     entries:    aa.instanceof(aa.Collection),
                     next:       aa.isArrayLike,
+                    offsetEnd:      arg => arg === null || aa.isInt(arg),
+                    offsetStart:    arg => arg === null || aa.isInt(arg),
                     previous:   aa.isArrayLike,
                     type:       aa.inArray(diffTypes),
                 },
@@ -10242,9 +10256,10 @@
             const blueprint = {
                 accessors: {
                     read: {
-                        index:      null,
-                        type:       null,
-                        value:      null,
+                        index:          null,
+                        type:           null,
+                        value:          null,
+                        previousValue:  null,
                     }
                 },
                 construct: function (spec={}) {
@@ -10260,24 +10275,30 @@
                     publics: {
                         toObject: function () {
                             return {
-                                index:  this.index,
-                                type:   this.type,
-                                value:  this.value,
+                                index:          this.index,
+                                type:           this.type,
+                                value:          this.value,
+                                previousValue:  this.value,
                             };
                         },
                     },
                     privates: {
-                        setIndex:       function (index) {
+                        setIndex:           function (index) {
                             aa.arg.test(index, blueprint.verifiers.index, "'index'");
                             const that = _(this);
                             that.index = index;
                         },
-                        setType:        function (type) {
+                        setPreviousValue:   function (previousValue) {
+                            aa.arg.test(previousValue, blueprint.verifiers.previousValue, "'previousValue'");
+                            const that = _(this);
+                            that.previousValue = previousValue;
+                        },
+                        setType:            function (type) {
                             aa.arg.test(type, blueprint.verifiers.type, "'type'");
                             const that = _(this);
                             that.type = type;
                         },
-                        setValue:       function (value) {
+                        setValue:           function (value) {
                             aa.arg.test(value, blueprint.verifiers.value, "'value'");
                             const that = _(this);
                             that.value = value;
@@ -10285,9 +10306,10 @@
                     }
                 },
                 verifiers: {
-                    index:      aa.isPositiveInt,
-                    value:      aa.any,
-                    type:       aa.inArray(changeTypes),
+                    index:          aa.isPositiveInt,
+                    value:          aa.any,
+                    previousValue:  aa.any,
+                    type:           aa.inArray(changeTypes),
                 },
             };
             aa.manufacture(DiffEntry, blueprint, {get, set});
@@ -10423,8 +10445,9 @@
                             }
                             if (!isDeleted && !isInserted) {
                                 list.push(new DiffEntry({
-                                    index:      cell.aIndex,
-                                    value:      that.previous[cell.aIndex],
+                                    index:          cell.bIndex,
+                                    value:          that.next[cell.bIndex],
+                                    previousValue:  that.previous[cell.aIndex],
                                 }));
                             }
 
@@ -10578,6 +10601,8 @@
 
                     if (that.previous.length === 0 || that.next.length === 0) return algorithm.myers.getEntriesFromEmpty.call(this);
 
+                    algorithm.myers.trimEqualities.call(this);
+
                     that.data.virtual = algorithm.myers.getVirtualTable.call(this, that.previous.length, that.next.length);
                     algorithm.myers.weight.call(this);
                     const entries = algorithm.myers.getEntries.call(this);
@@ -10641,6 +10666,32 @@
                         }
                     }
                     return true;
+                },
+                trimEqualities:         function () {
+                    const that = _(this);
+
+                    let end = null;
+                    let start = null;
+                    let i = 0
+
+                    start: for (; i < Math.min(that.previous.length, that.next.length); i++) {
+                        if (!that.comparator(that.previous[i], that.next[i])) {
+                            start = i;
+                            break start;
+                        }
+                    }
+                    start ??= 0;
+
+                    const offset = that.next.length - that.previous.length;
+                    end: for (i = that.next.length - 1; i > 0 && i - offset > 0; i--) {
+                        if (!that.comparator(that.previous[i - offset], that.next[i])) {
+                            end = i - (that.next.length - 1) || null;
+                            break end;
+                        }
+                    }
+                    
+                    that.setOffsetStart(start);
+                    that.setOffsetEnd(end);
                 },
                 weight:                 function () {
                     const that = _(this);

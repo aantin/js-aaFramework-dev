@@ -114,36 +114,40 @@
     // Prototypes:
     aa.prototypes = Object.freeze({
         events:         aa.event,
-        hydrate:        function (spec /*, startWith */) {
-            /**
-             * @param {object} spec={}
-             * @param {array} startWith=[]
-             *
-             * @return {void}
-             */
-            spec = arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : {};
-            const startWith = arguments && arguments.length > 1 && aa.isArray(arguments[1]) ? arguments[1] : [];
-
-            const set = (k, v) => {
+        hydrate:        (function () {
+            const set = function (k, v) {
                 const method = "set"+k.firstToUpper();
-                if (typeof this[method] === "function") {
+                if (aa.isFunction(this[method])) {
                     this[method].call(this, v);
+                } else {
+                    warn(`Method '${method}' not found`);
                 }
             };
+            return function (spec /*, startWith */) {
+                /**
+                 * @param {object} spec={}
+                 * @param {array} startWith=[]
+                 *
+                 * @return {void}
+                 */
+                spec = arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : {};
+                const startWith = arguments && arguments.length > 1 && aa.isArray(arguments[1]) ? arguments[1] : [];
 
-            // Do first:
-            startWith.forEach((key) => {
-                if (spec.hasOwnProperty(key)) {
-                    set(key, spec[key]);
-                    delete spec[key];
-                }
-            });
 
-            // Then:
-            spec.forEach((v, k) => {
-                set(k, v);
-            });
-        },
+                // Do first:
+                startWith.forEach((key) => {
+                    if (spec.hasOwnProperty(key)) {
+                        set.call(this, key, spec[key]);
+                        delete spec[key];
+                    }
+                });
+
+                // Then:
+                spec.forEach((v, k) => {
+                    set.call(this, k, v);
+                });
+            };
+        })(),
         mapFactory:     function () {
             const privates = new WeakMap();
             return Object.freeze({

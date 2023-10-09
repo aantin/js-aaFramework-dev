@@ -545,7 +545,7 @@
                     if (!privates.get(aa.Action, "onceExecuteDeprecated")) {
                         const onceExecuteDeprecated = true;
                         privates.set(aa.Action, onceExecuteDeprecated);
-                        deprecated("aa.Action.callbacks");
+                        aa.deprecated("aa.Action.callbacks");
                     }
                     callback(param);
                 });
@@ -817,7 +817,7 @@
                 return get(this, "disabled");
             };
             aa.Action.prototype.setCallback     = function (f) {
-                deprecated("aa.Action.callbacks");
+                aa.deprecated("aa.Action.callbacks");
                 verify("callback", f);
 
                 get(this, "listeners")["onexecute"].push(f); // now in 'onexecute' instead of in 'callbacks'

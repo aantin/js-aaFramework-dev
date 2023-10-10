@@ -4189,7 +4189,7 @@
         })();
         this.Dialog         = (function () {
             const db = new aa.Storage("aaDialog");
-            let dialogCollection = {}; // liste des <aa.gui.Dialog> ouvertes
+            const dialogCollection = {}; // liste des <aa.gui.Dialog> ouvertes
 
             function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
 
@@ -4261,11 +4261,11 @@
                 checkValidation:  function () {
                     let form = undefined;
                     let isValid = true;
-                    el("aaDialog-"+this.getID(), (node) => {
+                    el("aaDialog-"+this.getID(), node => {
                         const forms = node.getElementsByTagName("form");
                         if (forms.length === 1) {
                             form = forms[0];
-                            const validation = this.validation || (() => { return true; });
+                            const validation = this.validation ?? aa.any;
                             const checkElements = () => {
                                 return form.elements.reduce((bool, elt) => {
                                     const validation = get(elt, "validation");
@@ -4285,7 +4285,7 @@
                             };
                             const checkPatterns = () => {
                                 return form.elements
-                                    .filter(elt => elt.nodeName && ["input", "textarea"].has(elt.nodeName.toLowerCase()))
+                                    .filter(elt => ["input", "textarea"].has(elt.nodeName?.toLowerCase()))
                                     .reduce((bool, elt) => {
                                         const pattern = elt.pattern || elt.dataset.pattern;
                                         return (pattern && !elt.value.match(new RegExp(pattern)) ?
@@ -4297,7 +4297,7 @@
                             };
                             const checkrequired = () => {
                                 return form.elements
-                                    .filter(elt => elt.nodeName && ["input", "textarea"].has(elt.nodeName.toLowerCase()))
+                                    .filter(elt => ["input", "textarea"].has(elt.nodeName?.toLowerCase()))
                                     .reduce((bool, elt) => {
                                         const required = !!elt.required;
                                         return (required && !elt.value ?
@@ -4310,11 +4310,8 @@
                             isValid = (validation(getPOST.call(this)) && checkPatterns() && checkrequired() && checkElements());
                         }
                     });
-                    const btn = get(this, "yesButton");
-                    if (btn) {
-                        btn.disabled = !isValid;
-                    }
-                    // get(this, "yesButton").disabled = (!validation(getPOST.call(this)) || !checkPatterns() || !checkrequired());
+                    const btn = get(this, "btn-submit");
+                    if (btn) btn.disabled = !isValid;
                     return isValid;
                 },
                 hydrate:            aa.prototypes.hydrate,
@@ -4767,8 +4764,7 @@
                     }
                 },
                 setValidate:        function (callback) {
-                    if (!aa.isFunction(callback)) { throw new TypeError("Dialog validation must be a Function."); }
-
+                    aa.arg.test(callback, aa.isFunction, "'callback'");
                     this.validation = callback;
                     return !!this.validation;
                 },
@@ -5305,20 +5301,20 @@
                     }
                 },
                 addCancelButtonTo:  function (node) {
-                    set(this, "btn-cancel", $$("input#aaDialog-"+this.getID()+"-cancelButton.reset", {
+                    const button = $$("input#aaDialog-"+this.getID()+"-cancelButton.reset", {
                         type: "reset",
-                        on: {
-                            click: () => {
+                        on: {click: (e) => {
                                 fire.call(this, "cancel");
                                 this.hide();
-                            }
-                        }
-                    }));
+                        }}
+                    });
                     const texts = {
                         confirm: 'no'
                     };
-                    get(this, "btn-cancel").value = aa.lang.get(`action.${texts[this.type] ?? 'cancel'}`);
-                    node.appendChild(get(this, "btn-cancel"));
+                    button.value = aa.lang.get(`action.${texts[this.type] ?? 'cancel'}`);
+                    
+                    set(this, "btn-cancel", button);
+                    node.appendChild(button);
                 },
                 addInputTo:         function (node) {
                     const input = $$("input#aaDialog-"+this.getID()+"DialogInput", {
@@ -5337,7 +5333,7 @@
                     });
                     node.appendChild(input);
                 },
-                addReminderTo:       function (node) {
+                addReminderTo:      function (node) {
                     const reminder = get(this, "reminder");
                     if (reminder) {
                         node.appendChild($$("br"));
@@ -5349,20 +5345,22 @@
                     }
                 },
                 addSubmitButtonTo:  function (node) {
-                    set(this, "btn-submit", $$("input#aaDialog-"+this.getID()+"-submitButton", {
+                    const button = $$("input#aaDialog-"+this.getID()+"-submitButton", {
                         type: "submit",
                         on: {click: (e) => {
                             fire.call(this, "submit");
                             this.hide();
                         }}
-                    }));
+                    });
                     const texts = {
                         confirm:        'yes',
                         prompt:         'submit',
                     };
-                    get(this, "btn-submit").value = aa.lang.get(`action.${texts[this.type] ?? 'ok'}`);
-                    node.appendChild(get(this, "btn-submit"));
-                    get(this, "btn-submit").focus();
+                    button.value = aa.lang.get(`action.${texts[this.type] ?? 'ok'}`);
+                    
+                    set(this, "btn-submit", button);
+                    node.appendChild(button);
+                    button.focus();
                 },
                 addThemeTo:         function (node) {
                     if (this.theme) {
@@ -5475,11 +5473,9 @@
                     });
                 },
                 getButtons:         function () {
-
                     return $$("div.buttons");
                 },
                 getCell:            function () {
-                    
                     return $$("div.td");
                 },
                 getDom:             function () {
@@ -5517,7 +5513,6 @@
                     return dom;
                 },
                 getGrid:            function () {
-                    
                     return $$("div.aaTable.fullscreen");
                 },
                 getFromLayout:      function () {
@@ -5581,14 +5576,13 @@
                             submit: (e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                const btn = get(this, "yesButton");
+                                const btn = get(this, "btn-submit");
                             }
                         }
                     });
                     return form;
                 },
                 getMenu:            function () {
-
                     return $$("div.menu");
                 },
                 getModal:           function () {
@@ -5599,7 +5593,6 @@
                 getMenuIcon:        function () {
                 },
                 getMessage:         function () {
-                    
                     return $$("div.message");
                 },
                 onresize:           function () {
@@ -5693,6 +5686,7 @@
                     const verify = () => {
                         this.checkValidation();
                     };
+                    form.on('change', verify);
                     form.elements.forEach((node) => {
                         if (node.nodeName) {
                             switch (node.nodeName.toLowerCase()) {

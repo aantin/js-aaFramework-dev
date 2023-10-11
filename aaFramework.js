@@ -3649,7 +3649,6 @@
             };
         };
         const parse = function (arr, shortcut /*, callback */) {
-            log(arr)
             aa.arg.test(arr, aa.isArray, 0);
             aa.arg.test(shortcut, aa.isFunction, 1);
             const callback = aa.arg.optional(arguments, 2, undefined);
@@ -3781,17 +3780,17 @@
                 if (arguments && arguments.length) {
                     this.hydrate(arguments[0]);
                 }
-                aa.prototypes.initGetters.call(this, ["theme", "appName", "items"]);
             };
             const Menu      = function () {
 
                 // Attributes:
                 aa.defineAccessors.call(this, {
-                    publics: {},
-                    privates: {
+                    publics: {
                         appName: null,
                         items: [],
                         theme: null
+                    },
+                    privates: {
                     },
                 }, {getter: get, setter: set});
 
@@ -3833,7 +3832,6 @@
                     get(this, "items").push(null);
                 },
                 reset:      function () {
-
                     set(this, "items", []);
                 },
                 setAction:  function (a) {

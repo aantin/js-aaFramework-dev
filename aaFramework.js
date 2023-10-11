@@ -358,75 +358,6 @@
             setter(this, key, value);
         });
     };
-    /* aa.defineAccessors      = function (accessors, spec={}) {
-        const spec = arguments && arguments.length > 1 ? arguments[1] : {};
-
-        if (!aa.isObject(accessors)) { throw new TypeError('First argument must be an Object.'); }
-        if (!aa.isObject(spec)) { throw new TypeError("Second argument must be an Object."); }
-
-        accessors.verify({
-            execute: aa.isObject,
-            privates: aa.isObject,
-            publics: aa.isObject,
-            read: aa.isObject,
-            write: aa.isObject
-        });
-        spec.verify({
-            getter: aa.isFunction,
-            setter: aa.isFunction,
-        });
-
-        const getter = spec.getter || get;
-        const setter = spec.setter || set;
-
-        accessors.forEach((keyValues, accessor) => {
-            keyValues.forEach((value, key) => {
-                const thisSetter = 'set'+key.firstToUpper();
-                setter(this, key, value);
-                switch (accessor) {
-                    case 'publics':
-                        Object.defineProperty(this, key, {
-                            get: () => {
-                                return getter(this, key);
-                            },
-                            set: (value) => {
-                                if (typeof this[thisSetter] === 'function') {
-                                    this[thisSetter].call(this, value);
-                                } else {
-                                    console.warn("Setter '"+key+"' not implemented.");
-                                }
-                            }
-                        });
-                        break;
-                    case 'read':
-                        Object.defineProperty(this, key, {
-                            get: () => {
-                                return getter(this, key);
-                            }
-                        });
-                        break;
-                    case 'write':
-                        Object.defineProperty(this, key, {
-                            set: (value) => {
-                                if (typeof this[thisSetter] === 'function') {
-                                    this[thisSetter].call(this, value);
-                                } else {
-                                    console.warn("Setter '"+key+"' not implemented.");
-                                }
-                            }
-                        });
-                        break;
-                    case 'execute':
-                        Object.defineProperty(this, key, {
-                            get: () => {
-                                return getter(this, key).call(this);
-                            }
-                        });
-                        break;
-                }
-            });
-        });
-    }; */
     // ----------------------------------------------------------------
 
     // Classes:
@@ -3475,6 +3406,189 @@
             return;
         };
     })());
+    aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
+        /**
+         * Build a constructor with publics, privates, static, etc properties.
+         * 
+         * Calling the 'construct' private method will call the following sequence:
+         *      - define accessors
+         *      - construct
+         *      - hydrate
+         *      : emit event 'hydrated'
+         * 
+         * Usage:
+            const XXX = (() => {
+                const {get, set} = aa.mapfactory();
+                function XXX () { get(XXX, 'construct').apply(this, arguments); }
+                function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
+                const blueprint = {
+                    accessors: {
+                        publics: {
+                        },
+                        privates: {
+                        },
+                    },
+                    construct: function () {
+                        const that = getAccessor(this);
+                    },
+                    methods: {
+                        publics: {
+                        },
+                        setters: {
+                        }
+                    },
+                    on: {
+                        hydrated: function () {},
+                    },
+                    statics: {
+                    },
+                    verifiers: {
+                    }
+                };
+                aa.manufacture(XXX, blueprint, {get, set});
+                return XXX;
+            })();
+         */
+        aa.arg.test(blueprint, aa.verifyObject({
+            accessors:          aa.verifyObject(commons.accessors.verifiers),
+            construct:          aa.isFunction,
+            startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+            methods:            aa.verifyObject({
+                privates:       aa.isObjectOfFunctions,
+                publics:        aa.isObjectOfFunctions,
+                setters:        aa.isObjectOfFunctions
+            }),
+            on:                 aa.verifyObject({
+                hydrated:       aa.isFunction
+            }),
+            statics:            aa.isObject,
+            verifiers:          aa.isObject,
+        }), `'blueprint'`);
+        blueprint.sprinkle({
+            accessors: commons.accessors.defaultValue,
+            startHydratingWith: [],
+            methods: {
+                privates: {},
+                publics:{},
+                setters: {}
+            },
+            statics: {},
+            verifiers: {}
+        });
+
+        // Verify property name duplications between attributes and methods:
+        Object.keys(blueprint.methods)
+        ?.filter(visibility => visibility !== 'setters')
+        ?.forEach(methodVisibility => {
+            blueprint.methods?.[methodVisibility]
+            ?.forEach((callback, methodName) => {
+                Object.keys(blueprint.accessors)
+                ?.forEach(attributeVisibility => {
+                    aa.throwErrorIf(
+                        blueprint.accessors?.[attributeVisibility]?.hasOwnProperty(methodName),
+                        `Property '${methodName}' must not be declared in both attributes and methods.`
+                    );
+                });
+            });
+        });
+
+        const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            get: aa.isFunction,
+            set: aa.isFunction,
+        }));
+
+        const getter = accessors.get ?? get;
+        const setter = accessors.set ?? set;
+
+        const emit = aa.event.getEmitter({get: getter, set: setter});
+
+        // Define setters:
+        Object.keys(blueprint.accessors.publics)
+        .forEach(key => {
+            if (blueprint.accessors.publics.hasOwnProperty(key)) {
+                const methodName = `set${key.firstToUpper()}`;
+                function method (value) {
+                    // Verify value integrity:
+                    aa.arg.test(
+                        value,
+                        value =>
+                            !blueprint.verifiers
+                            || !(blueprint.verifiers.hasOwnProperty(key))
+                            || blueprint.verifiers[key].call(this, value),
+                        `'${key}' setter`
+                    );
+
+                    // Emit onchange event:
+                    const isDifferent = (value !== getter(this, key));
+                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
+
+                    // Set value:
+                    if (blueprint?.methods?.setters.hasOwnProperty(key)) {
+                        blueprint.methods.setters[key].call(this, value);
+                    } else {
+                        setter(this, key, value);
+                    }
+
+                    // Emit onchanged event:
+                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
+                }
+
+                // setter(this, methodName, method);
+                Instancer.prototype[methodName] ??= method;
+            }
+        });
+
+        // Constructor:
+        setter(Instancer, `construct`, function (/* spec */) {
+            const spec = aa.arg.optional(arguments, 0, {});
+
+            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
+            aa.definePrivateMethods.call(this, blueprint.methods?.privates, {get: getter, set: setter});
+
+            blueprint.construct?.apply(this, arguments);
+            
+            this.hydrate(spec, blueprint.startHydratingWith);
+        });
+
+        function hydrator (key, value) {
+            if (spec.hasOwnProperty(key)) {
+                const methodName = `set${key.firstToUpper()}`;
+                const method = getter(this, methodName) ?? this[methodName];
+                if (aa.isFunction(method)) {
+                    method.call(this, value);
+                }
+            }
+        };
+
+        // Public:
+        const methods = Object.assign({
+            hydrate:    function (/* spec, order */) {
+                const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
+                const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
+
+                // First assign with starting keys:
+                order
+                .forEach((key) => { hydrator(key, spec[key]); });
+
+                // Then assign remaining keys:
+                Object.keys(spec)
+                .filter(key => !order.has(key))
+                .forEach(key => { hydrator(key, spec[key]); });
+
+                // Emit event 'hydrated':
+                emit.call(this, 'hydrated');
+            },
+            on:         aa.event.getListener({get: getter, set: setter})
+        }, blueprint.methods.publics);
+        aa.deploy(Instancer.prototype, methods, {force: true});
+
+        // Static:
+        aa.deploy(Instancer, blueprint.statics, {force: true});
+
+        return Object.freeze({
+            emitter: emit
+        });
+    });
     aa.gui                      = Object.freeze(new (function () {
         const {get, set} = aa.mapFactory();
         function _(that) { return aa.getAccessor.call(that, {get, set}); }
@@ -3787,8 +3901,8 @@
                 aa.defineAccessors.call(this, {
                     publics: {
                         appName: null,
-                        items: [],
-                        theme: null
+                        items:  [],
+                        theme:  null
                     },
                     privates: {
                     },
@@ -3828,7 +3942,6 @@
                     }
                 },
                 addSep:     function () {
-
                     get(this, "items").push(null);
                 },
                 reset:      function () {
@@ -3927,7 +4040,8 @@
             return Object.freeze(Menu);
         })();
         this.ContextMenu    = (function () {
-            function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
+            const {get, set} = aa.mapFactory();
+            function _(that) { return aa.getAccessor.call(that, {get, set}); }
 
             // Closure private methods:
             const view = {
@@ -3936,7 +4050,7 @@
                 construct: function (/* spec */) {
                     const spec = aa.arg.optional(arguments, 0, {});
 
-                    const that = getAccessor(this);
+                    const that = _(this);
 
                     set(this, "theme", aa.settings.theme);
                     aa.events.on('themechange', (theme) => {
@@ -3999,7 +4113,7 @@
                 on:     aa.prototypes.events.getListener({get, set}),
 
                 hide:   function () {
-                    const that = getAccessor(this);
+                    const that = _(this);
                     if (that.node) {
                         aa.events.removeApp("aaContextMenu");
                         that.node.removeNode();
@@ -4008,20 +4122,18 @@
                         if (that.onclickout) {
                             document.body.cancel(`click`, that.onclickout);
                         }
-                        if (that.activeElement) {
-                            that.activeElement.focus();
-                        }
+                        that.activeElement?.focus();
                         privates.emit.call(this, `hide`);
                     }
                 },
                 show:   function () {
-                    const that = getAccessor(this);
+                    const that = _(this);
 
                     privates.currentContextMenu?.hide();
                     privates.currentContextMenu = this;
 
                     that.activeElement = document.activeElement;
-                    that.activeElement.blur();
+                    that.activeElement?.blur();
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {
@@ -4177,12 +4289,12 @@
                 },
                 setTop:     function (top) {
                     aa.arg.test(top, aa.isPositiveInt, "'top'");
-                    const that = getAccessor(this);
+                    const that = _(this);
                     that.top = top;
                 },
                 setLeft:    function (left) {
                     aa.arg.test(left, aa.isPositiveInt, "'left'");
-                    const that = getAccessor(this);
+                    const that = _(this);
                     that.left = left;
                 },
             }, {force: true});
@@ -4226,6 +4338,7 @@
                         escape: true
                     },
                     privates: {
+                        active:     null,
                         validation: null
                     }
                 }, {getter: get, setter: set});
@@ -4317,13 +4430,15 @@
                 },
                 hydrate:            aa.prototypes.hydrate,
                 hide:               function () {
-                    // warn("hide.id:", this.id);
+                    const that = _(this);
+
                     el("aaDialogBG-"+this.id, (dom) => {
                         dom.classList.remove("fade");
                         dom.classList.add("fadeOut");
                     });
                     fire.call(this, "hide");
                     pop.call(this);
+                    that.active?.focus();
                     setTimeout(() => {
                         // return;
                         el("aaDialogBG-"+this.id, (dom) => {
@@ -4416,13 +4531,15 @@
                     }
                 },
                 show:               function () {
-                    // warn("show.id:", this.id);
                     if (this.isValid()) {
                         // Directly do stuff if no need to confirm:
                         if (doNotConfirm.call(this)) {
                             fire.call(this, "submit");
                             return;
                         }
+
+                        const that = _(this);
+                        that.active = document.activeElement;
 
                         View.onresize.call(this);
                         View.freezeBody.call(this);
@@ -5731,58 +5848,66 @@
             // The actual <Dialog> Function:
             return Object.freeze(Dialog);
         })();
-        this.Notification   = (function () {
-            const Notification = function () {
-                /*
-                    notif = new aa.gui.Notification('Play / Pause');
-                    notif = new aa.gui.Notification('Play / Pause',{
-                        title: 'myTitle',
-                        message: 'bla bla bla',
-                        type: 'information' // ['information','warning','critical','confirm']
-                    });
-                    ---
-                    notif.addAction({
-                        text: 'Ok',
-                        // name: 'action_name',
-                        callback: function () {},
-                        callbacks: [
-                            function () {},
-                            function () {}
-                        ]
-                    });
-                    notif.push();
-                */
-                // Attributes:
-                aa.defineAccessors.call(this, {
-                    publics: {
-                        id: null,
-                        message: null,
-                        title: null,
-                        type: null,
-                    }
+        this.Notification = (() => {
+            const {get, set} = aa.mapFactory();
+            function _(that) { return aa.getAccessor.call(that, {get, set}); }
+
+            /**
+             * Display a notification in the bottom-right corner of the window.
+             * 
+             * @param 
+             * 
+             * Usage:
+                notif = new aa.gui.Notification('Play / Pause');
+                notif = new aa.gui.Notification('Play / Pause',{
+                    title: 'myTitle',
+                    message: 'bla bla bla',
+                    type: 'information' // ['information','warning','critical','confirm']
                 });
-                // this.id         = null;
-                // this.message    = null;
-                // this.title      = null;
-                // this.type       = null;
-
-                // Lists:
-                this.actions = [];
-
-                let notifsLength = 0;
-            
-                // Closure private variables:
-                const types = ["information", "warning", "critical", "confirm"];
-
-                // Closure private methods:
-                const construct = function () {
-                    this.type = types[0];
-                    if (arguments && arguments.length) {
-                        this.setMessage(arguments[0]);
-                        if (arguments.length > 1) {
-                            this.hydrate(arguments[1]);
-                        }
+                ---
+                notif.addAction({
+                    text: 'Ok',
+                    // name: 'action_name',
+                    callback: function () {},
+                    callbacks: [
+                        function () {},
+                        function () {}
+                    ]
+                });
+                notif.push();
+             */
+            function Notification () { get(Notification, 'construct').apply(this, arguments); }
+            const privates = {
+                notifsLength: 0,
+                types: ["information", "warning", "critical", "confirm"] // First item will be used by default
+            };
+            const blueprint = {
+                accessors: {
+                    publics: {
+                        actions:    null,
+                        id:         null,
+                        text:       null,
+                        title:      null,
+                        type:       null,
                     }
+                },
+                construct: function (text, options={}) {
+                    aa.arg.test(text, blueprint.verifiers.text, "'text'");
+                    aa.arg.test(options, aa.verifyObject(blueprint.verifiers), "'options'");
+
+                    const that = _(this);
+
+                    that.actions = new aa.Collection({ authenticate: aa.instanceof(aa.Action) });
+                    that.type = privates.types[0];
+
+                    options.sprinkle({
+                        id: `${privates.notifsLength}`,
+                        text
+                    });
+                    privates.notifsLength++;
+                    options.forEach((value, key) => {
+                        blueprint.methods.setters[key]?.call(this, value);
+                    });
                     el("aaNotifs", (node) => {
                         node.classList.add(aa.settings.theme);
                     }, () => {
@@ -5793,169 +5918,159 @@
                             node.classList.add(theme);
                         });
                     });
-                };
+                },
+                methods: {
+                    publics: {
 
-                aa.deploy(aa.gui.Notification.prototype, {
-
-                    // Methods:
-                    hydrate:    aa.prototypes.hydrate,
-                    isValid:    function () {
-
-                        return (this.text !== null);
-                    },
-                    push:       function () {
-                        let notifs = document.getElementById("aaNotifs");
-                        if (notifs) {
-                            notifs.style.zIndex = 1+aa.getMaxZIndex();
-                            let dom = this.getHTML();
-                            if (dom) {
-                                if (notifs.firstChild) {
-                                    notifs.insertBefore(dom, notifs.firstChild);
-                                } else {
-                                    notifs.appendChild(dom);
+                        // Methods:
+                        isValid:    function () {
+                            return (this.text !== null);
+                        },
+                        push:       function () {
+                            els('#aaNotifs', container => {
+                                container.style.zIndex = 1+aa.getMaxZIndex();
+                                let node = this.getHTML();
+                                if (node) {
+                                    container.insertAdjacentElement('afterbegin', node);
                                 }
-                                notifsLength++;
-                            }
-                        }
-                    },
-                    remove:     function (id) {
-                        let dom = document.getElementById('aaNotif_'+id);
-                        if (dom) {
-                            dom.classList.add('fadeOut');
-                            dom.on('animationend',(function (dom) {return function () {
-                                dom.style.display = 'none';
-                                dom.removeNode();
-                            };})(dom));
-                        }
-                    },
-
-                    // Setters:
-                    addAction:  function (o) {
-                        if (!aa.isObject(o)) {
-                            throw new TypeError("Options argument must be an object.");
-                            return false;
-                        }
-                        let action = new aa.Action(o);
-                        if (action.isValid()) {
-                            this.actions.push(action);
-                            return true;
-                        }
-                        return false;
-                    },
-                    setId:      function (p) {
-                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
-                        
-                        set(this, 'id', p.trim());
-                    },
-                    setMessage: function (p) {
-                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
-
-                        set(this, 'message', p.trim());
-                    },
-                    setTitle:   function (p) {
-                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
-
-                        set(this, 'title', p.trim());
-                    },
-                    setType:    function (p) {
-                        if (!aa.nonEmptyString(p)) { throw new Error("Argument must be a non-empty String."); }
-
-                        p = p.trim().toLowerCase();
-                        if (types.has(p)) {
-                            set(this, 'type', p);
-                        }
-                    },
-
-                    // Getters:
-                    getHTML:    function () {
-                        const dom = aa.html("div.notif."+this.type+"#aaNotif_"+notifsLength);
-
-                        if (this.type !== null) {
-                            let icon = aa.html("div.icon");
-                            dom.appendChild(icon);
-                            // icon.classList.add(this.type);
-                            switch (this.type) {
-                                case "information":
-                                    icon.classList.add("information");
-                                    icon.appendChild(aa.html("span.fa.fa-2x.fa-info-circle"));
-                                    break;
-                                case "warning":
-                                    icon.classList.add("warning");
-                                    icon.appendChild(aa.html("span.fa.fa-2x.fa-warning"));
-                                    break;
-                                case "critical":
-                                    icon.classList.add("critical");
-                                    icon.appendChild(aa.html("span.fa.fa-2x.fa-remove"));
-                                    break;
-                                case "confirm":
-                                    icon.classList.add("confirm");
-                                    icon.appendChild(aa.html("span.fa.fa-2x.fa-question-circle"));
-                                    break;
-                                case "prompt":
-                                    icon.classList.add("prompt");
-                                    icon.appendChild(aa.html("span.fa.fa-2x.fa-question-circle"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                        let message = aa.html('div.message',this.message);
-                        dom.appendChild(message);
-
-                        if (this.actions.length > 0) {
-                            let remove = (function (that,id) {
-                                return function () {
-                                    that.remove(id);
-                                };
-                            })(this, notifsLength);
-                            let bs = document.createElement("div");
-                            bs.classList.add("buttons");
-                            
-                            this.actions.forEach(function (action) {
-                                let b = aa.html("input",{
-                                    type: "button",
-                                    value: action.text || "Ok"
-                                });
-                                if (action.callbacks.length > 0) {
-                                    action.callbacks.forEach(function (callback) {
-                                        aa.deprecated("action.callback");
-                                        return b.on("click",callback);
-                                    });
-                                }
-                                b.on("click", () => { action.execute(); });
-                                b.on("click", remove);
-                                bs.appendChild(b);
-                                switch (action.type) {
-                                    case "reset":
-                                        b.classList.add("reset");
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                return true;
                             });
-                            message.appendChild(bs);
+                        },
+                        remove:     function (id) {
+                            let dom = document.getElementById('aaNotif_'+id);
+                            if (dom) {
+                                dom.classList.add('fadeOut');
+                                dom.on('animationend',(function (dom) {return function () {
+                                    dom.style.display = 'none';
+                                    dom.removeNode();
+                                };})(dom));
+                            }
+                        },
+
+                        // Setters:
+                        addAction:  function (action) {
+                            if (!(action instanceof aa.Action) && aa.isObject(action)) {
+                                action = new aa.Action(action);
+                            }
+                            aa.arg.test(action, aa.instanceof(aa.Action), "'action'");
+
+                            const that = _(this);
+                            if (action.isValid()) {
+                                that.actions.push(action);
+                                return true;
+                            }
+                            return false;
+                        },
+
+                        // Getters:
+                        getHTML:    function () {
+                            const that = _(this);
+
+                            const node = aa.html("div.notif."+that.type+"#aaNotif_"+that.id);
+
+                            if (that.type !== null) {
+                                let icon = aa.html("div.icon");
+                                node.appendChild(icon);
+                                icon.classList.add(that.type);
+                                const icons = {
+                                    information: 'info-circle',
+                                    warning: 'warning',
+                                    critical: 'remove',
+                                    confirm: 'question-circle',
+                                };
+                                icon.append(aa.html(`span.fa.fa-2x.fa-${icons[that.type]}`));
+                            }
+
+                            const message = $$('div.message', `${that.title ? `<h2>${that.title}</h2>` : ''}${that.text}`);
+                            node.appendChild(message);
+
+                            if (that.actions.length > 0) {
+                                const remove = () => { this.remove(that.id); };
+                                let buttons = document.createElement("div");
+                                buttons.classList.add("buttons");
+                                
+                                that.actions.forEach(function (action) {
+                                    const btn = $$(`button.${action.type}`, action.text ?? "Ok");
+                                    if (action.callbacks.length > 0) {
+                                        action.callbacks.forEach(callback => {
+                                            aa.deprecated("action.callback");
+                                            btn.on("click", callback);
+                                        });
+                                    }
+                                    btn.on("click", () => { action.execute(); });
+                                    btn.on("click", remove);
+                                    buttons.appendChild(btn);
+                                    switch (action.type) {
+                                        case "reset":
+                                            btn.classList.add("reset");
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    return true;
+                                });
+                                message.appendChild(buttons);
+                            }
+                            else {
+                                node.classList.add("waitAndFadeOut");
+                                node.on("animationend",(function (node) {return function () {
+                                    node.style.display = "none";
+                                    node.removeNode();
+                                };})(node));
+                            }
+                            
+                            return node;
                         }
-                        else {
-                            dom.classList.add("waitAndFadeOut");
-                            dom.on("animationend",(function (dom) {return function () {
-                                dom.style.display = "none";
-                                dom.removeNode();
-                            };})(dom));
-                        }
-                        
-                        return dom;
+                    },
+                    setters: {
+                        action:    function (action) {
+                            aa.arg.test([action], blueprint.verifiers.actions, "'action'");
+                            const that = _(this);
+                            this.addAction(action);
+                        },
+                        actions:    function (actions) {
+                            aa.arg.test(actions, blueprint.verifiers.actions, "'actions'");
+                            const that = _(this);
+                            actions.forEach(action => {
+                                this.addAction(action);
+                            });
+                        },
+                        id:         function (id) {
+                            aa.arg.test(id, blueprint.verifiers.id, "'id'");
+                            const that = _(this);
+                            that.id = id;
+                        },
+                        message:    function (message) {
+                            aa.deprecated('<Notification.message>');
+                            this.text = message;
+                        },
+                        text:       function (text) {
+                            aa.arg.test(text, blueprint.verifiers.text, "'text'");
+                            const that = _(this);
+                            that.text = text;
+                        },
+                        title:      function (title) {
+                            aa.arg.test(title, blueprint.verifiers.title, "'title'");
+                            const that = _(this);
+                            that.title = title;
+                        },
+                        type:       function (type) {
+                            aa.arg.test(type, blueprint.verifiers.type, "'type'");
+                            const that = _(this);
+                            that.type = type;
+                        },
                     }
-                }, {
-                    force: true,
-                    condition: aa.gui.Notification.prototype.hydrate === undefined
-                });
-
-                // Init:
-                construct.apply(this, arguments);
+                },
+                verifiers: {
+                    actions:    aa.isArrayOf(arg => arg instanceof aa.Action || aa.isObject(arg)),
+                    id:         aa.nonEmptyString,
+                    text:       aa.nonEmptyString,
+                    message:    aa.nonEmptyString,
+                    title:      aa.nonEmptyString,
+                    type:       aa.inArray(privates.types)
+                }
             };
-
-            return Object.freeze(Notification);
+            aa.manufacture(Notification, blueprint, {get, set});
+            return Notification;
         })();
         this.Progress       = (function () {
             const collection = {};
@@ -6204,7 +6319,7 @@
             }, transitionDuration*1000);
             return gui;
         };
-        this.notification   = function (message /*, spec */) {
+        this.notification   = function (message, spec={}) {
             /**
              * @param {string} type ('information','warning','critical','confirm')
              * @param {object} spec (optional)
@@ -6245,20 +6360,16 @@
                 });
                 // ----------------------------
              */
-             const spec = (arguments && arguments.length>1 ? arguments[1] : {});
-            if (!aa.isObject(spec)) {
-                throw new Error("Options argument should be an Object.");
-            }
-
-            let notif = new aa.gui.Notification(message, spec);
+            
+            aa.arg.test(spec, aa.isObject, "'spec'");
+            spec.sprinkle({
+                actions: []
+            });
             if (spec.action !== undefined) {
-                notif.addAction(spec.action);
+                spec.actions.push(spec.action);
+                delete spec.action;
             }
-            if (spec.actions !== undefined && aa.isArray(spec.actions)) {
-                spec.actions.forEach(function (action) {
-                    notif.addAction(action);
-                });
-            }
+            let notif = new aa.gui.Notification(message, spec);
             notif.push();
             return notif;
         };
@@ -6272,15 +6383,18 @@
              *
              * @return {void}
              */
-            verify("message", message);
+            verify('message', message);
             const show = (arguments && arguments.length>1 && verify("boolean", arguments[1]) ? arguments[1] : false);
 
             if (!aa.settings.production) {
-                const spec = { type: "warning" };
+                const spec = {
+                    title: 'Todo:',
+                    type: 'warning'
+                };
                 if (show) {
                     spec.action = {name: aa.uid()};
                 }
-                this.notif("<h2 style=\"margin: 0;\">Todo:</h2>"+message, spec);
+                this.notif(message, spec);
             }
         };
 
@@ -9098,194 +9212,6 @@
         }
 
         return Object.freeze(action);
-    });
-    aa.manufacture              = Object.freeze(function (Instancer, blueprint /*, accessors */) {
-        /**
-         * Build a constructor with publics, privates, static, etc properties.
-         * 
-         * Calling the 'construct' private method will call the following sequence:
-         *      - define accessors
-         *      - construct
-         *      - hydrate
-         *      : emit event 'hydrated'
-         * 
-         * Usage:
-            const XXX = (() => {
-                const {get, set} = aa.mapfactory();
-                function XXX () { get(XXX, 'construct').apply(this, arguments); }
-                function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
-                const blueprint = {
-                    accessors: {
-                        publics: {
-                        },
-                        privates: {
-                        },
-                    },
-                    construct: function () {
-                        const that = getAccessor(this);
-                    },
-                    methods: {
-                        publics: {
-                        },
-                        setters: {
-                        }
-                    },
-                    on: {
-                        hydrated: function () {},
-                    },
-                    statics: {
-                    },
-                    verifiers: {
-                    }
-                };
-                aa.manufacture(XXX, blueprint, {get, set});
-                return XXX;
-            })();
-         */
-        aa.arg.test(blueprint, aa.verifyObject({
-            accessors:          aa.verifyObject(commons.accessors.verifiers),
-            construct:          aa.isFunction,
-            startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
-            methods:            aa.verifyObject({
-                privates:       aa.isObjectOfFunctions,
-                publics:        aa.isObjectOfFunctions,
-                setters:        aa.isObjectOfFunctions
-            }),
-            on:                 aa.verifyObject({
-                hydrated:       aa.isFunction
-            }),
-            statics:            aa.isObject,
-            verifiers:          aa.isObject,
-        }), `'blueprint'`);
-        blueprint.sprinkle({
-            accessors: commons.accessors.defaultValue,
-            startHydratingWith: [],
-            methods: {
-                privates: {},
-                publics:{},
-                setters: {}
-            },
-            statics: {},
-            verifiers: {}
-        });
-
-        // Verify property name duplications between attributes and methods:
-        Object.keys(blueprint.methods)
-        ?.filter(visibility => visibility !== 'setters')
-        ?.forEach(methodVisibility => {
-            blueprint.methods?.[methodVisibility]
-            ?.forEach((callback, methodName) => {
-                Object.keys(blueprint.accessors)
-                ?.forEach(attributeVisibility => {
-                    aa.throwErrorIf(
-                        blueprint.accessors?.[attributeVisibility]?.hasOwnProperty(methodName),
-                        `Property '${methodName}' must not be declared in both attributes and methods.`
-                    );
-                });
-            });
-        });
-
-        const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
-            get: aa.isFunction,
-            set: aa.isFunction,
-        }));
-
-        const getter = accessors.get ?? get;
-        const setter = accessors.set ?? set;
-
-        const emit = aa.event.getEmitter({get: getter, set: setter});
-
-        // Define setters:
-        Object.keys(blueprint.accessors.publics)
-        .forEach(key => {
-            if (blueprint.accessors.publics.hasOwnProperty(key)) {
-                const methodName = `set${key.firstToUpper()}`;
-                function method (value) {
-                    // Verify value integrity:
-                    aa.arg.test(
-                        value,
-                        value =>
-                            !blueprint.verifiers
-                            || !(blueprint.verifiers.hasOwnProperty(key))
-                            || blueprint.verifiers[key].call(this, value),
-                        `'${key}' setter`
-                    );
-
-                    // Emit onchange event:
-                    const isDifferent = (value !== getter(this, key));
-                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
-
-                    // Set value:
-                    if (blueprint?.methods?.setters.hasOwnProperty(key)) {
-                        blueprint.methods.setters[key].call(this, value);
-                    } else {
-                        setter(this, key, value);
-                    }
-
-                    // Emit onchanged event:
-                    if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
-                }
-
-                // setter(this, methodName, method);
-                Instancer.prototype[methodName] ??= method;
-            }
-        });
-
-        // Constructor:
-        setter(Instancer, `construct`, function (/* spec */) {
-            const spec = aa.arg.optional(arguments, 0, {});
-
-            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
-            aa.definePrivateMethods.call(this, blueprint.methods?.privates, {get: getter, set: setter});
-
-            blueprint.construct?.apply(this, arguments);
-            
-            this.hydrate(spec, blueprint.startHydratingWith);
-        });
-
-        // Public:
-        const methods = Object.assign({
-            hydrate:    function (/* spec, order */) {
-                const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
-                // aa.arg.test(spec, aa.verifyObject(blueprint.verifiers), `'spec'`);
-                const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
-
-
-                // First assign with starting keys:
-                order.forEach((key) => {
-                    if (spec.hasOwnProperty(key)) {
-                        const methodName = `set${key.firstToUpper()}`;
-                        const method = getter(this, methodName) ?? this[methodName];
-                        if (aa.isFunction(method)) {
-                            method.call(this, spec[key]);
-                        }
-                    }
-                });
-
-                // Then assign remaining keys:
-                Object.keys(spec)
-                .filter(key => !order.has(key))
-                .forEach(key => {
-                    const methodName = `set${key.firstToUpper()}`;
-                    const method = getter(this, methodName) ?? this[methodName];
-                    if (aa.isFunction(method)) {
-                        method.call(this, spec[key]);
-                    }
-                });
-
-                // Emit event 'hydrated':
-                emit.call(this, 'hydrated');
-            },
-            on:         aa.event.getListener({get: getter, set: setter})
-        }, blueprint.methods.publics);
-        aa.deploy(Instancer.prototype, methods, {force: true});
-
-        // Static:
-        aa.deploy(Instancer, blueprint.statics, {force: true});
-
-        return Object.freeze({
-            emitter: emit
-        });
     });
     aa.Animation                = (() => {
         /**
@@ -12567,9 +12493,14 @@
     // ----------------------------------------------------------------
     // Overwrite:
     aa.deprecated = function (txt) {
-        txt = "Deprecated: '"+txt+"'. This feature is no longer recommended. Avoid using it, and update existing code if possible.";
-        aa.gui.notif(txt, {type: "warning"});
-        console.warn(txt);
+        const message = "This feature is no longer recommended. Avoid using it, and update existing code if possible.";
+        if (!aa.settings.production) {
+            aa.gui.notif(`${message}`, {
+                title: txt.replace(/\</g, '&lt;').replace(/\>/g, '&gt;'),
+                type: "warning"
+            });
+        }
+        console.warn(`"Deprecated: ${txt}. ${message}`);
     };
     // ----------------------------------------------------------------
     // Aliases:

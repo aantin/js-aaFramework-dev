@@ -2913,7 +2913,7 @@ div.aaDialog.dark.progress div.item label > div > div{
     Notifications
 -------------------------------- */
 
-div#aaNotifs{
+div#aaNotifs {
     position: fixed;
     bottom: 8px;
     right: 8px;
@@ -2927,12 +2927,12 @@ div#aaNotifs input[type="submit"],
 div#aaNotifs input[type="reset"],
 div#aaNotifs input[type="password"],
 div#aaNotifs input[type="number"],
-div#aaNotifs input[type="text"]{
+div#aaNotifs input[type="text"] {
     all: initial;
     font-size: 11px;
     font-family: var(--font-family);
 }
-div#aaNotifs div.notif{
+div#aaNotifs div.notif {
     display: block;
     overflow-y: auto;
     margin-top: 8px;
@@ -2945,7 +2945,7 @@ div#aaNotifs div.notif{
     border-radius: 2px;
     box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
 }
-div#aaNotifs div.icon{
+div#aaNotifs div.icon {
     position: relative;
     /*top: -1px;*/
     display: table-cell;
@@ -2961,33 +2961,36 @@ div#aaNotifs div.icon{
     border-top-left-radius: 2px;
     border-bottom-left-radius: 2px;
 }
-div#aaNotifs div.notif.information div.icon{
+div#aaNotifs div.notif.information div.icon {
     /*background-color: #def;*/
 }
-div#aaNotifs div.notif.warning div.icon{
+div#aaNotifs div.notif.warning div.icon {
     /*background-color: #fed;*/
 }
-div#aaNotifs div.notif.critical div.icon{
+div#aaNotifs div.notif.critical div.icon {
     /*background-color: #fdd;*/
 }
-div#aaNotifs div.icon.warning{
+div#aaNotifs div.icon.warning {
     color: var(--warning-color);
 }
-div#aaNotifs div.icon.critical{
+div#aaNotifs div.icon.critical {
     color: var(--critical-color);
 }
-div#aaNotifs div.message{
+div#aaNotifs div.message {
     display: table-cell;
     vertical-align: top;
     padding: 11px 8px 8px 8px;
     text-align: left;
 }
-div#aaNotifs div.message div.buttons{
+div#aaNotifs div.message > h2 {
+    margin: 0;
+}
+div#aaNotifs div.message div.buttons {
     padding: 0px;
     padding-top: 4px;
 }
 div#aaNotifs div.message pre,
-div#aaNotifs div.message code{
+div#aaNotifs div.message code {
     box-sizing: border-box;
     overflow: auto;
     padding: 8px;
@@ -2996,8 +2999,9 @@ div#aaNotifs div.message code{
     background: #446;
     color: var(--form-placeholder-color);
 }
+div#aaNotifs div.buttons button,
 div#aaNotifs div.buttons input[type="submit"],
-div#aaNotifs div.buttons input[type="button"]{
+div#aaNotifs div.buttons input[type="button"] {
     display: inline-block;
     margin: 0px 2px;
     padding: 2px 8px;
@@ -3006,17 +3010,19 @@ div#aaNotifs div.buttons input[type="button"]{
     border-radius: 2px;
     border: 1px solid var(--submit-bg-color);
 }
-div#aaNotifs div.buttons input[type="button"]:focus{
-    border: 1px solid var(--color-blue-darker);
+div#aaNotifs div.buttons button:focus,
+div#aaNotifs div.buttons input[type="submit"]:focus,
+div#aaNotifs div.buttons input[type="button"]:focus {
+    border-color: var(--color-blue-darker);
 }
 div#aaNotifs div.buttons button.reset,
-div#aaNotifs div.buttons input[type="button"].reset{
+div#aaNotifs div.buttons input[type="button"].reset {
     background: var(--button-disabled-bg-color);
     color: var(--reset-color);
     border: 1px solid var(--button-disabled-bg-color);
 }
 div#aaNotifs div.buttons button.reset:focus,
-div#aaNotifs div.buttons input[type="button"].reset:focus{
+div#aaNotifs div.buttons input[type="button"].reset:focus {
     border: 1px solid var(--submit-bg-color);
 }
 

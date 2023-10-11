@@ -3476,6 +3476,8 @@
         };
     })());
     aa.gui                      = Object.freeze(new (function () {
+        const {get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {get, set}); }
     
         // Attributes:
         const dialogs = []; // liste des <aa.gui.Dialog> ouvertes
@@ -4215,7 +4217,7 @@
                 this.title          = null;
                 this.type           = null;
                 this.width          = null;
-                this.validation     = null;
+                // this.validation     = null;
                 const publics = {
                 };
 
@@ -4225,6 +4227,7 @@
                         escape: true
                     },
                     privates: {
+                        validation: null
                     }
                 }, {getter: get, setter: set});
 
@@ -4232,10 +4235,8 @@
                     buttons:    true,
                     icon:       null,
                     lastFocus:  null,
-                    noButton:   null,
                     node:       null,
                     reminder:   null,
-                    yesButton:  null
                 };
                 privates.forEach((v, k) => {
                     set(this, k, v);
@@ -4259,13 +4260,14 @@
 
                 // Methods:
                 checkValidation:  function () {
+                    const that = _(this);
                     let form = undefined;
                     let isValid = true;
                     el("aaDialog-"+this.getID(), node => {
                         const forms = node.getElementsByTagName("form");
                         if (forms.length === 1) {
                             form = forms[0];
-                            const validation = this.validation ?? aa.any;
+                            const validation = that.validation ?? aa.any;
                             const checkElements = () => {
                                 return form.elements.reduce((bool, elt) => {
                                     const validation = get(elt, "validation");
@@ -4765,8 +4767,9 @@
                 },
                 setValidate:        function (callback) {
                     aa.arg.test(callback, aa.isFunction, "'callback'");
-                    this.validation = callback;
-                    return !!this.validation;
+                    const that = _(this);
+                    that.validation = callback;
+                    return !!that.validation;
                 },
                 setWidth:           function (n) {
                     if (aa.isInt(n) && n>0) {
@@ -5429,16 +5432,18 @@
                     document.body.classList.add("aaFrameworkFreeze");
                 },
                 focus:              function () {
-                    if (this.type.toLowerCase() === "prompt") {
-                        el("aaDialog-"+this.id+"DialogInput", (input) => {
-                            input.select();
-                        });
-                    } else {
-                        const btn = get(this, "btn-submit");
-                        if (btn) {
-                            btn.focus();
+                    aa.wait(100, () => {
+                        if (this.type.toLowerCase() === "prompt") {
+                            el("aaDialog-"+this.id+"DialogInput", input => {
+                                input.select();
+                            });
+                        } else {
+                            const btn = get(this, "btn-submit");
+                            if (btn) {
+                                btn.focus();
+                            }
                         }
-                    }
+                    });
                 },
                 followFocus:        function (form) {
                     form.elements.forEach((elt) => {
@@ -5613,8 +5618,9 @@
                                 case "information":
                                 case "warning":
                                 case "critical":
-                                    if (get(this, "btn-submit")) {
-                                        get(this, "btn-submit").click();
+                                    const button = get(this, "btn-submit");
+                                    if (button) {
+                                        button.click();
                                     } else if (this.escape) {
                                         this.hide();
                                     }
@@ -5622,8 +5628,9 @@
                                 case "confirm":
                                 case "prompt":
                                 case "win":
-                                    if (get(this, "btn-cancel")) {
-                                        get(this, "btn-cancel").click();
+                                    const button = get(this, "btn-cancel");
+                                    if (button) {
+                                        button.click();
                                     } else if (this.escape) {
                                         this.hide();
                                     }

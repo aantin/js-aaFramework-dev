@@ -3649,6 +3649,7 @@
             };
         };
         const parse = function (arr, shortcut /*, callback */) {
+            log(arr)
             aa.arg.test(arr, aa.isArray, 0);
             aa.arg.test(shortcut, aa.isFunction, 1);
             const callback = aa.arg.optional(arguments, 2, undefined);
@@ -5618,21 +5619,25 @@
                                 case "information":
                                 case "warning":
                                 case "critical":
-                                    const button = get(this, "btn-submit");
-                                    if (button) {
-                                        button.click();
-                                    } else if (this.escape) {
-                                        this.hide();
+                                    {
+                                        const button = get(this, "btn-submit");
+                                        if (button) {
+                                            button.click();
+                                        } else if (this.escape) {
+                                            this.hide();
+                                        }
                                     }
                                     break;
                                 case "confirm":
                                 case "prompt":
                                 case "win":
-                                    const button = get(this, "btn-cancel");
-                                    if (button) {
-                                        button.click();
-                                    } else if (this.escape) {
-                                        this.hide();
+                                    {
+                                        const button = get(this, "btn-cancel");
+                                        if (button) {
+                                            button.click();
+                                        } else if (this.escape) {
+                                            this.hide();
+                                        }
                                     }
                                     break;
                                 default:

@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.1.1",
+        version: "3.1.2",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -3551,12 +3551,10 @@
         });
 
         function hydrator (key, value) {
-            if (spec.hasOwnProperty(key)) {
-                const methodName = `set${key.firstToUpper()}`;
-                const method = getter(this, methodName) ?? this[methodName];
-                if (aa.isFunction(method)) {
-                    method.call(this, value);
-                }
+            const methodName = `set${key.firstToUpper()}`;
+            const method = getter(this, methodName) ?? this[methodName];
+            if (aa.isFunction(method)) {
+                method.call(this, value);
             }
         };
 
@@ -3568,12 +3566,12 @@
 
                 // First assign with starting keys:
                 order
-                .forEach((key) => { hydrator(key, spec[key]); });
+                .forEach((key) => { hydrator.call(this, key, spec[key]); });
 
                 // Then assign remaining keys:
                 Object.keys(spec)
                 .filter(key => !order.has(key))
-                .forEach(key => { hydrator(key, spec[key]); });
+                .forEach(key => { hydrator.call(this, key, spec[key]); });
 
                 // Emit event 'hydrated':
                 emit.call(this, 'hydrated');

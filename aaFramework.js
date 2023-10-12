@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.1.2",
+        version: "3.1.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1409,7 +1409,7 @@
 
             // Getters:
             toArray:            function () {
-                return Array.from(get(this, 'data'));
+                return [...get(this, 'data')];
             },
 
             // Setters:
@@ -4179,7 +4179,7 @@
                         const tab = (forward=true) => {
                             aa.arg.test(forward, aa.isBool, "'forward' must be a Boolean");
 
-                            const enabledButtons = Array.from(that.node.getElementsByTagName('button'))
+                            const enabledButtons = [...that.node.getElementsByTagName('button')]
                             .filter(button => !button.disabled);
                             const active = document.activeElement;
                             let toActivate = null;
@@ -10548,7 +10548,7 @@
                     const copyPaths = [...paths];
                     copyPaths.reverse();
                     copyPaths.forEach((path, index) => {
-                        const iterationPath = Array.from(path);
+                        const iterationPath = [...path];
                         iterationPath.push({
                             aIndex: -1,
                             bIndex: -1,
@@ -11085,7 +11085,7 @@
             });
 
             if (arguments) {
-                Array.from(arguments).forEach(function (param,i) {
+                [...arguments].forEach(function (param,i) {
                     let option;
 
                     if (i > 0) {

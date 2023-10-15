@@ -361,8 +361,12 @@
     // ----------------------------------------------------------------
 
     // Classes:
-    aa.Action                   = function () {
-        /*
+    aa.Action                   = (() => {
+        const {get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {get, set}); }
+
+        /**
+         * Usage:
             action = new aa.Action(Object);
             ---
             action = new aa.Action();
@@ -377,554 +381,524 @@
                 tooltip: String,
                 type: String, // ['submit','reset']
             });
-        */
+         */
+        function Action () {
 
-        // Attributes:
-        const publics = {
-            accessible:     false,
-            app:            null,
-            checkable:      false,
-            checked:        false,
-            description:    null,
-            disabled:       false,
-            icon:           null,
-            name:           "anonymous-"+aa.uid(),
-            priority:       null,
-            text:           null,
-            tooltip:        null,
-            type:           null,
+            // Attributes:
+            const accessors = {
+                publics: {
+                    accessible:     false,
+                    app:            null,
+                    checkable:      false,
+                    checked:        false,
+                    description:    null,
+                    disabled:       false,
+                    icon:           null,
+                    name:           "anonymous-"+aa.uid(),
+                    priority:       null,
+                    text:           null,
+                    tooltip:        null,
+                    type:           null,
 
-            // Lists:
-            callbacks: [], // deprecated
-            listeners: {}
-        };
-        const privates = {
-            addToManager: true,
-            constructing: true,
-            nodesToListen: {}
-        };
+                    // Lists:
+                    callbacks: [], // aa.deprecated
+                    listeners: {}
+                },
+                privates: {
+                    addToManager: true,
+                    constructing: true,
+                    nodesToListen: {}
+                }
+            };
 
-        // Const:
-        const allowedEvents = [
-            "oncheckchange",
-            "ondescriptionchange",
-            "ondisable",
-            "ondisablechange",
-            "onenable",
-            "onexecute",
-            "oniconchange",
-            "onprioritychange",
-            "onshortcutchange",
-            "ontextchange"
-        ];
-        const priorities = ["low", "normal", "high"];
-        const types = ["information", "warning", "critical", "confirm", "reset"];
-        const verifier = {
-            accessible:     aa.isBool,
-            addToManager:   aa.isBool,
-            app:            aa.nonEmptyString,
-            checked:        aa.isBool,
-            callback:       aa.isFunction,
-            callbacks:      aa.isArrayOfFunctions,
-            description:    aa.nonEmptyString,
-            evtName:        aa.nonEmptyString,
-            disabled:       aa.isBool,
-            icon:           aa.nonEmptyString,
-            name:           aa.nonEmptyString,
-            on:             aa.isObject,
-            priority:       aa.nonEmptyString,
-            text:           aa.nonEmptyString,
-            tooltip:        aa.nonEmptyString,
-            type:           type => types.has(type)
-        };
-        const verify = aa.prototypes.verify(verifier);
-        let count = 0;
+            // Const:
+            const allowedEvents = [
+                "oncheckchange",
+                "ondescriptionchange",
+                "ondisable",
+                "ondisablechange",
+                "onenable",
+                "onexecute",
+                "oniconchange",
+                "onprioritychange",
+                "onshortcutchange",
+                "ontextchange"
+            ];
+            const priorities = ["low", "normal", "high"];
+            const types = ["information", "warning", "critical", "confirm", "reset"];
+            const verifiers = {
+                accessible:     aa.isBool,
+                addToManager:   aa.isBool,
+                app:            aa.nonEmptyString,
+                checked:        aa.isBool,
+                callback:       aa.isFunction,
+                callbacks:      aa.isArrayOfFunctions,
+                description:    aa.nonEmptyString,
+                evtName:        aa.nonEmptyString,
+                disabled:       aa.isBool,
+                icon:           aa.nonEmptyString,
+                name:           aa.nonEmptyString,
+                on:             aa.isObject,
+                priority:       aa.nonEmptyString,
+                shortcut:       aa.nonEmptyString,
+                text:           aa.nonEmptyString,
+                tooltip:        aa.nonEmptyString,
+                type:           aa.inArray(types)
+            };
+            let count = 0;
 
-        // Private:
-        const construct         = function(){
-            /**
-             * @param {object} spec
-             * @param {bool} addToManager=true
-             *
-             * @return {void}
-             */
+            // Private:
+            const construct         = function(){
+                /**
+                 * @param {object} spec
+                 * @param {bool} addToManager=true
+                 *
+                 * @return {void}
+                 */
 
-            set(this, "constructing", true);
-            initAttributes.call(this);
-            initGetters.call(this);
-            initListeners.call(this);
+                aa.defineAccessors.call(this, accessors, {getter: get, setter: set});
+                const that = _(this);
 
-            // Add to manager:
-            const addToManager = (arguments && arguments.length > 1 && aa.isBool(arguments[1]) ? arguments[1] : get(this, "addToManager"));
-            this.setAddToManager(addToManager);
-            
-            // Hydrate:
-            const spec = (arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : undefined);
-            this.hydrate(spec, ["checkable"]);
+                that.constructing = true;
+                initGetters.call(this);
+                initListeners.call(this);
 
-            initAnonymous.call(this);
-            set(this, "constructing", false);
-            this.addToManager();
-            count += 1;
-        };
-        const _execute          = function (/* param */) {
-            /**
-             * @param {any} param (optional)
-             *
-             * @return {void}
-             */
-            const param = arguments && arguments.length ? arguments[0] : undefined;
-            if (!get(this, "disabled")) {
-                this.fire("execute", param);
-                get(this, "callbacks").forEach(function (callback) {
-                    if (!privates.get(aa.Action, "onceExecuteDeprecated")) {
-                        const onceExecuteDeprecated = true;
-                        privates.set(aa.Action, onceExecuteDeprecated);
-                        aa.deprecated("aa.Action.callbacks");
-                    }
-                    callback(param);
-                });
-            }
-        };
-        const _enable           = function () {
-            /**
-             * @param {boolean} disabled=false
-             * @param {boolean} fire=true
-             * return void
-             */
-            const disabled = (
-                arguments && arguments.length && aa.isBool(arguments[0])
-                ? !arguments[0]
-                : false
-            );
-            this.setDisabled(disabled);
-            return get(this, "disabled");
-        };
-        const _disable          = function () {
-            /**
-             * @param {boolean} disabled=true
-             * return void
-             */
-            const disabled = (
-                arguments && arguments.length && aa.isBool(arguments[0])
-                ? arguments[0]
-                : true
-            );
-            this.setDisabled(disabled);
-            return get(this, "disabled");
-        };
-        const dispatch          = function (evtName, param) {
-            // Dispatch on listened nodes:
-            evtName = "on"+evtName;
-            const list = get(this, "nodesToListen");
-            if (list.hasOwnProperty(evtName)) {
-                list[evtName].forEach((listener) => {
-                    listener.callback(listener.node, param);
-                });
-            }
-        };
-        const initAnonymous     = function () {
-            this.execute = (e) => { _execute.call(this, e); };
-            this.enable = (e) => { _enable.call(this, e); };
-            this.disable = (e) => { _disable.call(this, e); };
-        };
-        const initAttributes    = function () {
-            publics.forEach((v, k) => {
-                set(this, k, v);
-            });
-            privates.forEach((v, k) => {
-                set(this, k, v);
-            });
-        };
-        const initGetters       = function () {
-            publics.forEach((v, k) => {
-                Object.defineProperty(this, k, {
-                    get: () => {
-                        return Object.freeze(get(this, k));
+                // Add to manager:
+                const addToManager = (arguments && arguments.length > 1 && aa.isBool(arguments[1]) ? arguments[1] : get(this, "addToManager"));
+                this.setAddToManager(addToManager);
+                
+                // Hydrate:
+                const spec = (arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : undefined);
+                this.hydrate(spec, ["checkable"]);
+
+                initAnonymous.call(this);
+                that.constructing = false;
+                this.addToManager();
+                count += 1;
+            };
+            const _execute          = function (/* param */) {
+                /**
+                 * @param {any} param (optional)
+                 *
+                 * @return {void}
+                 */
+                const param = aa.arg.optional(arguments, 0, undefined);
+                const that = _(this);
+
+                if (!that.disabled) {
+                    this.fire("execute", param);
+                    that.callbacks.forEach(function (callback) {
+                        if (!privates.get(aa.Action, "onceExecuteDeprecated")) {
+                            const onceExecuteDeprecated = true;
+                            accessors.privates.set(aa.Action, onceExecuteDeprecated);
+                            aa.deprecated("aa.Action.callbacks");
+                        }
+                        callback(param);
+                    });
+                }
+            };
+            const _enable           = function (enabled=true) {
+                /**
+                 * @param {boolean} enabled=true
+                 * @param {boolean} fire=true
+                 * return void
+                 */
+                aa.arg.test(enabled, aa.isBool, "'enabled'");
+                const that = _(this);
+
+                this.setDisabled(!enabled);
+                return !that.disabled;
+            };
+            const _disable          = function (disabled=true) {
+                /**
+                 * @param {boolean} disabled=true
+                 * return void
+                 */
+                aa.arg.test(disabled, aa.isBool, "'disabled'");
+                const that = _(this);
+                this.setDisabled(disabled);
+                return that.disabled;
+            };
+            const dispatch          = function (evtName, param) {
+                const that = _(this);
+                
+                // Dispatch on listened nodes:
+                evtName = "on"+evtName;
+                const list = that.nodesToListen;
+                if (list.hasOwnProperty(evtName)) {
+                    list[evtName].forEach((listener) => {
+                        listener.callback(listener.node, param);
+                    });
+                }
+            };
+            const initAnonymous     = function () {
+                this.execute =  _execute.bind(this);
+                this.enable =   _enable.bind(this);
+                this.disable =  _disable.bind(this);
+            };
+            const initGetters       = function () {
+                Object.defineProperties(this, {
+                    shortcut: {
+                        get: () => Object.freeze(getShortcut.call(this)),
+                        set: shortcut => {
+                            verify("shortcut", shortcut);
+                            set(this, "shortcut", shortcut.trim());
+                        }
                     },
-                    set: (v) => {
-                        const method = "set"+k.firstToUpper();
-                        if (typeof this[method] === "function") {
-                            this[method](v);
+                    shortcuts: {
+                        get: () => Object.freeze(getShortcuts.call(this))
+                    },
+                });
+            };
+            const initListeners     = function () {
+                const that = _(this);
+                allowedEvents.forEach(function (evtName) {
+                    that.listeners[evtName] ??= [];
+                },this);
+            };
+            const getShortcut       = function () {
+                const appName = this.app;
+                const app = aa.events.app(appName);
+                return (app?.getShortcutOf(this) ?? undefined);
+            };
+            const getShortcuts      = function () {
+                const appName = this.app;
+                const app = aa.events.app(appName);
+                return (app?.getShortcutsOf(this) ?? []);
+            };
+
+            // Methods:
+            aa.deploy(aa.Action.prototype, {
+
+                // General:
+                hydrate:         aa.prototypes.hydrate,
+                addToManager:    function () {
+                    const that = _(this);
+                    if (that.addToManager) {
+                        aa.actionManager.update(this);
+                    }
+                },
+                /**
+                 * @param {string} evtName="execute" (optional)
+                 * @param {any} param=undefined (optional)
+                 *
+                 * @return {void}
+                 */
+                fire:            function (evtName="execute" /*, param */) {
+                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                    const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
+                    aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
+                    const that = _(this);
+
+                    evtName = "on"+evtName.trim();
+                    const listeners = that.listeners;
+                    if (listeners.hasOwnProperty(evtName) && aa.isArray(listeners[evtName])) {
+                        if (!(evtName === "onexecute" && that.disabled)) {
+                            listeners[evtName].forEach(function (callback) {
+                                callback(param);
+                            });
                         }
                     }
-                });
-            });
-            Object.defineProperty(this, "shortcut", {
-                get: () => {
-                    return Object.freeze(getShortcut.call(this));
-                }
-            });
-            Object.defineProperty(this, "shortcuts", {
-                get: () => {
-                    return Object.freeze(getShortcuts.call(this));
-                }
-            });
-        };
-        const initListeners     = function () {
-            allowedEvents.forEach(function (evtName) {
-                const listeners = get(this, "listeners");
-                if (!listeners.hasOwnProperty(evtName)) {
-                    listeners[evtName] = [];
-                }
-            },this);
-        };
-        const getShortcut       = function () {
-            const appName = this.app;
-            const app = aa.events.app(appName);
-            return (app ?
-                app.getShortcutOf(this)
-                : undefined
-            );
-        };
-        const getShortcuts      = function () {
-            const appName = this.app;
-            const app = aa.events.app(appName);
-            return (app ?
-                app.getShortcutsOf(this)
-                : []
-            );
-        };
-
-        // Methods:
-        if (aa.Action.prototype.hydrate === undefined) {
-
-            // General:
-            aa.Action.prototype.hydrate         = aa.prototypes.hydrate;
-            aa.Action.prototype.addToManager    = function () {
-                if (get(this, "addToManager")) {
-                    aa.actionManager.update(this);
-                }
-            };
-            /**
-             * @param {string} evtName="execute" (optional)
-             * @param {any} param=undefined (optional)
-             *
-             * @return {void}
-             */
-            aa.Action.prototype.fire            = function (/* evtName, param */) {
-                let evtName = arguments && arguments.length > 0 ? arguments[0] : "execute";
-                const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
-                if (!aa.nonEmptyString(evtName)) { throw new TypeError("First Argument must be a non-empty String."); }
-
-                evtName = "on"+evtName.trim();
-                const listeners = get(this, "listeners");
-                if (listeners.hasOwnProperty(evtName) && aa.isArray(listeners[evtName])) {
-                    if (!(evtName === "onexecute" && get(this, "disabled"))) {
-                        listeners[evtName].forEach(function (callback) {
-                            callback(param);
-                        });
+                    if (param !== undefined && !(evtName === "onexecute" && that.disabled)) {
+                        dispatch.call(this, evtName.replace(/^on/, ''), param);
                     }
-                }
-                if (param !== undefined && !(evtName === "onexecute" && get(this, "disabled"))) {
-                    dispatch.call(this, evtName.replace(/^on/, ''), param);
-                }
-            };
-            aa.Action.prototype.isValid         = function () {
-                
-                return (get(this, "name") !== null);
-            };
-            /**
-             * @param {element} node
-             * @param {string} evtName
-             * @param {function} callback
-             *
-             * @return {void}
-             */
-            aa.Action.prototype.listenNode      = function (node, evtName, callback) {
-                if (!aa.isElement(node)) { throw new TypeError("First argument must be an Element node."); }
-                if (!allowedEvents.has(evtName)) { throw new TypeError("Second argument not valid."); }
-                if (!aa.isFunction(callback)) { throw new TypeError("Third argument must be a Function."); }
+                },
+                hasCallback:        function (callback) {
+                    const that = _(this);
+                    return that.listeners.onexecute.has(callback);
+                },
+                isValid:         function () {
+                    const that = _(this);
+                    return (that.name !== null);
+                },
+                /**
+                 * @param {element} node
+                 * @param {string} evtName
+                 * @param {function} callback
+                 *
+                 * @return {void}
+                 */
+                listenNode:      function (node, evtName, callback) {
+                    aa.arg.test(node, aa.isElement, "'node'");
+                    aa.arg.test(evtName, aa.inArray(allowedEvents), "'evtName'");
+                    aa.arg.test(callback, aa.isFunction, "'callback'");
+                    const that = _(this);
 
-                const list = get(this, "nodesToListen");
-                if (!list.hasOwnProperty(evtName)) {
-                    list[evtName] = [];
-                }
-                
-                list[evtName].push({
-                    node: node,
-                    callback: callback
-                });
-            };
-            /**
-             * If not already added, add a callback Function to Action's events listener.
-             *
-             * @param {string|object} evtName - The event name. In the case of giving an Object of callback Functions instead of an event name String, the second argument must be omitted.
-             * @param {function} [callback] - A function that will be executed when the evtName Event is fired. This argument must be omitted if the first argument is an Object of Functions.
-             *
-             * @return {boolean} - true if callback could be added, false if already existed
-             */
-            aa.Action.prototype.on              = function (evtName, callback) {
-                
-                let res = false;
-
-                if (aa.isObject(evtName)) {
-                    aa.throwErrorIf(
-                        arguments.length > 1,
-                        `Only one argument is allowed if first argument is an Object.`
-                    );
-                    aa.arg.test(evtName, aa.isObjectOfFunctions, "'evtName'");
-                    evtName.forEach((callback, name) => {
-                        this.on(name, callback);
+                    const list = that.nodesToListen;
+                    if (!list.hasOwnProperty(evtName)) {
+                        list[evtName] = [];
+                    }
+                    
+                    list[evtName].push({
+                        node: node,
+                        callback: callback
                     });
-                    return;
-                }
-                
-                if (!aa.nonEmptyString(evtName)) {   throw new TypeError("First argument must be a non-empty String."); }
-                if (!aa.isFunction(callback)) {      throw new TypeError("Second argument must be a Function."); }
-                
-                evtName = "on"+evtName.trim();
-                const listeners = get(this, "listeners");
-                if (!listeners.hasOwnProperty(evtName)) {
-                    console.warn("Action's event listener '"+evtName+"' not implemented.");
-                    return false;
-                }
-                if (!res && listeners.hasOwnProperty(evtName) && !listeners[evtName].has(callback)) {
-                    listeners[evtName].push(callback);
-                    res = true;
-                }
-                return res;
-            };
-
-            // Setters:
-            aa.Action.prototype.get             = aa.prototypes.get;
-            aa.Action.prototype.set             = aa.prototypes.set;
-            aa.Action.prototype.setAccessible   = function (/* bool */) {
-                const bool = arguments && arguments.length ? arguments[0] : true;
-                verify("accessible", bool);
-                set(this, "accessible", bool);
-            };
-            aa.Action.prototype.setAddToManager = function (bool) {
-                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
-                
-                set(this, "addToManager", bool);
-                return bool;
-            };
-            aa.Action.prototype.setApp          = function (name) {
-                verify("app", name);
-                set(this, "app", name.trim());
-                return true;
-            };
-            aa.Action.prototype.setCheckable    = function (bool) {
-                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
-                
-                const change = (get(this, "checkable") !== bool);
-                set(this, "checkable", bool);
-                if (!get(this, "constructing") && change) {
-                    this.fire("checkablechange", bool);
-                }
-            };
-            aa.Action.prototype.setChecked      = function (bool) {
-                if (!aa.isBool(bool)) { throw new TypeError("Argument should be a Boolean."); }
-
-                if (get(this, "checkable")) {
-                    const change = (get(this, "checked") !== bool);
-                    set(this, "checked", bool);
-                    if (!get(this, "constructing") && change) {
-                        this.fire("checkchange", bool);
+                },
+                /**
+                 * If not already added, add a callback Function to Action's events listener.
+                 *
+                 * @param {string} evtName
+                 * @param {function} callback
+                 *
+                 * return {boolean} true if callback could be added, false if already existed
+                 */
+                on:              function (evtName, callback) {
+                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                    aa.arg.test(callback, aa.isFunction, "'callback'");
+                    const that = _(this);
+                    let res = false;
+                    
+                    evtName = "on"+evtName.trim();
+                    const listeners = get(this, "listeners");
+                    if (!listeners.hasOwnProperty(evtName)) {
+                        console.warn("Action's event listener '"+evtName+"' not implemented.");
+                        return false;
                     }
-                }
-                return bool;
-            };
-            aa.Action.prototype.setDescription  = function (str) {
-                verify("description", str);
-                const change = (get(this, "description") !== str);
-                set(this, "description", str);
-                if (!get(this, "constructing") && change) {
-                    this.fire("descriptionchange", str);
-                }
-                return true;
-            };
-            aa.Action.prototype.setDisabled     = function (disabled) {
+                    if (!res && listeners.hasOwnProperty(evtName) && !listeners[evtName].has(callback)) {
+                        listeners[evtName].push(callback);
+                        res = true;
+                    }
+                    return res;
+                },
+
+                // Setters:
+                get:             aa.prototypes.get,
+                set:             aa.prototypes.set,
+                setAccessible:   function (accessible=true) {
+                    aa.arg.test(accessible, aa.isBool, "'accessible'");
+                    const that = _(this);
+                    that.accessible = accessible;
+                    return accessible;
+                },
+                setAddToManager: function (addToManager) {
+                    aa.arg.test(addToManager, verifiers.addToManager, "'addToManager'");
+                    const that = _(this);
+                    
+                    that.addToManager = addToManager;
+                    return addToManager;
+                },
+                setApp:          function (appName) {
+                    aa.arg.test(appName, verifiers.app, "'appName'");
+                    const that = _(this);
+
+                    that.app = appName.trim();
+                    return true;
+                },
+                setCheckable:    function (checkable) {
+                    aa.arg.test(checkable, aa.isBool, "'checkable'");
+                    const that = _(this);
+                    
+                    const change = (that.checkable !== checkable);
+                    that.checkable = checkable;
+                    if (!that.constructing && change) {
+                        this.fire("checkablechange", checkable);
+                    }
+                    return checkable;
+                },
+                setChecked:      function (checked) {
+                    aa.arg.test(checked, aa.isBool, "'checked'");
+                    const that = _(this);
+
+                    if (that.checkable) {
+                        const change = (that.checked !== checked);
+                        that.checked = checked;
+                        if (!that.constructing && change) {
+                            this.fire("checkchange", checked);
+                        }
+                    }
+                    return bool;
+                },
+                setDescription:  function (description) {
+                    aa.arg.test(description, verifiers.description, "'description'");
+                    const that = _(this);
+
+                    const change = (that.description !== description);
+                    that.description = description;
+                    if (!that.constructing && change) {
+                        this.fire("descriptionchange", description);
+                    }
+                    return true;
+                },
                 /**
                  * @param {boolean} disabled
                  *
                  * @return {void}
                  */
-                
-                verify("disabled", disabled);
-                const change = (get(this, "disabled") !== disabled);
-                set(this, "disabled", disabled);
-                if (!get(this, "constructing") && change) {
-                    this.fire("disablechange", disabled);
-                    this.fire((disabled ? "dis" : "en")+"able", disabled);
-                }
-                return get(this, "disabled");
-            };
-            aa.Action.prototype.setCallback     = function (f) {
-                aa.deprecated("aa.Action.callbacks");
-                verify("callback", f);
+                setDisabled:     function (disabled) {
+                    aa.arg.test(disabled, verifiers.disabled, "'disabled'");
+                    const that = _(this);
 
-                get(this, "listeners")["onexecute"].push(f); // now in 'onexecute' instead of in 'callbacks'
-                return true;
-            };
-            aa.Action.prototype.setCallbacks    = function (list) {
-                verify("callbacks", list);
+                    const change = (that.disabled !== disabled);
+                    that.disabled = disabled;
+                    if (!that.constructing && change) {
+                        this.fire("disablechange", disabled);
+                        this.fire((disabled ? "dis" : "en")+"able", disabled);
+                    }
+                    return that.disabled;
+                },
+                setCallback:     function (callback) {
+                    aa.deprecated("aa.Action.callbacks");
+                    aa.arg.test(callback, verifiers.callback, "'callback'");
+                    const that = _(this);
 
-                return list.forEach((callback) => {
-                    this.setCallback(callback);
-                });
-            };
-            aa.Action.prototype.setIcon         = function (str) {
-                verify("icon", str);
-                const previous = get(this, "icon");
-                const change = (previous !== str);
-                set(this, "icon", str.trim())
-                if (!get(this, "constructing") && change) {
-                    this.fire("iconchange", {
-                        new: str,
-                        previous: previous
+                    that.listeners["onexecute"].push(callback); // now in 'onexecute' instead of in 'callbacks'
+                    return true;
+                },
+                setCallbacks:    function (callbacks) {
+                    aa.arg.test(callbacks, verifiers.callbacks, "'callbacks'");
+                    return callbacks.forEach((callback) => {
+                        this.setCallback(callback);
                     });
-                }
-                return true;
-            };
-            aa.Action.prototype.setName         = function (p) {
-                verify("name", p);
-                set(this, "name", p.trim());
-                return true;
-            };
-            aa.Action.prototype.setOn           = function (o) {
-                verify("on", o);
+                },
+                setIcon:         function (icon) {
+                    aa.arg.test(icon, verifiers.icon, "'icon'");
+                    const that = _(this);
 
-                const verifier = {};
-                allowedEvents.forEach((evtName) => {
-                    evtName = evtName.replace(/^on/, "");
-                    verifier[evtName] = aa.isFunction
-                });
-                if (!o.verify(verifier)) { throw new TypeError("'on' argument is not compliant."); }
-
-                o.forEach((callback, evtName) => {
-                    this.on(evtName, callback);
-                });
-            };
-            aa.Action.prototype.setPriority     = function (p) {
-                verify("priority", p);
-
-                p = p.trim().toLowerCase();
-                if (priorities.has(p)) {
-                    const change = (get(this, "priority") !== p);
-                    set(this, "priority", p);
-                    if (!get(this, "constructing") && change) {
-                        this.fire("prioritychange", p);
+                    const previous = that.icon;
+                    const change = (previous !== icon);
+                    that.icon = icon.trim();
+                    if (!that.constructing && change) {
+                        this.fire("iconchange", {
+                            new: icon,
+                            previous: previous
+                        });
                     }
                     return true;
-                }
-            };
-            aa.Action.prototype.setText         = function (str) {
-                verify("text", str);
+                },
+                setName:         function (name) {
+                    aa.arg.test(name, verifiers.name, "'name'");
+                    const that = _(this);
 
-                const change = (get(this, "text") !== str);
-                set(this, "text", str.trim());
-                if (!get(this, "constructing") && change) {
-                    this.fire("textchange", str);
-                }
-                return true;
-            };
-            aa.Action.prototype.setTooltip      = function (p) {
-                verify("tooltip", p);
+                    that.name = name.trim();
+                    return true;
+                },
+                setOn:           function (listeners) {
+                    aa.arg.test(listeners, verifiers.on, "'listeners'");
 
-                set(this, "tooltip", p.trim());
-                return true;
-            };
-            aa.Action.prototype.setType         = function (p) {
-                verify("type", p);
-                set(this, "type", p);
-                if (!get(this, "icon")) {
-                    switch (p) {
-                        case "critical":
-                            this.setIcon("close");
-                            break;
-                        case "warning":
-                            this.setIcon("exclamation");
-                            break;
-                        case "information":
-                            this.setIcon("info");
-                            break;
-                        case "confirm":
-                            this.setIcon("question");
-                            break;
-                    }
-                }
-            };
-
-            // Getters:
-            aa.Action.prototype.getDomLi        = function () {
-                let li = aa.html('li');
-                li.innerHTML = this.getText();
-                if (get(this, "tooltip")) {
-                    li.title = get(this, "tooltip");
-                }
-                if (get(this, "callbacks").length > 0) {
-                    get(this, "callbacks").forEach(function (callback) {
-                        li.on('click',callback);
+                    const verifier = {};
+                    allowedEvents.forEach((evtName) => {
+                        evtName = evtName.replace(/^on/, "");
+                        verifier[evtName] = aa.isFunction
                     });
-                }
-                return li;
-            };
-            aa.Action.prototype.getDescription  = function () {
-                return Object.freeze(
-                    get(this, "description")
-                    ? get(this, "description")
-                    : (
-                        get(this, "name")
-                        ? get(this, "name")
-                        : "Action"
-                    )
-                );
-            };
-            aa.Action.prototype.getText         = function () {
-                return Object.freeze(
-                    get(this, "text")
-                    ? get(this, "text")
-                    : (
-                        get(this, "name")
-                        ? get(this, "name")
-                        : "Action"
-                    )
-                );
-            };
-            aa.Action.prototype.getTitle        = function () {
-                return Object.freeze(
-                    get(this, "title")
-                    ? get(this, "title")
-                    : (
-                        get(this, "name")
-                        ? get(this, "name")
-                        : "Action"
-                    )
-                );
-            };
-            aa.Action.prototype.getCallbacks    = function () {
+                    if (!listeners.verify(verifier)) { throw new TypeError("'on' argument is not compliant."); }
 
-                return get(this, "listeners").onexecute;
-            };
+                    listeners.forEach((callback, evtName) => {
+                        this.on(evtName, callback);
+                    });
+                },
+                setPriority:     function (priority) {
+                    aa.arg.test(priority, verifiers.priority, "'priority'");
+                    const that = _(this);
+
+                    priority = priority.trim().toLowerCase();
+                    if (priorities.has(priority)) {
+                        const change = (that.priority !== priority);
+                        that.priority = priority;
+                        if (!that.constructing && change) {
+                            this.fire("prioritychange", priority);
+                        }
+                        return true;
+                    }
+                },
+                setText:         function (text) {
+                    aa.arg.test(text, verifiers.text, "'text'");
+                    const that = _(this);
+
+                    const change = (that.text !== text);
+                    that.text = text.trim();
+                    if (!that.constructing && change) {
+                        this.fire("textchange", text);
+                    }
+                    return true;
+                },
+                setTooltip:      function (tooltip) {
+                    aa.arg.test(tooltip, verifiers.tooltip, "'tooltip'");
+                    const that = _(this);
+
+                    that.tooltip = tooltip.trim();
+                    return true;
+                },
+                setType:         function (type) {
+                    aa.arg.test(type, verifiers.type, "'type'");
+                    that.type = type;
+                    if (!that.icon) {
+                        switch (type) {
+                            case "critical":
+                                this.setIcon("close");
+                                break;
+                            case "warning":
+                                this.setIcon("exclamation");
+                                break;
+                            case "information":
+                                this.setIcon("info");
+                                break;
+                            case "confirm":
+                                this.setIcon("question");
+                                break;
+                        }
+                    }
+                },
+
+                // Getters:
+                getDomLi:        function () {
+                    const that = _(this);
+
+                    let li = aa.html('li');
+                    li.innerHTML = this.getText();
+                    if (that.tooltip) {
+                        li.title = that.tooltip;
+                    }
+                    if (that.callbacks.length > 0) {
+                        that.callbacks.forEach(function (callback) {
+                            li.on('click',callback);
+                        });
+                    }
+                    return li;
+                },
+                getDescription:  function () {
+                    const that = _(this);
+                    return that.description ?? that.name ?? "Action";
+                },
+                getText:         function () {
+                    const that = _(this);
+                    return that.text ?? that.name ?? "Action";
+                },
+                getTitle:        function () {
+                    const that = _(this);
+                    return that.title ?? that.name ?? "Action";
+                },
+                getCallbacks:    function () {
+                    const that = _(this);
+                    return that.listeners.onexecute;
+                },
+            }, {force: true, condition: aa.Action.prototype.hydrate === undefined});
+
+            // Init:
+            construct.apply(this, arguments);
         }
-
-        // Init:
-        construct.apply(this, arguments);
-    };
+        return Action;
+    })();
     (function () { /* aa.Action static */
-        const verifier = {
+        const verifiers = {
             appName: aa.nonEmptyString
         };
-        const verify = aa.prototypes.verify(verifier);
 
+        /**
+         * @param {String} appName
+         * @param {Object|Array} builder
+         *
+         * @return {void}
+         *
+         * How to use:
+            aa.Action.build(appName, {
+                app: <String>,
+                name: <String>,
+                description: <String>, // optional
+                <shortcut>: <Function>
+            });
+         */
         aa.Action.build = function (appName, builder) {
-            /**
-             * @param {String} appName
-             * @param {Object|Array} builder
-             *
-             * @return {void}
-             *
-             * How to use:
-                aa.Action.build(appName, {
-                    app: <String>,
-                    name: <String>,
-                    description: <String>, // optional
-                    <shortcut>: <Function>
-                });
-             */
-            verify("appName", appName);
+            aa.arg.test(appName, verifiers.appName, "'appName'");
 
             if (aa.isObject(builder)) {
                 const shortcuts = [];
@@ -1470,7 +1444,7 @@
         
         const privates = {
             construct: function (actionOrCallback /* , options, spec */) {
-                const options = (arguments && arguments.length > 1 && privates.verify("options", arguments[1]) ? arguments[1] : undefined);
+                const options = (arguments && arguments.length > 1 && privates.verifiers.options(arguments[1]) ? arguments[1] : undefined);
                 const spec = (arguments && arguments.length > 2 ? arguments[2] : {});
                 if (!aa.isObject(spec)) { throw new TypeError("Third argument must be an Object."); }
 
@@ -1488,9 +1462,7 @@
                     }
                 }
             },
-            verify: aa.prototypes.verify({
-                options: aa.isArrayOfStrings
-            })
+            verifiers: {options: aa.isArrayOfStrings}
         };
         function Event(actionOrCallback, options /* , spec */) {
             // Attributes:
@@ -1589,18 +1561,21 @@
         return Event;
     })();
     aa.EventApp = (() => {
+        const {get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {get, set}); }
+
         const privates = {
             construct: function (app) {
-                aa.prototypes.initGetters.call(this, ['events']);
+                // aa.prototypes.initGetters.call(this, ['events']);
                 return this.setApp(app);
             },
-            verify: aa.prototypes.verify({
+            verifiers: {
                 appName: aa.nonEmptyString,
                 callback: aa.isFunction,
                 associableParam: (p) => { return (aa.isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || aa.nonEmptyString(p)); },
                 callbackOrUndefined: (f) => { return (aa.isFunction(f) || f === undefined); },
                 evtName: aa.nonEmptyString
-            }),
+            },
         };
         function EventApp (app) {
             
@@ -1610,7 +1585,7 @@
                     name: () => get(this, 'app')
                 },
                 privates: {
-                    app: null,
+                    app:    null,
                     module: null,
                     events: {},
                 },
@@ -1632,8 +1607,8 @@
                  * @return {void}
                  */
 
-                privates.verify('evtName', evtName);
-                privates.verify('associableParam', param)
+                aa.arg.test(param, privates.verifiers.associableParam, "'param'");
+                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
 
                 const o = {};
 
@@ -1662,10 +1637,11 @@
                     return;
                 }
 
-                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                aa.arg.test(callback, aa.isFunction, "'callback'");
+                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
+                aa.arg.test(callback, privates.verifiers.callback, "'callback'");
+                const that = _(this);
 
-                const events = get(this, "events");
+                const events = that.events;
                 if (events.hasOwnProperty(evtName)) {
                     events[evtName].forEachReverse(event => {
                         aa.throwErrorIf(
@@ -1685,8 +1661,9 @@
                  *
                  * @return {void}
                  */
-                privates.verify("evtName", evtName);
-                const param = (arguments && arguments.length > 1 && privates.verify("associableParam", arguments[1])) ? arguments[1] : undefined;
+                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
+                const param = aa.arg.optional(arguments, 1, undefined, privates.verifiers.associableParam);
+                const that = _(this);
 
                 const list = [];
                 const events = this.getEvents(evtName);
@@ -1721,16 +1698,16 @@
                             }
                         });
                     }
-                    // this._events[evtName] = list;
-                    get(this, "events")[evtName] = list;
+                    that.events[evtName] = list;
                 }
             },
             listen:         function (spec) {
-                if (!aa.isObject(spec)) { throw new TypeError("Argument must be an object."); }
+                aa.arg.test(spec, aa.isObject, "'spec'");
+                const that = _(this);
 
                 spec.forEach((evt, evtName) => {
                     evtName = aa.shortcut.rename(evtName);
-                    aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
+                    aa.arg.test(evtName, privates.verifiers.evtName, `'evtName'`);
 
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let pile = [];
@@ -1738,18 +1715,18 @@
                         pile.push(evt);
                     } else if(aa.isArray(evt)) {
                         aa.arg.test(evt, aa.isArrayOf(e => e instanceof aa.Event), `'evt'`);
-                        evt.forEach((e) => {
+                        evt.forEach(e => {
                             pile.push(e);
                         });
                     }
                     pile.forEach((event) => {
-                        const events = get(this, "events");
+                        const events = that.events;
 
                         if (event.callback) {
                             aa.deprecated("aa.Event.callback");
                         }
-                        event.setModule(get(this, "module"));
-                        event.setApp(get(this, "app"));
+                        event.setModule(that.module);
+                        event.setApp(that.app);
                         if (!events.hasOwnProperty(evtName)) {
                             events[evtName] = [];
                         }
@@ -1759,7 +1736,7 @@
                 });
                 return true;
             },
-            on:             function (evtName, callback /*, options */) {
+            on:             function (evtName, callback, options=[]) {
                 /**
                  * Usage:
                  *      // aa.EventApp.prototype.on(eventName, callback);
@@ -1774,33 +1751,28 @@
                  * @return {object} this (=> chainable 'on' functions)
                  */
 
-                const options = (arguments && arguments.length > 2 && aa.isArray(arguments[2]) ?
-                    arguments[2].filter(aa.nonEmptyString)
-                    : ["preventDefault"]
-                );
+                aa.arg.test(options, aa.isArrayOfNonEmptyStrings, "'options'");
+                options.pushUnique("preventDefault");
 
                 // Recur in case of signature: aa.EventApp.prototype.on({eventName: callback} /*, options */);
                 if (aa.isObject(evtName)) {
-                    const options = callback || [];
-                    evtName.forEach((func, name) => {
+                    const listeners = evtName;
+                    const options = callback ?? [];
+                    listeners.forEach((func, name) => {
                         this.on(name, func, options);
                     });
                     return this;
                 }
 
-                // else:
-                if (arguments.length === 1 && aa.isObject(arguments[0])) {
-                    arguments[0].forEach((func, name) => {
-                        this.on(name, func, options);
-                    });
-                    return this;
-                }
+                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
+                const that = _(this);
 
-                const spec = {}
+                const spec = {};
                 evtName = aa.shortcut.cmdOrCtrl(evtName);
                 if (aa.isFunction(callback)) {
                     spec[evtName] = new aa.Event((new aa.Action({
-                        on: {execute: callback}
+                        on: {execute: callback},
+                        ...((() => (that.app?.name ? {app: that.app.name} : {}))()),
                     })), options);
                 } else if (callback instanceof aa.Action) {
                     const action = callback;
@@ -1809,34 +1781,37 @@
                 this.listen(spec);
                 return this;
             },
-            module:         function (m) {
-                if (m !== null && !aa.nonEmptyString(m)) {
-                    throw new TypeError("Argument must be null or a non-empty String.");
-                    return undefined;
-                }
-                if (aa.isString(m)) {
-                    set(this, "module", m.trim());
+            forEachEvent:   function (callback) {
+                aa.arg.test(callback, privates.verifiers.callback, "'callback'");
+                const that = _(this);
+
+                that.events.forEach(callback);
+            },
+            module:         function (mod) {
+                aa.arg.test(mod, aa.isNullOrNonEmptyString, "'mod'");
+                const that = _(this);
+
+                if (aa.isString(mod)) {
+                    that.module = mod.trim();
                 }
                 return this;
             },
             pop:            function (evt) {
-                const events = get(this, "events");
-                if (aa.isString(evt) && events.hasOwnProperty(evt)) {
-                    events[evt].pop();
-                }
+                aa.arg.test(evt, privates.verifiers.evtName, "'evt'");
+                const that = _(this);
+                const events = that.events;
+                events[evt]?.pop();
             },
             run:            function (evt) {},
             suspend:        function (param) {
-                aa.arg.test(param, arg => aa.isArray(arg) || aa.nonEmptyString(arg), 'param');
+                aa.arg.test(param, arg => aa.isArrayOfNonEmptyStrings(arg) || aa.nonEmptyString(arg), 'param');
 
                 const toSuspend = [];
-                if (aa.nonEmptyString(param)) {
+                if (aa.isString(param)) {
                     param = param.trim();
                     toSuspend.push(param);
                 } else if(aa.isArray(param)) {
                     param.forEach((s) => {
-                        if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
-
                         toSuspend.push(s);
                     });
                 }
@@ -1851,42 +1826,41 @@
 
             // Setters:
             setApp:         function (name) {
-                privates.verify("appName", name);
-                if (aa.isString(name)) {
-                    set(this, "app", name.trim());
-                }
-                set(this, "module", null);
+                aa.arg.test(name, privates.verifiers.appName, "'name'");
+                const that = _(this);
+                that.app = name.trim();
+                that.module = null;
                 return this;
             },
 
             // Getters:
             getEvents:      function (evtName) {
-                if (evtName !== undefined && !aa.nonEmptyString(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
+                if (evtName !== undefined && !privates.verifiers.evtName(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
 
-                const events = get(this, "events");
+                const that = _(this);
+                const events = that.events;
 
                 if (aa.isString(evtName)) {
                     evtName = evtName.trim();
-                    // return this._events.hasOwnProperty(evtName) ? this._events[evtName] : undefined;
-                    return events.hasOwnProperty(evtName) ? events[evtName] : undefined;
+                    return events[evtName] ?? undefined;
                 } else {
                     return events;
                 }
             },
             getShortcutOf:  function (obj) {
-
                 return this.getShortcutsOf(obj).first;
             },
             getShortcutsOf: function (obj) {
+                const that = _(this);
                 const db = new aa.Storage("custom");
                 const shortcuts = [];
 
                 // action's shortcut saved in DB:
-                if (get(this, "app") === obj.app) {
+                if (that.app === obj.app) {
                     db.load();
                     const data = db.select("shortcuts");
                     if (data) {
-                        const app = data.find((list, name)=> name === get(this, "app"));
+                        const app = data.find((list, name)=> name === that.app);
                         if (app && obj instanceof aa.Action) {
                             if (app[obj.name] && aa.isArray(app[obj.name])) {
                                 return app[obj.name];
@@ -2821,22 +2795,16 @@
                 // Methods:
                 loadOnce: function () {
                     db.load();
-                    delete(storage.privates.loadOnce);
+                    delete storage.privates.loadOnce;
 
                     this.apps.forEach((app, appName) => {
-                        app.events.forEach((list, evtName) => {
-                            list.forEach((event) => {
+                        app.forEachEvent((events, evtName) => {
+                            events.forEach(event => {
                                 const action = event.action;
                                 if (action && action.isValid() && action.accessible) {
-                                    if (storage.privates.shortcuts.default[appName] === undefined) {
-                                        storage.privates.shortcuts.default[appName] = {};
-                                    }
-                                    if (storage.privates.shortcuts.default[appName][action.name] === undefined) {
-                                        storage.privates.shortcuts.default[appName][action.name] = [];
-                                    }
-                                    if (!storage.privates.shortcuts.default[appName][action.name].has(evtName)) {
-                                        storage.privates.shortcuts.default[appName][action.name].push(evtName);
-                                    }
+                                    storage.privates.shortcuts.default[appName] ??= {};
+                                    storage.privates.shortcuts.default[appName][action.name] ??= [];
+                                    storage.privates.shortcuts.default[appName][action.name].pushUnique(evtName);
                                 }
                             });
                         });
@@ -3008,7 +2976,7 @@
 
             switch (evtName) {
                 case "bodyload":
-                    storage.privates.loadOnce.apply(this);
+                    storage.privates.loadOnce?.apply(this);
                     break;
                 
                 case "windowunload":

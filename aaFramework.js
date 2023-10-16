@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.1.3",
+        version: "3.4.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -11077,35 +11077,46 @@
                                     if (htmlAttributes.has(key)) {
                                         switch (key) {
                                             case "onglets":
-                                                if (!aa.isArray(option)) { throw new TypeError("'onglets' option must be an Array."); }
-                                                const onglets = aa.html("legend.onglets");
-                                                const container = aa.html("fieldset.onglets", onglets);
+                                                aa.arg.test(option, aa.isArrayOf(aa.verifyObject({
+                                                    alt:        aa.nonEmptyString,
+                                                    border:     aa.isBool,
+                                                    checked:    aa.isBool,
+                                                    disabled:   aa.isBool,
+                                                    id:         aa.nonEmptyString,
+                                                    label:      aa.nonEmptyString,
+                                                    name:       aa.nonEmptyString,
+                                                    on:         aa.isObject,
+                                                    text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || aa.instanceof(DocumentFragment)),
+                                                    title:      aa.nonEmptyString,
+                                                    value:      aa.nonEmptyString,
+                                                })), "'option'");
+
+                                                const name = aa.uid();
+                                                const onglets = $$("legend.onglets");
+                                                const container = $$("fieldset.onglets", onglets);
                                                 let checkedRadio = null;
                                                 elt.appendChild(container);
 
                                                 option.forEach((spec, i) => {
-                                                    if (!aa.isObject(spec)) { throw new TypeError("'onglets' option must be an Array of spec Object."); }
-                                                    if (!spec.verify({
-                                                        checked:    p => aa.isBool(p),
-                                                        disabled:   p => aa.isBool(p),
-                                                        id:         p => aa.nonEmptyString(p),
-                                                        label:      p => aa.nonEmptyString(p),
-                                                        name:       p => aa.nonEmptyString(p),
-                                                        on:         p => aa.isObject(p),
-                                                        text:       p => (aa.nonEmptyString(p) || aa.isElement(p)),
-                                                        title:      p => aa.nonEmptyString(p),
-                                                        value:      p => aa.nonEmptyString(p)
-                                                    })) { throw new TypeError("'onglets' spec not valid."); }
-                                                    spec.checked = !!spec.checked;
+                                                    spec.sprinkle({
+                                                        border:     true,
+                                                        checked:    false,
+                                                        disabled:   false,
+                                                        id:         aa.uid(),
+                                                        name,
+                                                    });
+
+                                                    spec.id = spec.id.trim();
 
                                                     // DOM:
-                                                    option[i].id = spec.id ? spec.id.trim() : aa.uid();
-                                                    const radio = aa.html("radio", {
+                                                    if (!spec.border)
+                                                        container.classList.add("no-border");
+                                                    const radio = $$("radio", {
                                                         dataset: {id: spec.id},
-                                                        disabled: (spec.disabled !== undefined && spec.disabled)
+                                                        disabled: spec.disabled
                                                     });
-                                                    const span = aa.html("span");
-                                                    const label = aa.html("label.onglet",
+                                                    const span = $$("span");
+                                                    const label = $$("label.onglet",
                                                         radio,
                                                         span
                                                     );
@@ -11164,7 +11175,7 @@
                                                 option.forEach((spec, i) => {
                                                     if (spec.text) {
                                                         spec.text = aa.isString(spec.text) ? spec.label.trim() : spec.text;
-                                                        const content = aa.html("div#"+spec.id+".aaDialogOngletContent", spec.text);
+                                                        const content = $$("div#"+spec.id+".aaDialogOngletContent", spec.text);
                                                         content.classList.add("hidden");
                                                         container.appendChild(content);
                                                     }

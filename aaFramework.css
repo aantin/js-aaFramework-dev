@@ -45,6 +45,7 @@
     --color-grey-darker: #888;
     --color-grey-lighter: #ddd;
     --color-red: #f88;
+    --color-red-darker: #c00;
     --color-white: #fff;
     --color-black: #000;
     --color-cyan: #0dc;
@@ -1502,6 +1503,9 @@ div.aaDialog .message fieldset {
     padding: 16px;
     border-radius: 3px;
     border: 1px solid var(--button-disabled-bg-color);
+}
+div.aaDialog .message fieldset.no-border {
+    border-color: transparent;
 }
 div.aaDialog .message fieldset legend {
     position: relative;

@@ -49,7 +49,7 @@
     --color-white: #fff;
     --color-black: #000;
     --color-cyan: #0dc;
-    
+
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
@@ -70,9 +70,12 @@
     --dark-color: #aaa;
     --dark-color-darker: #888;
 
-    --dark-submit-bg-color: #49f;
+    --dark-button-bg: #444;
+    --dark-button-border-hover: #888;
+    --dark-button-color: #aaa;
     --dark-button-disabled-bg-color: #444;
     --dark-button-disabled-color: #bbb;
+    --dark-submit-bg-color: #49f;
     
     --dark-color-bg-lighter: #333;
     --dark-color-bg: #222;
@@ -216,6 +219,9 @@ body.aaFrameworkFreeze{
     font-size: 13px;
     font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     line-height: 1.5;
+}
+.aa button:disabled {
+    cursor: default;
 }
 .aa button.small:disabled,
 .aa input.small[type="submit"]:disabled,
@@ -1505,7 +1511,10 @@ div.aaDialog .message fieldset {
     border: 1px solid var(--button-disabled-bg-color);
 }
 div.aaDialog .message fieldset.no-border {
+    --border-width: 2px;
     border-color: transparent;
+    border-radius: 0;
+    border-width: 0;
 }
 div.aaDialog .message fieldset legend {
     position: relative;
@@ -1545,42 +1554,87 @@ div.aaDialog .message fieldset legend label:last-child {
 div.aaDialog .message fieldset legend label input[type="radio"] {
     display: none;
 }
-div.aaDialog .message fieldset legend label input[type="radio"] + span {
+/* Button with border */
+div.aaDialog .message fieldset.onglets legend label input[type="radio"] + button {
     display: inline-block;
     top: 3px;
+    margin: 0;
     padding: 2px 12px;
-    background: #fff;
+    background: transparent;
     color: #444;
     font-size: 14px;
     border: 1px solid var(--button-disabled-bg-color);
-    border-left: 0px solid transparent;
+    border-right-width: 0px;
+    border-radius: 0;
+    box-shadow: 0 0 0 transparent;
+
+    transition: color var(--duration),
+        border-color var(--duration);
 }
-div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span {
+div.aaDialog .message fieldset.onglets legend label:last-child input[type="radio"] + button {
+    border-right-width: 1px;
 }
-div.aaDialog .message fieldset legend label:first-child input[type="radio"] + span {
+div.aaDialog .message fieldset.onglets legend label:first-child input[type="radio"] + button {
     border-top-left-radius: 16px;
     border-bottom-left-radius: 16px;
 }
-div.aaDialog .message fieldset legend label:last-child input[type="radio"] + span {
+div.aaDialog .message fieldset.onglets legend label:last-child input[type="radio"] + button {
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
 }
-div.aaDialog .message fieldset legend label input[type="radio"] + span:hover {
+div.aaDialog .message fieldset.onglets legend label input[type="radio"] + button:focus,
+div.aaDialog .message fieldset.onglets legend label input[type="radio"] + button:hover {
     cursor: pointer;
     color: var(--submit-bg-color);
 }
-div.aaDialog .message fieldset legend label input[type="radio"]:checked + span {
+div.aaDialog .message fieldset.onglets legend label input[type="radio"]:checked + button {
     margin: 0px 0px;
     background: var(--submit-bg-color);
     color: #fff;
     text-decoration: none;
-    border-color: var(--submit-bg-color);
+    border: 1px solid var(--submit-bg-color);
 }
-div.aaDialog .message fieldset legend label:first-child input[type="radio"]:checked + span {
+div.aaDialog .message fieldset.onglets legend label input[type="radio"]:checked + button:focus {
+    border-color: var(--color-blue-darker);
 }
-div.aaDialog .message fieldset legend label input[type="radio"]:disabled + span {
+div.aaDialog .message fieldset.onglets legend label input[type="radio"]:disabled + button {
     cursor: default;
     color: var(--color-grey);
+}
+
+/* Button without border */
+div.aaDialog .message fieldset.onglets.no-border legend {
+    border-width: 0;
+}
+div.aaDialog .message fieldset.onglets.no-border legend label:first-child {
+    border-radius: 0;
+    border-width: 0;
+}
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"] + button {
+    padding: 8px 12px;
+    min-width: fit-content;
+    color: var(--color-grey-darker);
+    border-radius: 0;
+    border-width: 0;
+    border-bottom: var(--border-width) solid transparent;
+}
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"]:checked + button {
+    background: transparent;
+    color: #000;
+    border-width: 0;
+    border-left-width: 0px;
+    border-bottom: var(--border-width) solid var(--submit-bg-color);
+}
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"] + button:focus,
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"] + button:hover {
+    color: var(--submit-bg-color);
+}
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"]:checked + button:focus,
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"]:checked + button:hover {
+    color: #000;
+}
+div.aaDialog .message fieldset.onglets.no-border legend label input[type="radio"]:disabled + button {
+    color: var(--color-grey-lighter);
 }
 div.aaDialog .message input.wrong{
     background: var(--error-bg-color);
@@ -2445,7 +2499,10 @@ Tooltip:
 .aa button:focus > .tooltip-container.hidden {
     display: none;
 }
-
+.aa button:disabled > .tooltip-container > div.tooltip-anchor > div.tooltip {
+    --tooltip-bg: var(--color-grey-darker);
+    --tooltip-text: var(--color-grey);
+}
 /* Selection matrix */
 
 section.SelectionMatrix {

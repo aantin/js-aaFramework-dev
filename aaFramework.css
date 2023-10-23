@@ -1712,6 +1712,15 @@ div.aaDialog .message fieldset.scrollable .gris{
 div.aaDialog .message fieldset.scrollable button.key:focus .keyboardKey{
     border-color: var(--color-blue-darker);
 }
+div.aaDialog .message fieldset.scrollable button.ico {
+    background-color: transparent;
+}
+div.aaDialog .message fieldset.scrollable button.ico:hover,
+div.aaDialog .message fieldset.scrollable button.ico:focus {
+    background-color: var(--color-blue-lighter);
+    color: var(--color-blue-darker);
+}
+
 div.aaDialog span.w{
     display: inline-block;
     text-align: right;
@@ -2532,6 +2541,7 @@ Tooltip:
     --tooltip-text: var(--color-grey);
 }
 /* Selection matrix */
+
 
 section.SelectionMatrix {
     --item-top: rgba(64,128,255,.1);

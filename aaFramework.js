@@ -1876,7 +1876,7 @@
                 }
 
                 // else:
-                this.events.forEach((events, evtName) => {
+                that.events.forEach((events, evtName) => {
                     if (aa.shortcut.isValid(evtName)) {
                         events.forEach((evt) => {
                             if (obj instanceof aa.Event) {
@@ -8236,7 +8236,7 @@
                     onglets: []
                 };
                 aa.gui.loading(() => {
-                    fonts.forEach((font) => {
+                    fonts.forEach(font => {
                         const filter = (e) => {
                             const value = e.target.value;
                             searchValue = value;
@@ -8263,17 +8263,34 @@
                             }
                         });
                         spec.onglets.push({
+                            border: false,
                             name: "aafw-fonts",
                             label: obj.constructor.name,
                             text: (() => {
-                                obj.keys().forEach((key) => {
+                                obj.keys().forEach(key => {
                                     grid.appendChild($$("div.row", {dataset: {key: key}},
                                         $$("div.cell", {style: "min-width: fit-content;"},
-                                            $$("icon.fa-fw."+key, {style: "margin: 2px;", title: key}),
+                                            $$("button.ico", (() => {
+                                                const options = {style: "margin: 2px;", title: key};
+                                                return (font === GoogleIconfont ?
+                                                    aa.icon("icon."+key, options)
+                                                    : $$("icon.fw."+key, options)
+                                                );
+                                            })(), {
+                                                tooltip: $$("tooltip", {
+                                                    text: "Copy into clipboard",
+                                                }),
+                                                on: {click: e => {
+                                                    navigator.clipboard.writeText(key).then(
+                                                        () => {},
+                                                        () => {aa.gui.notif("You're not allowed to write into the clipboard.", {type: "critical"});},
+                                                    );
+                                                }}
+                                            })
                                         ),
                                         $$("div.cell",
                                             $$("span", key),
-                                        ),
+                                        )
                                     ));
                                 });
                                 const div = $$("fieldset.scrollable",

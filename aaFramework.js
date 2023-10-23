@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.6.0",
+        version: "3.7.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -8297,6 +8297,7 @@
                     win = aa.gui.win({
                         id: "icons-gui",
                         title: "Fonts",
+                        buttons: false,
                         text: $$("div", spec),
                         on: {show: e => {
                             els("#aaDialog-icons-gui", dialog => {
@@ -10991,9 +10992,9 @@
                 nodeName = extracts.tagName;
 
                 switch (nodeName) {
-                case "icon":
-                    return aa.icon.apply(undefined, arguments);
-                    break;
+                // case "icon":
+                //     return aa.icon.apply(undefined, arguments);
+                //     break;
                 case "text":
                     return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
                         document.createTextNode(arguments[1])
@@ -11019,6 +11020,10 @@
                     type = "text";
                     nodeName = "input";
                     break;
+                case "icon":
+                    type = nodeName;
+                    nodeName = "span";
+                    break;
                 case "pastille":
                 case "tooltip":
                     type = nodeName;
@@ -11033,6 +11038,13 @@
                     elt.id = extracts.id;
                 }
                 const specialNodes = {
+                    icon: () => {
+                        elt.classList.add("fa");
+                        extracts.classes.forEach(cls => {
+                            elt.classList.add("fa-"+cls);
+                        });
+                        while (extracts.classes.length) extracts.classes.pop();
+                    },
                     pastille: () => {
                         elt.classList.add("pastille-container");
                         const valueNode = $$("div.pastille");
@@ -11120,6 +11132,7 @@
                 if (!specialNodes.hasOwnProperty(type)) {
                     Object.defineProperties(elt, {
                         icon: {
+                            get: () => get(elt, "icons")[0] ?? null,
                             set: icon => {
                                 elt.classList.add("fa");
                                 try { aa.arg.test(icon, aa.isNullOrNonEmptyString, "'icon'"); }

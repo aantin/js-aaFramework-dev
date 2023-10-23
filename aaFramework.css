@@ -2368,8 +2368,6 @@ Pastilles:
     display: block;
     --width: 12px;
 
-    background-color: var(--button-red-bg-color);
-    background-color: var(--color-magenta);
     background-color: var(--color-blue);
     color: var(--button-red-color);
     width: var(--width);
@@ -2377,6 +2375,10 @@ Pastilles:
     font-size: 9px;
     line-height: var(--width);
     border-radius: 50%;
+}
+.aa .pastille-container > div.pastille.critical {
+    background-color: var(--button-red-bg-color);
+    background-color: var(--color-magenta);
 }
 
 /* --------------------------------

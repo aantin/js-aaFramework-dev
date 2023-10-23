@@ -10877,755 +10877,781 @@
             }
         };
     })());
-    aa.html                     = Object.freeze(function (nodeName) {
-        /*
-            aa.html(nodeName[, args]);
-            - First argument must be nodeName.
-            - Each following argument can be a string or an object or parameters.
-                - If argument is a String and starts with a '#', it will be considered as id.
-                - If argument is a String and starts with a '.', it will be considered as additional className.
-            
-            // Examples:
-            aa.html('div');
-            aa.html('div','#myID');
-            aa.html('div','.myClass');
-            aa.html('div','#myID','.myClass');
-            aa.html('div','#myID','.myClass','innerHTML String');
-            aa.html('div#myID.myClass.anOtherClass','innerHTML String'); // shortcut markup declaration
-            aa.html('input',{
-                id:     '#myID',
-                class:  '.myClass',
-                type:   'button',
-                value:  'Ok',
-                on: ['click',funcion() {}],
-                on: ['click',funcion() {},true],
-                on: [
-                    ['click',function () {}],
-                    ['mouseover',function () {},false],
-                    ['focus',function () {},true]
+    /**
+     * Generate a DOM Element.
+     * Usage:
+        aa.html(nodeName[, args]);
+        - First argument must be nodeName.
+        - Each following argument can be a string or an object or parameters.
+            - If argument is a String and starts with a '#', it will be considered as id.
+            - If argument is a String and starts with a '.', it will be considered as additional className.
+        
+        // Examples:
+        aa.html('div');
+        aa.html('div','#myID');
+        aa.html('div','.myClass');
+        aa.html('div','#myID','.myClass');
+        aa.html('div','#myID','.myClass','innerHTML String');
+        aa.html('div#myID.myClass.anOtherClass','innerHTML String'); // shortcut markup declaration
+        aa.html('input',{
+            id:     '#myID',
+            class:  '.myClass',
+            type:   'button',
+            value:  'Ok',
+            on: ['click',funcion() {}],
+            on: ['click',funcion() {},true],
+            on: [
+                ['click',function () {}],
+                ['mouseover',function () {},false],
+                ['focus',function () {},true]
+                // ...
+            ],
+            on: {
+                click: function () {}
+            },
+            on: {
+                click: [
+                    function () {},
+                    function () {}
                     // ...
-                ],
-                on: {
-                    click: function () {}
-                },
-                on: {
-                    click: [
-                        function () {},
-                        function () {}
-                        // ...
-                    ]
+                ]
+            }
+        });
+     */
+    aa.html = (() => {
+        const pastilleTypes = ["information", "warning", "critical"];
+        return Object.freeze(function (nodeName) {
+            let i,elt,res,rest,table,value,type,
+                id = null,
+                classes = [],
+                htmlAttributes = [
+                    // Attributes to include as themselves:
+                    "action",
+                    "alt",
+                    "charset",
+                    "download",
+                    "enctype",
+                    "for",
+                    "height",
+                    "href",
+                    "id",
+                    "kind",
+                    "label",
+                    "method",
+                    "name",
+                    "orient",
+                    "placeholder",
+                    "src",
+                    "srclang",
+                    "style",
+                    "title",
+                    "value",
+                    "width",
+                    
+                    // Attributes to transform before including:
+                    "checked",
+                    "class",
+                    "colspan",
+                    "content",
+                    "count",
+                    // "css",
+                    "dataset",
+                    "default",
+                    "disabled",
+                    "direction",
+                    "draggable",
+                    "icon",
+                    "icons",
+                    "legend",
+                    "max",
+                    "min",
+                    "multiple",
+                    "on",
+                    "onglets",
+                    "options",
+                    "pastille",
+                    "pattern",
+                    "prefix",
+                    "readonly",
+                    "required",
+                    "rowspan",
+                    "selected",
+                    "shortcut",
+                    "step",
+                    "suffix",
+                    "target",
+                    "text",
+                    "tooltip",
+                    "type",
+                    "validation"
+                ];
+
+            if (aa.nonEmptyString(nodeName)) {
+                const extracts = aa.extractClassNameAndID(nodeName);
+                nodeName = extracts.tagName;
+
+                switch (nodeName) {
+                case "icon":
+                    return aa.icon.apply(undefined, arguments);
+                    break;
+                case "text":
+                    return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
+                        document.createTextNode(arguments[1])
+                        : undefined
+                    );
+                    break;
+                case "button":
+                    type = "button";
+                    break;
+                case "checkbox":
+                case "file":
+                case "password":
+                case "hidden":
+                case "radio":
+                case "number":
+                case "range":
+                case "reset":
+                case "submit":
+                    type = nodeName;
+                    nodeName = "input";
+                    break;
+                case "input":
+                    type = "text";
+                    nodeName = "input";
+                    break;
+                case "pastille":
+                case "tooltip":
+                    type = nodeName;
+                    nodeName = "div";
+                    break;
+                default:
+                    break;
                 }
-            });
-        */
-        let i,elt,res,rest,table,value,type,
-            id = null,
-            classes = [],
-            htmlAttributes = [
-                // Attributes to include as themselves:
-                "action",
-                "alt",
-                "charset",
-                "download",
-                "enctype",
-                "for",
-                "height",
-                "href",
-                "id",
-                "kind",
-                "label",
-                "method",
-                "name",
-                "orient",
-                "placeholder",
-                "src",
-                "srclang",
-                "style",
-                "title",
-                "type",
-                "value",
-                "width",
-                
-                // Attributes to transform before including:
-                "checked",
-                "class",
-                "colspan",
-                "content",
-                "count",
-                // "css",
-                "dataset",
-                "default",
-                "disabled",
-                "direction",
-                "draggable",
-                "icon",
-                "icons",
-                "legend",
-                "max",
-                "min",
-                "multiple",
-                "on",
-                "onglets",
-                "options",
-                "pastille",
-                "pattern",
-                "prefix",
-                "readonly",
-                "required",
-                "rowspan",
-                "selected",
-                "shortcut",
-                "step",
-                "suffix",
-                "target",
-                "text",
-                "tooltip",
-                "validation"
-            ];
 
-        if (aa.nonEmptyString(nodeName)) {
-            const extracts = aa.extractClassNameAndID(nodeName);
-            nodeName = extracts.tagName;
+                elt = document.createElement(nodeName);
+                if (extracts.id) {
+                    elt.id = extracts.id;
+                }
+                const specialNodes = {
+                    pastille: () => {
+                        elt.classList.add("pastille-container");
+                        const valueNode = $$("div.pastille");
+                        elt.append(valueNode);
+                        Object.defineProperties(elt, {
+                            count: {
+                                get: () => parseInt(valueNode.innerHTML),
+                                set : count => {
+                                    try { aa.arg.test(count, aa.isPositiveInt, "'count'"); }
+                                    catch (err) { warn(err); return; }
 
-            switch (nodeName) {
-            case "icon":
-                return aa.icon.apply(undefined, arguments);
-                break;
-            case "text":
-                return (arguments && arguments.length > 1 && aa.isString(arguments[1]) ?
-                    document.createTextNode(arguments[1])
-                    : undefined
-                );
-                break;
-            case "button":
-                type = "button";
-                break;
-            case "checkbox":
-            case "file":
-            case "password":
-            case "hidden":
-            case "radio":
-            case "number":
-            case "range":
-            case "reset":
-            case "submit":
-                type = nodeName;
-                nodeName = "input";
-                break;
-            case "input":
-                type = "text";
-                nodeName = "input";
-                break;
-            case "pastille":
-            case "tooltip":
-                type = nodeName;
-                nodeName = "div";
-                break;
-            default:
-                break;
-            }
-
-            elt = document.createElement(nodeName);
-            if (extracts.id) {
-                elt.id = extracts.id;
-            }
-            const specialNodes = {
-                pastille: () => {
-                    elt.classList.add("pastille-container");
-                    const valueNode = $$("div.pastille");
-                    elt.append(valueNode);
-                    Object.defineProperties(elt, {
-                        count: {
-                            get: () => parseInt(valueNode.innerHTML),
-                            set : count => {
-                                try { aa.arg.test(count, aa.isPositiveInt, "'count'"); }
-                                catch (err) { warn(err); return; }
-
-                                valueNode.classList[count > 0 ? "remove" : "add"]("hidden");
-                                valueNode.innerHTML = ""+(count > 9 ? "#": count);
-                            }
-                        }
-                    });
-                },
-                tooltip: () => {
-                    elt.classList.add("tooltip-container");
-                    elt.classList.add("right"); // Default direction
-                    const textNode = $$("div.text");
-                    elt.append($$("div.tooltip-anchor",
-                        $$("div.tooltip",
-                            $$("div.arrow"),
-                            textNode
-                        )
-                    ));
-                    Object.defineProperties(elt, {
-                        text: {
-                            get: () => textNode.innerHTML,
-                            set: text => {
-                                aa.arg.test(text, aa.isString, "'text'");
-                                textNode.innerHTML = text.trim();
-                            }
-                        },
-                        content: {
-                            get: () => textNode.children,
-                            set: content => {
-                                aa.arg.test(content, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
-
-                                textNode.innerHTML = '';
-                                if (aa.isNode(content)) {
-                                    textNode.appendChild(content);
-                                } else {
-                                    content.forEach(node => {
-                                        textNode.appendChild(node);
-                                    });
+                                    valueNode.classList[count > 0 ? "remove" : "add"]("hidden");
+                                    valueNode.innerHTML = ""+(count > 9 ? "#": count);
+                                }
+                            },
+                            type: {
+                                get: () => get(elt, "type"),
+                                set: type => {
+                                    aa.arg.test(type, aa.inArray([null, ...pastilleTypes]), "'type'");
+                                    const previousType = elt.type;
+                                    if (previousType) valueNode.classList.remove(previousType);
+                                    if (type) {
+                                        valueNode.classList.add(type);
+                                        set(elt, "type", type);
+                                    }
                                 }
                             }
-                        },
-                        shortcut: {
-                            get: () => textNode.dataset.shortcut,
-                            set: shortcut => {
-                                aa.arg.test(shortcut, aa.isNullOrNonEmptyString, "'shortcut'");
+                        });
+                    },
+                    tooltip: () => {
+                        elt.classList.add("tooltip-container");
+                        elt.classList.add("right"); // Default direction
+                        const textNode = $$("div.text");
+                        elt.append($$("div.tooltip-anchor",
+                            $$("div.tooltip",
+                                $$("div.arrow"),
+                                textNode
+                            )
+                        ));
+                        Object.defineProperties(elt, {
+                            text: {
+                                get: () => textNode.innerHTML,
+                                set: text => {
+                                    aa.arg.test(text, aa.isString, "'text'");
+                                    textNode.innerHTML = text.trim();
+                                }
+                            },
+                            content: {
+                                get: () => textNode.children,
+                                set: content => {
+                                    aa.arg.test(content, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
 
-                                if (shortcut) {
-                                    textNode.dataset.shortcut = shortcut.trim();
-                                } else {
-                                    delete textNode.dataset.shortcut;
+                                    textNode.innerHTML = '';
+                                    if (aa.isNode(content)) {
+                                        textNode.appendChild(content);
+                                    } else {
+                                        content.forEach(node => {
+                                            textNode.appendChild(node);
+                                        });
+                                    }
+                                }
+                            },
+                            shortcut: {
+                                get: () => textNode.dataset.shortcut,
+                                set: shortcut => {
+                                    aa.arg.test(shortcut, aa.isNullOrNonEmptyString, "'shortcut'");
+
+                                    if (shortcut) {
+                                        textNode.dataset.shortcut = shortcut.trim();
+                                    } else {
+                                        delete textNode.dataset.shortcut;
+                                    }
                                 }
                             }
-                        }
-                    });
-                },
-            };
-            if (type) {
-                if (specialNodes.hasOwnProperty(type)) {
-                    specialNodes[type]();
-                } else {
-                    elt.type = type;
+                        });
+                    },
+                };
+                if (type) {
+                    if (specialNodes.hasOwnProperty(type)) {
+                        specialNodes[type]();
+                    } else {
+                        elt.type = type;
+                    }
                 }
-            }
-            if (!specialNodes.hasOwnProperty(type)) {
-                Object.defineProperties(elt, {
-                    icon: {
-                        set: icon => {
-                            elt.classList.add("fa");
-                            try { aa.arg.test(icon, aa.isNullOrNonEmptyString, "'icon'"); }
-                            catch (err) {
-                                warn(err);
-                                return;
+                if (!specialNodes.hasOwnProperty(type)) {
+                    Object.defineProperties(elt, {
+                        icon: {
+                            set: icon => {
+                                elt.classList.add("fa");
+                                try { aa.arg.test(icon, aa.isNullOrNonEmptyString, "'icon'"); }
+                                catch (err) {
+                                    warn(err);
+                                    return;
+                                }
+                                elt.icons = (icon ? [icon] : []);
                             }
-                            elt.icons = (icon ? [icon] : []);
-                        }
-                    },
-                    icons: {
-                        get: () => [...get(elt, "icons")],
-                        set: icons => {
-                            if (icons === null)
-                                icons = [];
-                            if (aa.isString(icons))
-                                icons = [icons];
-                            
-                            elt.classList.add("fa");
-                            try { aa.arg.test(icons, aa.isArrayOfNonEmptyStrings, "'icons'"); }
-                            catch (err) {
-                                warn(err);
-                                return;
-                            }
+                        },
+                        icons: {
+                            get: () => [...get(elt, "icons")],
+                            set: icons => {
+                                if (icons === null)
+                                    icons = [];
+                                if (aa.isString(icons))
+                                    icons = [icons];
+                                
+                                elt.classList.add("fa");
+                                try { aa.arg.test(icons, aa.isArrayOfNonEmptyStrings, "'icons'"); }
+                                catch (err) {
+                                    warn(err);
+                                    return;
+                                }
 
-                            get(elt, "icons")?.forEach(icon => {
-                                elt.classList.remove("fa-"+icon);
-                            });
-                            icons.forEach(icon => {
-                                elt.classList.add("fa-"+icon);
-                            });
-                            set(elt, "icons", icons);
-                        }
-                    },
-                    pastille: {
-                        get: () => elt.querySelector("div.pastille-container"),
-                        set: pastille => {
-                            aa.arg.test(pastille, arg => aa.isNode(arg) && arg.classList?.contains("pastille-container"), "'pastille'");
-                            elt.classList.add("with-pastille");
-                            elt.append(pastille);
-                        }
-                    },
+                                get(elt, "icons")?.forEach(icon => {
+                                    elt.classList.remove("fa-"+icon);
+                                });
+                                icons.forEach(icon => {
+                                    elt.classList.add("fa-"+icon);
+                                });
+                                set(elt, "icons", icons);
+                            }
+                        },
+                        pastille: {
+                            get: () => elt.querySelector("div.pastille-container"),
+                            set: pastille => {
+                                aa.arg.test(pastille, arg => aa.isNode(arg) && arg.classList?.contains("pastille-container"), "'pastille'");
+                                elt.classList.add("with-pastille");
+                                elt.append(pastille);
+                            }
+                        },
+                    });
+                }
+
+                extracts.classes.forEach(function (value) {
+                    if (value.match(/\s/)) {
+                        let table = value.split(/\s/);
+                        table.forEach(function (value) {
+                            if (value.trim()) {
+                                elt.classList.add(value.trim());
+                            }
+                        });
+                    } else {
+                        elt.classList.add(value);
+                    }
                 });
-            }
 
-            extracts.classes.forEach(function (value) {
-                if (value.match(/\s/)) {
-                    let table = value.split(/\s/);
-                    table.forEach(function (value) {
-                        if (value.trim()) {
-                            elt.classList.add(value.trim());
-                        }
-                    });
-                } else {
-                    elt.classList.add(value);
-                }
-            });
+                if (arguments) {
+                    [...arguments].forEach(function (param,i) {
+                        let option;
 
-            if (arguments) {
-                [...arguments].forEach(function (param,i) {
-                    let option;
-
-                    if (i > 0) {
-                        if (aa.isDom(param) || aa.isNode(param)) {
-                            elt.appendChild(param);
-                        } else if (aa.isString(param)) {
-                            option = param.trim();
-                            switch (nodeName) {
-                                case "textarea":
-                                    elt.innerText += option;
-                                    break;
-                                default:
-                                    elt.innerHTML += option;
-                                    break;
-                            }
-                        } else if (aa.isObject(param)) {
-                            param.forEach(function (option, key) {
-                                let classes;
-                                if (aa.isString(key)) {
-                                    key = key.trim().toLowerCase();
-                                    if (htmlAttributes.has(key)) {
-                                        switch (key) {
-                                            case "class":
-                                                if (aa.isString(option) && option.trim()) {
-                                                    option = option.trim().replace(/\s+/,' ');
-                                                    classes = option.split(' ');
-                                                    classes.forEach(function (classe) {
-                                                        return (elt.classList.add(classe));
-                                                    });
-                                                }
-                                                break;
-                                            
-                                            case "colspan":
-                                            case "rowspan":
-                                                switch (nodeName) {
-                                                    case 'th':
-                                                    case 'td':
-                                                        elt.setAttribute(key, option+'');
-                                                        break;
-                                                }
-                                                break;
-                                            
-                                            case "content":
-                                                aa.arg.test(option, value => aa.isNode(value) || value instanceof DocumentFragment || aa.isArrayOf(aa.isNode)(value), "'content'");
-
-                                                if (!["pastille", "tooltip"].includes(type)) {
-                                                    elt.content = option;
-                                                } else {
-                                                    elt.innerHTML = '';
-                                                    if (aa.isNode(option)) {
-                                                        elt.appendChild(option);
-                                                    } else if (option instanceof DocumentFragment) {
-                                                        elt.append(option);
-                                                    } else if (aa.isArray(option)) {
-                                                        option.forEach(node => {
-                                                            elt.appendChild(node);
+                        if (i > 0) {
+                            if (aa.isDom(param) || aa.isNode(param)) {
+                                elt.appendChild(param);
+                            } else if (aa.isString(param)) {
+                                option = param.trim();
+                                switch (nodeName) {
+                                    case "textarea":
+                                        elt.innerText += option;
+                                        break;
+                                    default:
+                                        elt.innerHTML += option;
+                                        break;
+                                }
+                            } else if (aa.isObject(param)) {
+                                param.forEach(function (option, key) {
+                                    let classes;
+                                    if (aa.isString(key)) {
+                                        key = key.trim().toLowerCase();
+                                        if (htmlAttributes.has(key)) {
+                                            switch (key) {
+                                                case "class":
+                                                    if (aa.isString(option) && option.trim()) {
+                                                        option = option.trim().replace(/\s+/,' ');
+                                                        classes = option.split(' ');
+                                                        classes.forEach(function (classe) {
+                                                            return (elt.classList.add(classe));
                                                         });
                                                     }
-                                                }
-                                                break;
+                                                    break;
+                                                
+                                                case "colspan":
+                                                case "rowspan":
+                                                    switch (nodeName) {
+                                                        case 'th':
+                                                        case 'td':
+                                                            elt.setAttribute(key, option+'');
+                                                            break;
+                                                    }
+                                                    break;
+                                                
+                                                case "content":
+                                                    aa.arg.test(option, value => aa.isNode(value) || value instanceof DocumentFragment || aa.isArrayOf(aa.isNode)(value), "'content'");
 
-                                            case "count":
-                                                if (["pastille"].includes(type)) {
-                                                    if (aa.isNumber(option)) {
-                                                        elt.count = option;
-                                                    }
-                                                }
-                                                break;
-                                            
-                                            case "dataset":
-                                                if (aa.isObject(option)) {
-                                                    option.forEach((v, k) => {
-                                                        if (aa.nonEmptyString(v))
-                                                            elt.dataset[k] = v;
-                                                        else if (v === null)
-                                                            delete elt.dataset[v];
-                                                        else
-                                                            warn("Dataset argument should be an Object of non-empty Strings only.");
-                                                    });
-                                                }
-                                                break;
-                                            
-                                            case "direction":
-                                                if (type === "tooltip") {
-                                                    aa.arg.test(option, aa.inEnum(
-                                                        'bottom',
-                                                        'bottom-left',
-                                                        'bottom-right',
-                                                        'left',
-                                                        'right',
-                                                        'top',
-                                                        'top-left',
-                                                        'top-right',
-                                                    ), "'tooltip.direction'");
-                                                    if (option !== 'right') {
-                                                        elt.classList.remove('right');
-                                                        elt.classList.add(option);
-                                                    }
-                                                }
-                                                break;
-                                            
-                                            case "draggable":
-                                                elt.draggable = (
-                                                    aa.isBool(option)
-                                                    ? option
-                                                    : false
-                                                );
-                                                break;
-                                            
-                                            case "icon":
-                                            case "icons":
-                                                elt[key] = option;
-                                                break;
-
-                                            case "legend":
-                                                if (nodeName === "fieldset") {
-                                                    if (aa.nonEmptyString(option)) {
-                                                        const legend = aa.html("legend", option.trim());
-                                                        elt.insertAtFirst(legend);
-                                                    }
-                                                }
-                                                break;
-                                            
-                                            case "onglets":
-                                                aa.arg.test(option, aa.isArrayOf(aa.verifyObject({
-                                                    alt:        aa.nonEmptyString,
-                                                    border:     aa.isBool,
-                                                    checked:    aa.isBool,
-                                                    disabled:   aa.isBool,
-                                                    id:         aa.nonEmptyString,
-                                                    label:      aa.nonEmptyString,
-                                                    name:       aa.nonEmptyString,
-                                                    on:         aa.isObject,
-                                                    text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || aa.instanceof(DocumentFragment)),
-                                                    title:      aa.nonEmptyString,
-                                                    value:      aa.nonEmptyString,
-                                                })), "'option'");
-
-                                                const name = aa.uid();
-                                                const onglets = $$("legend.onglets");
-                                                const container = $$("fieldset.onglets", onglets);
-                                                let checkedRadio = null;
-                                                elt.appendChild(container);
-
-                                                option.forEach((spec, i) => {
-                                                    spec.sprinkle({
-                                                        border:     true,
-                                                        checked:    false,
-                                                        disabled:   false,
-                                                        id:         aa.uid(),
-                                                        name,
-                                                    });
-
-                                                    spec.id = spec.id.trim();
-
-                                                    // DOM:
-                                                    if (!spec.border)
-                                                        container.classList.add("no-border");
-                                                    const radio = $$("radio", {
-                                                        dataset: {id: spec.id},
-                                                        disabled: spec.disabled
-                                                    });
-                                                    const span = $$("button", {
-                                                        disabled: spec.disabled,
-                                                        on: {click: e => radio.click()}
-                                                    });
-                                                    const label = $$("label.onglet",
-                                                        radio,
-                                                        span
-                                                    );
-                                                    onglets.appendChild(label);
-
-                                                    if (spec.checked) {
-                                                        checkedRadio = radio;
-                                                    }
-                                                    if (spec.label) {
-                                                        spec.label = spec.label.trim();
-                                                        span.innerHTML = spec.label;
-                                                    }
-                                                    if (spec.name) {
-                                                        spec.name = spec.name.trim();
-                                                        radio.name = spec.name;
-                                                    }
-                                                    if (spec.on) {
-                                                        spec.on.forEach((callback, evtName) => {
-                                                            if (!aa.isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
-                                                            evtName = evtName.toLowerCase();
-                                                            switch (evtName) {
-                                                                case "check":
-                                                                    radio.on("change", () => {
-                                                                        if (radio.checked) {
-                                                                            setTimeout(() => {
-                                                                                callback();
-                                                                            }, 50);
-                                                                        }
-                                                                    });
-                                                                    break;
-                                                                default:
-                                                                    throw new TypeError("Unknown onglets 'on' spec key.");
-                                                                    break;
-                                                            }
-                                                        });
-                                                    }
-                                                    if (spec.title) {
-                                                        spec.title = spec.title.trim();
-                                                        label.title = spec.title;
-                                                    }
-                                                    if (spec.value) {
-                                                        spec.value = spec.value.trim();
-                                                        radio.value = spec.value;
-                                                    }
-                                                    radio.on("change", () => {
-                                                        container.diveTheDOM((node) => {
-                                                            if (node.classList.contains("aaDialogOngletContent")) {
-                                                                node.classList.add("hidden");
-                                                            }
-                                                        });
-                                                        el(spec.id, (content) => {
-                                                            content.classList.remove("hidden");
-                                                        });
-                                                    });
-                                                });
-                                                option.forEach((spec, i) => {
-                                                    if (spec.text) {
-                                                        spec.text = aa.isString(spec.text) ? spec.label.trim() : spec.text;
-                                                        const content = $$("div#"+spec.id+".aaDialogOngletContent", spec.text);
-                                                        content.classList.add("hidden");
-                                                        container.appendChild(content);
-                                                    }
-                                                });
-                                                setTimeout(() => {
-                                                    if (checkedRadio) {
-                                                        checkedRadio.click();
-                                                    } else {
-                                                        const found = onglets.childNodes
-                                                            .find((onglet) => {
-                                                                let radio;
-                                                                onglet.diveTheDOM((node) => {
-                                                                    if (node.type && node.type.toLowerCase() === "radio") {
-                                                                        radio = node;
-                                                                    }
-                                                                })
-                                                                return !radio.disabled;
-                                                            })
-                                                        ;
-                                                        if (found) {
-                                                            found.click();
-                                                        }
-                                                    }
-                                                }, 50);
-                                                break;
-                                            
-                                            case "orient":
-                                                if (
-                                                    nodeName === "input" && type === "range"
-                                                    && (["vertical"]).has(option)
-                                                ) {
-                                                    elt.setAttribute("orient", option);
-                                                } else {
-                                                    warn("Invalid 'orient' argument.");
-                                                }
-                                                break;
-                                            
-                                            case "text":
-                                                if (["tooltip"].includes(type)) {
-                                                    if (aa.isString(option)) {
-                                                        elt.text = option;
-                                                    } else {
+                                                    if (!["pastille", "tooltip"].includes(type)) {
                                                         elt.content = option;
-                                                    }
-                                                } else {
-                                                    elt.innerHTML = option;
-                                                }
-                                                break;
-                                            
-                                            case "checked":
-                                                elt.defaultChecked = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
-                                                elt[key] = elt.defaultChecked;
-                                                break;
-                                            
-                                            case "min":
-                                            case "max":
-                                            case "step":
-                                                elt[key] = option+'';
-                                                break;
-                                            
-                                            case "prefix":
-                                            case "suffix":
-                                                switch (nodeName) {
-                                                    case "input":
-                                                        key = key.toLowerCase();
-                                                        elt.classList.add(key);
-                                                        elt.dataset[key] = option;
-                                                        break;
-                                                }
-                                                break;
-                                            
-                                            case "default":
-                                            case "disabled":
-                                            case "multiple":
-                                            case "readonly":
-                                            case "required":
-                                            case "selected":
-                                                elt[key] = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
-                                                break;
-                                            
-                                            case "on":
-                                                if (aa.isArray(option)) {
-                                                    if (option.length > 1 && !aa.isArray(option[0])) {
-                                                        let evt =       option[0];
-                                                        let callback =  option[1];
-
-                                                        if (option.length > 2) {
-                                                            let bubble = option[2];
-                                                            return elt.on(evt,callback,bubble);
-                                                        } else {
-                                                             return elt.on(evt,callback);
-                                                        }
                                                     } else {
-                                                        option.forEach(function (listener) {
-                                                            if (aa.isArray(listener) && listener.length > 1) {
-                                                                let evt = listener[0];
-                                                                let callback = listener[1];
-
-                                                                if (listener.length > 2) {
-                                                                    let bubble = listener[2];
-                                                                    return elt.on(evt,callback,bubble);
-                                                                }
-                                                                return elt.on(evt,callback);
-                                                            }
-                                                        });
-                                                    }
-                                                } else if (aa.isObject(option)) {
-                                                    option.forEach(function (callback,evt) {
-                                                        if (typeof callback === 'function') {
-                                                            return elt.on(evt,callback);
-                                                        } else if(aa.isArray(callback)) {
-                                                            callback.forEach(function (func) {
-                                                                return elt.on(evt,func);
+                                                        elt.innerHTML = '';
+                                                        if (aa.isNode(option)) {
+                                                            elt.appendChild(option);
+                                                        } else if (option instanceof DocumentFragment) {
+                                                            elt.append(option);
+                                                        } else if (aa.isArray(option)) {
+                                                            option.forEach(node => {
+                                                                elt.appendChild(node);
                                                             });
                                                         }
+                                                    }
+                                                    break;
+
+                                                case "count":
+                                                    if (["pastille"].includes(type)) {
+                                                        if (aa.isNumber(option)) {
+                                                            elt.count = option;
+                                                        }
+                                                    }
+                                                    break;
+                                                
+                                                case "dataset":
+                                                    if (aa.isObject(option)) {
+                                                        option.forEach((v, k) => {
+                                                            if (aa.nonEmptyString(v))
+                                                                elt.dataset[k] = v;
+                                                            else if (v === null)
+                                                                delete elt.dataset[v];
+                                                            else
+                                                                warn("Dataset argument should be an Object of non-empty Strings only.");
+                                                        });
+                                                    }
+                                                    break;
+                                                
+                                                case "direction":
+                                                    if (type === "tooltip") {
+                                                        aa.arg.test(option, aa.inEnum(
+                                                            'bottom',
+                                                            'bottom-left',
+                                                            'bottom-right',
+                                                            'left',
+                                                            'right',
+                                                            'top',
+                                                            'top-left',
+                                                            'top-right',
+                                                        ), "'tooltip.direction'");
+                                                        if (option !== 'right') {
+                                                            elt.classList.remove('right');
+                                                            elt.classList.add(option);
+                                                        }
+                                                    }
+                                                    break;
+                                                
+                                                case "draggable":
+                                                    elt.draggable = (
+                                                        aa.isBool(option)
+                                                        ? option
+                                                        : false
+                                                    );
+                                                    break;
+                                                
+                                                case "icon":
+                                                case "icons":
+                                                    elt[key] = option;
+                                                    break;
+
+                                                case "legend":
+                                                    if (nodeName === "fieldset") {
+                                                        if (aa.nonEmptyString(option)) {
+                                                            const legend = aa.html("legend", option.trim());
+                                                            elt.insertAtFirst(legend);
+                                                        }
+                                                    }
+                                                    break;
+                                                
+                                                case "onglets":
+                                                    aa.arg.test(option, aa.isArrayOf(aa.verifyObject({
+                                                        alt:        aa.nonEmptyString,
+                                                        border:     aa.isBool,
+                                                        checked:    aa.isBool,
+                                                        disabled:   aa.isBool,
+                                                        id:         aa.nonEmptyString,
+                                                        label:      aa.nonEmptyString,
+                                                        name:       aa.nonEmptyString,
+                                                        on:         aa.isObject,
+                                                        text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || aa.instanceof(DocumentFragment)),
+                                                        title:      aa.nonEmptyString,
+                                                        value:      aa.nonEmptyString,
+                                                    })), "'option'");
+
+                                                    const name = aa.uid();
+                                                    const onglets = $$("legend.onglets");
+                                                    const container = $$("fieldset.onglets", onglets);
+                                                    let checkedRadio = null;
+                                                    elt.appendChild(container);
+
+                                                    option.forEach((spec, i) => {
+                                                        spec.sprinkle({
+                                                            border:     true,
+                                                            checked:    false,
+                                                            disabled:   false,
+                                                            id:         aa.uid(),
+                                                            name,
+                                                        });
+
+                                                        spec.id = spec.id.trim();
+
+                                                        // DOM:
+                                                        if (!spec.border)
+                                                            container.classList.add("no-border");
+                                                        const radio = $$("radio", {
+                                                            dataset: {id: spec.id},
+                                                            disabled: spec.disabled
+                                                        });
+                                                        const span = $$("button", {
+                                                            disabled: spec.disabled,
+                                                            on: {click: e => radio.click()}
+                                                        });
+                                                        const label = $$("label.onglet",
+                                                            radio,
+                                                            span
+                                                        );
+                                                        onglets.appendChild(label);
+
+                                                        if (spec.checked) {
+                                                            checkedRadio = radio;
+                                                        }
+                                                        if (spec.label) {
+                                                            spec.label = spec.label.trim();
+                                                            span.innerHTML = spec.label;
+                                                        }
+                                                        if (spec.name) {
+                                                            spec.name = spec.name.trim();
+                                                            radio.name = spec.name;
+                                                        }
+                                                        if (spec.on) {
+                                                            spec.on.forEach((callback, evtName) => {
+                                                                if (!aa.isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
+                                                                evtName = evtName.toLowerCase();
+                                                                switch (evtName) {
+                                                                    case "check":
+                                                                        radio.on("change", () => {
+                                                                            if (radio.checked) {
+                                                                                setTimeout(() => {
+                                                                                    callback();
+                                                                                }, 50);
+                                                                            }
+                                                                        });
+                                                                        break;
+                                                                    default:
+                                                                        throw new TypeError("Unknown onglets 'on' spec key.");
+                                                                        break;
+                                                                }
+                                                            });
+                                                        }
+                                                        if (spec.title) {
+                                                            spec.title = spec.title.trim();
+                                                            label.title = spec.title;
+                                                        }
+                                                        if (spec.value) {
+                                                            spec.value = spec.value.trim();
+                                                            radio.value = spec.value;
+                                                        }
+                                                        radio.on("change", () => {
+                                                            container.diveTheDOM((node) => {
+                                                                if (node.classList.contains("aaDialogOngletContent")) {
+                                                                    node.classList.add("hidden");
+                                                                }
+                                                            });
+                                                            el(spec.id, (content) => {
+                                                                content.classList.remove("hidden");
+                                                            });
+                                                        });
                                                     });
-                                                }
-                                                break;
-                                            
-                                            case "options":
-                                                if (!aa.isArray(option)) {
-                                                    throw new Error("'Options' argument should be an Array.");
-                                                }
-                                                option.forEach(function (opt) {
-                                                    if (!aa.isDom(opt)) {
-                                                        throw new Error("<option> should be a DOM Element.");
-                                                    }
-                                                    elt.appendChild(opt);
-                                                });
-                                                break;
-                                            
-                                            case "pastille":
-                                                (() => {
-                                                    aa.arg.test(
-                                                        option,
-                                                        arg =>  aa.isPositiveInt(arg)
-                                                                || (aa.isElement(arg) && arg.classList.contains('pastille-container')),
-                                                        "'pastille'"
-                                                    );
-                                                    
-                                                    elt.classList.add('with-pastille');
-                                                    if (aa.isNumber(option)) {
-                                                        const pastille = $$("pastille", {
-                                                            count: option
-                                                        });
-                                                        elt.append(pastille);
+                                                    option.forEach((spec, i) => {
+                                                        if (spec.text) {
+                                                            spec.text = aa.isString(spec.text) ? spec.label.trim() : spec.text;
+                                                            const content = $$("div#"+spec.id+".aaDialogOngletContent", spec.text);
+                                                            content.classList.add("hidden");
+                                                            container.appendChild(content);
+                                                        }
+                                                    });
+                                                    setTimeout(() => {
+                                                        if (checkedRadio) {
+                                                            checkedRadio.click();
+                                                        } else {
+                                                            const found = onglets.childNodes
+                                                                .find((onglet) => {
+                                                                    let radio;
+                                                                    onglet.diveTheDOM((node) => {
+                                                                        if (node.type && node.type.toLowerCase() === "radio") {
+                                                                            radio = node;
+                                                                        }
+                                                                    })
+                                                                    return !radio.disabled;
+                                                                })
+                                                            ;
+                                                            if (found) {
+                                                                found.click();
+                                                            }
+                                                        }
+                                                    }, 50);
+                                                    break;
+                                                
+                                                case "orient":
+                                                    if (
+                                                        nodeName === "input" && type === "range"
+                                                        && (["vertical"]).has(option)
+                                                    ) {
+                                                        elt.setAttribute("orient", option);
                                                     } else {
-                                                        elt.append(option);
+                                                        warn("Invalid 'orient' argument.");
                                                     }
-                                                })();
-                                                break;
+                                                    break;
+                                                
+                                                case "text":
+                                                    if (["tooltip"].includes(type)) {
+                                                        if (aa.isString(option)) {
+                                                            elt.text = option;
+                                                        } else {
+                                                            elt.content = option;
+                                                        }
+                                                    } else {
+                                                        elt.innerHTML = option;
+                                                    }
+                                                    break;
+                                                
+                                                case "checked":
+                                                    elt.defaultChecked = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
+                                                    elt[key] = elt.defaultChecked;
+                                                    break;
+                                                
+                                                case "min":
+                                                case "max":
+                                                case "step":
+                                                    elt[key] = option+'';
+                                                    break;
+                                                
+                                                case "prefix":
+                                                case "suffix":
+                                                    switch (nodeName) {
+                                                        case "input":
+                                                            key = key.toLowerCase();
+                                                            elt.classList.add(key);
+                                                            elt.dataset[key] = option;
+                                                            break;
+                                                    }
+                                                    break;
+                                                
+                                                case "default":
+                                                case "disabled":
+                                                case "multiple":
+                                                case "readonly":
+                                                case "required":
+                                                case "selected":
+                                                    elt[key] = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
+                                                    break;
+                                                
+                                                case "on":
+                                                    if (aa.isArray(option)) {
+                                                        if (option.length > 1 && !aa.isArray(option[0])) {
+                                                            let evt =       option[0];
+                                                            let callback =  option[1];
 
-                                            case "pattern":
-                                                switch (nodeName) {
-                                                    case "input":
+                                                            if (option.length > 2) {
+                                                                let bubble = option[2];
+                                                                return elt.on(evt,callback,bubble);
+                                                            } else {
+                                                                 return elt.on(evt,callback);
+                                                            }
+                                                        } else {
+                                                            option.forEach(function (listener) {
+                                                                if (aa.isArray(listener) && listener.length > 1) {
+                                                                    let evt = listener[0];
+                                                                    let callback = listener[1];
+
+                                                                    if (listener.length > 2) {
+                                                                        let bubble = listener[2];
+                                                                        return elt.on(evt,callback,bubble);
+                                                                    }
+                                                                    return elt.on(evt,callback);
+                                                                }
+                                                            });
+                                                        }
+                                                    } else if (aa.isObject(option)) {
+                                                        option.forEach(function (callback,evt) {
+                                                            if (typeof callback === 'function') {
+                                                                return elt.on(evt,callback);
+                                                            } else if(aa.isArray(callback)) {
+                                                                callback.forEach(function (func) {
+                                                                    return elt.on(evt,func);
+                                                                });
+                                                            }
+                                                        });
+                                                    }
+                                                    break;
+                                                
+                                                case "options":
+                                                    if (!aa.isArray(option)) {
+                                                        throw new Error("'Options' argument should be an Array.");
+                                                    }
+                                                    option.forEach(function (opt) {
+                                                        if (!aa.isDom(opt)) {
+                                                            throw new Error("<option> should be a DOM Element.");
+                                                        }
+                                                        elt.appendChild(opt);
+                                                    });
+                                                    break;
+                                                
+                                                case "pastille":
+                                                    (() => {
+                                                        aa.arg.test(
+                                                            option,
+                                                            arg =>  aa.isPositiveInt(arg)
+                                                                    || (aa.isElement(arg) && arg.classList.contains('pastille-container')),
+                                                            "'pastille'"
+                                                        );
+                                                        
+                                                        elt.classList.add('with-pastille');
+                                                        if (aa.isNumber(option)) {
+                                                            const pastille = $$("pastille", {
+                                                                count: option
+                                                            });
+                                                            elt.append(pastille);
+                                                        } else {
+                                                            elt.append(option);
+                                                        }
+                                                    })();
+                                                    break;
+
+                                                case "pattern":
+                                                    switch (nodeName) {
+                                                        case "input":
+                                                            elt.setAttribute(key, option);
+                                                            break;
+                                                        
+                                                        case "textarea":
+                                                            elt.dataset.pattern = option;
+                                                            elt.on("input", () => {
+                                                                const re = new RegExp(option);
+                                                                elt.classList[(elt.value.match(re) ?
+                                                                    "remove"
+                                                                    : "add"
+                                                                )]("invalid");
+                                                            });
+                                                            break;
+                                                    }
+                                                    break;
+
+                                                case "shortcut":
+                                                    elt.shortcut = option;
+                                                    break;
+
+                                                case "tooltip":
+                                                    (() => {
+                                                        aa.arg.test(
+                                                            option,
+                                                            arg =>  aa.nonEmptyString(arg)
+                                                                    || (aa.isElement(arg) && arg.classList.contains('tooltip-container')),
+                                                            "'tootltip'"
+                                                        );
+                                                        
+                                                        elt.classList.add('with-tooltip');
+                                                        if (aa.isString(option)) {
+                                                            elt.appendChild($$('tooltip', {
+                                                                text: option
+                                                            }));
+                                                        } else {
+                                                            elt.appendChild(option);
+                                                        }
+                                                    })();
+                                                    break;
+
+                                                case "type":
+                                                    if (["pastille"].includes(type)) {
+                                                        log(option)
+                                                        elt.type = option;
+                                                    } else {
                                                         elt.setAttribute(key, option);
-                                                        break;
-                                                    
-                                                    case "textarea":
-                                                        elt.dataset.pattern = option;
-                                                        elt.on("input", () => {
-                                                            const re = new RegExp(option);
-                                                            elt.classList[(elt.value.match(re) ?
-                                                                "remove"
-                                                                : "add"
-                                                            )]("invalid");
-                                                        });
-                                                        break;
-                                                }
-                                                break;
-
-                                            case "shortcut":
-                                                elt.shortcut = option;
-                                                break;
-
-                                            case "tooltip":
-                                                (() => {
-                                                    aa.arg.test(
-                                                        option,
-                                                        arg =>  aa.nonEmptyString(arg)
-                                                                || (aa.isElement(arg) && arg.classList.contains('tooltip-container')),
-                                                        "'tootltip'"
-                                                    );
-                                                    
-                                                    elt.classList.add('with-tooltip');
-                                                    if (aa.isString(option)) {
-                                                        elt.appendChild($$('tooltip', {
-                                                            text: option
-                                                        }));
-                                                    } else {
-                                                        elt.appendChild(option);
                                                     }
-                                                })();
-                                                break;
+                                                    break;
 
-                                            case "validation":
-                                                switch (nodeName) {
-                                                    case "input":
-                                                    case "button":
-                                                    case "textarea":
-                                                    case "select":
-                                                        if (!aa.isFunction(option)) { throw new TypeError("Option must be a Function."); }
-                                                        set(elt, "validation", option);
-                                                        break;
-                                                }
-                                                break;
+                                                case "validation":
+                                                    switch (nodeName) {
+                                                        case "input":
+                                                        case "button":
+                                                        case "textarea":
+                                                        case "select":
+                                                            if (!aa.isFunction(option)) { throw new TypeError("Option must be a Function."); }
+                                                            set(elt, "validation", option);
+                                                            break;
+                                                    }
+                                                    break;
 
-                                            case "value":
-                                                if (nodeName === "button") {
-                                                    elt.innerHTML = option;
-                                                } else {
-                                                    elt.setAttribute('value',(option ? option+'' : ''));
-                                                }
-                                                break;
-                                            
-                                            default:
-                                                if (aa.isString(option)) {
-                                                    return (elt.setAttribute(key, option.trim()));
-                                                } else if (aa.isNumber(option)) {
-                                                    return (elt.setAttribute(key, option));
-                                                }
-                                                break;
-                                        }
-                                    } else { warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)"); }
-                                }
-                                return false;
-                            });
+                                                case "value":
+                                                    if (nodeName === "button") {
+                                                        elt.innerHTML = option;
+                                                    } else {
+                                                        elt.setAttribute('value',(option ? option+'' : ''));
+                                                    }
+                                                    break;
+                                                
+                                                default:
+                                                    if (aa.isString(option)) {
+                                                        return (elt.setAttribute(key, option.trim()));
+                                                    } else if (aa.isNumber(option)) {
+                                                        return (elt.setAttribute(key, option));
+                                                    }
+                                                    break;
+                                            }
+                                        } else { warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)"); }
+                                    }
+                                    return false;
+                                });
+                            }
                         }
-                    }
-                    return false;
-                });
+                        return false;
+                    });
+                }
+                return elt;
             }
-            return elt;
-        }
-        return undefined;
-    });
+            return undefined;
+        });
+    })();
     aa.HTMLCollection           = (() => {
         function HTMLCollection (list) {
             const getAccessor = function (thisArg) {

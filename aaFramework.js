@@ -1136,6 +1136,7 @@
                         'findIndex',
                         'findLastIndex',
                         'findReverse',
+                        'includes',
                         'some',
                     )(methodName) && !aa.isBool(isVerified)) {
                         throw new TypeError(`Callback Function must return a Boolean.`);
@@ -1196,6 +1197,7 @@
             find:               methodFactory('find'),
             findIndex:          methodFactory('findIndex'),
             findLastIndex:      methodFactory('findLastIndex'),
+            includes:           methodFactory('includes'),
             map:                methodFactory('map'),
             ...fromArrayPrototype('pop'),
             reduce:             function (callback, accumulator /*, thisArg */) {
@@ -11033,13 +11035,13 @@
                     elt.append(valueNode);
                     Object.defineProperties(elt, {
                         count: {
-                            get: () => valueNode.innerText,
+                            get: () => parseInt(valueNode.innerHTML),
                             set : count => {
                                 try { aa.arg.test(count, aa.isPositiveInt, "'count'"); }
                                 catch (err) { warn(err); return; }
 
                                 valueNode.classList[count > 0 ? "remove" : "add"]("hidden");
-                                valueNode.innerText = ""+(count > 9 ? "#": count);
+                                valueNode.innerHTML = ""+(count > 9 ? "#": count);
                             }
                         }
                     });
@@ -11135,7 +11137,15 @@
                             });
                             set(elt, "icons", icons);
                         }
-                    }
+                    },
+                    pastille: {
+                        get: () => elt.querySelector("div.pastille-container"),
+                        set: pastille => {
+                            aa.arg.test(pastille, arg => aa.isNode(arg) && arg.classList?.contains("pastille-container"), "'pastille'");
+                            elt.classList.add("with-pastille");
+                            elt.append(pastille);
+                        }
+                    },
                 });
             }
 

@@ -257,6 +257,7 @@ body.aaFrameworkFreeze{
     padding: 1px;
     min-width: 16px;
 }
+.aa *.with-pastille,
 .aa *.with-tooltip {
     position: relative;
 }
@@ -2354,6 +2355,31 @@ div.aaDialog.progress div.item label > div > div{
 }
 
 /* --------------------------------
+Pastilles:
+-------------------------------- */
+.aa .pastille-container {
+    position: absolute;
+    top: -4px;
+    right: 8px;
+}
+.aa .pastille-container > div.pastille {
+    z-index: 7;
+    position: absolute;
+    display: block;
+    --width: 12px;
+
+    background-color: var(--button-red-bg-color);
+    background-color: var(--color-magenta);
+    background-color: var(--color-blue);
+    color: var(--button-red-color);
+    width: var(--width);
+    height: var(--width);
+    font-size: 9px;
+    line-height: var(--width);
+    border-radius: 50%;
+}
+
+/* --------------------------------
 Tooltip:
 -------------------------------- */
 
@@ -3307,7 +3333,7 @@ div.dependencyError{
 /* -------------------------------- */
 
 .aa .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* -------------------------------- */

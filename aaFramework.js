@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.4.0",
+        version: "3.5.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1194,6 +1194,8 @@
                 return collection;
             },
             find:               methodFactory('find'),
+            findIndex:          methodFactory('findIndex'),
+            findLastIndex:      methodFactory('findLastIndex'),
             map:                methodFactory('map'),
             ...fromArrayPrototype('pop'),
             reduce:             function (callback, accumulator /*, thisArg */) {
@@ -8251,7 +8253,7 @@
                         const obj = new font();
                         const grid = $$("div.grid");
                         const noMatch = $$("div.row.grey.italic.hidden", "No match");
-                        const search = $$("input", {
+                        const search = $$("input.search", {
                             placeholder: "Search for a class name...",
                             on: {
                                 input: aa.debounce(filter, 200),
@@ -8291,8 +8293,17 @@
                         });
                     });
                     win = aa.gui.win({
+                        id: "icons-gui",
                         title: "Fonts",
-                        text: $$("div", spec)
+                        text: $$("div", spec),
+                        on: {show: e => {
+                            els("#aaDialog-icons-gui", dialog => {
+                                aa.wait(100, () => {
+                                    const input = dialog.querySelector("input.search");
+                                    input?.focus();
+                                });
+                            });
+                        }}
                     });
                 }, () => {
                 });
@@ -10937,12 +10948,15 @@
                 "class",
                 "colspan",
                 "content",
+                "count",
                 // "css",
                 "dataset",
                 "default",
                 "disabled",
                 "direction",
                 "draggable",
+                "icon",
+                "icons",
                 "legend",
                 "max",
                 "min",
@@ -10950,6 +10964,7 @@
                 "on",
                 "onglets",
                 "options",
+                "pastille",
                 "pattern",
                 "prefix",
                 "readonly",
@@ -10998,6 +11013,7 @@
                 type = "text";
                 nodeName = "input";
                 break;
+            case "pastille":
             case "tooltip":
                 type = nodeName;
                 nodeName = "div";
@@ -11010,54 +11026,117 @@
             if (extracts.id) {
                 elt.id = extracts.id;
             }
-            if (type === "tooltip") {
-                elt.classList.add('tooltip-container');
-                elt.classList.add('right'); // Default direction
-                const textNode = $$('div.text');
-                elt.appendChild($$('div.tooltip-anchor',
-                    $$('div.tooltip',
-                        $$('div.arrow'),
-                        textNode
-                    )
-                ));
+            const specialNodes = {
+                pastille: () => {
+                    elt.classList.add("pastille-container");
+                    const valueNode = $$("div.pastille");
+                    elt.append(valueNode);
+                    Object.defineProperties(elt, {
+                        count: {
+                            get: () => valueNode.innerText,
+                            set : count => {
+                                try { aa.arg.test(count, aa.isPositiveInt, "'count'"); }
+                                catch (err) { warn(err); return; }
+
+                                valueNode.classList[count > 0 ? "remove" : "add"]("hidden");
+                                valueNode.innerText = ""+(count > 9 ? "#": count);
+                            }
+                        }
+                    });
+                },
+                tooltip: () => {
+                    elt.classList.add("tooltip-container");
+                    elt.classList.add("right"); // Default direction
+                    const textNode = $$("div.text");
+                    elt.append($$("div.tooltip-anchor",
+                        $$("div.tooltip",
+                            $$("div.arrow"),
+                            textNode
+                        )
+                    ));
+                    Object.defineProperties(elt, {
+                        text: {
+                            get: () => textNode.innerHTML,
+                            set: text => {
+                                aa.arg.test(text, aa.isString, "'text'");
+                                textNode.innerHTML = text.trim();
+                            }
+                        },
+                        content: {
+                            get: () => textNode.children,
+                            set: content => {
+                                aa.arg.test(content, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
+
+                                textNode.innerHTML = '';
+                                if (aa.isNode(content)) {
+                                    textNode.appendChild(content);
+                                } else {
+                                    content.forEach(node => {
+                                        textNode.appendChild(node);
+                                    });
+                                }
+                            }
+                        },
+                        shortcut: {
+                            get: () => textNode.dataset.shortcut,
+                            set: shortcut => {
+                                aa.arg.test(shortcut, aa.isNullOrNonEmptyString, "'shortcut'");
+
+                                if (shortcut) {
+                                    textNode.dataset.shortcut = shortcut.trim();
+                                } else {
+                                    delete textNode.dataset.shortcut;
+                                }
+                            }
+                        }
+                    });
+                },
+            };
+            if (type) {
+                if (specialNodes.hasOwnProperty(type)) {
+                    specialNodes[type]();
+                } else {
+                    elt.type = type;
+                }
+            }
+            if (!specialNodes.hasOwnProperty(type)) {
                 Object.defineProperties(elt, {
-                    text: {
-                        get: () => textNode.innerHTML,
-                        set: text => {
-                            aa.arg.test(text, aa.isString, "'text'");
-                            textNode.innerHTML = text.trim();
+                    icon: {
+                        set: icon => {
+                            elt.classList.add("fa");
+                            try { aa.arg.test(icon, aa.isNullOrNonEmptyString, "'icon'"); }
+                            catch (err) {
+                                warn(err);
+                                return;
+                            }
+                            elt.icons = (icon ? [icon] : []);
                         }
                     },
-                    content: {
-                        get: () => textNode.children,
-                        set: content => {
-                            aa.arg.test(content, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
-
-                            textNode.innerHTML = '';
-                            if (aa.isNode(content)) {
-                                textNode.appendChild(content);
-                            } else {
-                                content.forEach(node => {
-                                    textNode.appendChild(node);
-                                });
+                    icons: {
+                        get: () => [...get(elt, "icons")],
+                        set: icons => {
+                            if (icons === null)
+                                icons = [];
+                            if (aa.isString(icons))
+                                icons = [icons];
+                            
+                            elt.classList.add("fa");
+                            try { aa.arg.test(icons, aa.isArrayOfNonEmptyStrings, "'icons'"); }
+                            catch (err) {
+                                warn(err);
+                                return;
                             }
-                        }
-                    },
-                    shortcut: {
-                        get: () => textNode.dataset.shortcut,
-                        set: shortcut => {
-                            aa.arg.test(shortcut, aa.isNullOrNonEmptyString, "'shortcut'");
 
-                            if (shortcut) {
-                                textNode.dataset.shortcut = shortcut.trim();
-                            } else {
-                                delete textNode.dataset.shortcut;
-                            }
+                            get(elt, "icons")?.forEach(icon => {
+                                elt.classList.remove("fa-"+icon);
+                            });
+                            icons.forEach(icon => {
+                                elt.classList.add("fa-"+icon);
+                            });
+                            set(elt, "icons", icons);
                         }
                     }
                 });
-            } else if (type) {
-                elt.type = type;
             }
 
             extracts.classes.forEach(function (value) {
@@ -11097,6 +11176,107 @@
                                     key = key.trim().toLowerCase();
                                     if (htmlAttributes.has(key)) {
                                         switch (key) {
+                                            case "class":
+                                                if (aa.isString(option) && option.trim()) {
+                                                    option = option.trim().replace(/\s+/,' ');
+                                                    classes = option.split(' ');
+                                                    classes.forEach(function (classe) {
+                                                        return (elt.classList.add(classe));
+                                                    });
+                                                }
+                                                break;
+                                            
+                                            case "colspan":
+                                            case "rowspan":
+                                                switch (nodeName) {
+                                                    case 'th':
+                                                    case 'td':
+                                                        elt.setAttribute(key, option+'');
+                                                        break;
+                                                }
+                                                break;
+                                            
+                                            case "content":
+                                                aa.arg.test(option, value => aa.isNode(value) || value instanceof DocumentFragment || aa.isArrayOf(aa.isNode)(value), "'content'");
+
+                                                if (!["pastille", "tooltip"].includes(type)) {
+                                                    elt.content = option;
+                                                } else {
+                                                    elt.innerHTML = '';
+                                                    if (aa.isNode(option)) {
+                                                        elt.appendChild(option);
+                                                    } else if (option instanceof DocumentFragment) {
+                                                        elt.append(option);
+                                                    } else if (aa.isArray(option)) {
+                                                        option.forEach(node => {
+                                                            elt.appendChild(node);
+                                                        });
+                                                    }
+                                                }
+                                                break;
+
+                                            case "count":
+                                                if (["pastille"].includes(type)) {
+                                                    if (aa.isNumber(option)) {
+                                                        elt.count = option;
+                                                    }
+                                                }
+                                                break;
+                                            
+                                            case "dataset":
+                                                if (aa.isObject(option)) {
+                                                    option.forEach((v, k) => {
+                                                        if (aa.nonEmptyString(v))
+                                                            elt.dataset[k] = v;
+                                                        else if (v === null)
+                                                            delete elt.dataset[v];
+                                                        else
+                                                            warn("Dataset argument should be an Object of non-empty Strings only.");
+                                                    });
+                                                }
+                                                break;
+                                            
+                                            case "direction":
+                                                if (type === "tooltip") {
+                                                    aa.arg.test(option, aa.inEnum(
+                                                        'bottom',
+                                                        'bottom-left',
+                                                        'bottom-right',
+                                                        'left',
+                                                        'right',
+                                                        'top',
+                                                        'top-left',
+                                                        'top-right',
+                                                    ), "'tooltip.direction'");
+                                                    if (option !== 'right') {
+                                                        elt.classList.remove('right');
+                                                        elt.classList.add(option);
+                                                    }
+                                                }
+                                                break;
+                                            
+                                            case "draggable":
+                                                elt.draggable = (
+                                                    aa.isBool(option)
+                                                    ? option
+                                                    : false
+                                                );
+                                                break;
+                                            
+                                            case "icon":
+                                            case "icons":
+                                                elt[key] = option;
+                                                break;
+
+                                            case "legend":
+                                                if (nodeName === "fieldset") {
+                                                    if (aa.nonEmptyString(option)) {
+                                                        const legend = aa.html("legend", option.trim());
+                                                        elt.insertAtFirst(legend);
+                                                    }
+                                                }
+                                                break;
+                                            
                                             case "onglets":
                                                 aa.arg.test(option, aa.isArrayOf(aa.verifyObject({
                                                     alt:        aa.nonEmptyString,
@@ -11226,46 +11406,6 @@
                                                 }, 50);
                                                 break;
                                             
-                                            case "legend":
-                                                if (nodeName === "fieldset") {
-                                                    if (aa.nonEmptyString(option)) {
-                                                        const legend = aa.html("legend", option.trim());
-                                                        elt.insertAtFirst(legend);
-                                                    }
-                                                }
-                                                break;
-                                            
-                                            case "dataset":
-                                                if (aa.isObject(option)) {
-                                                    option.forEach((v, k) => {
-                                                        if (aa.nonEmptyString(v)) {
-                                                            elt.dataset[k] = v;
-                                                        } else {
-                                                            warn("Dataset argument should be an Object of non-empty Strings only.");
-                                                        }
-                                                    });
-                                                }
-                                                break;
-                                            
-                                            case "direction":
-                                                if (type === "tooltip") {
-                                                    aa.arg.test(option, aa.inEnum(
-                                                        'bottom',
-                                                        'bottom-left',
-                                                        'bottom-right',
-                                                        'left',
-                                                        'right',
-                                                        'top',
-                                                        'top-left',
-                                                        'top-right',
-                                                    ), "'tooltip.direction'");
-                                                    if (option !== 'right') {
-                                                        elt.classList.remove('right');
-                                                        elt.classList.add(option);
-                                                    }
-                                                }
-                                                break;
-                                            
                                             case "orient":
                                                 if (
                                                     nodeName === "input" && type === "range"
@@ -11277,25 +11417,8 @@
                                                 }
                                                 break;
                                             
-                                            case "content":
-                                                aa.arg.test(option, value => aa.isNode(value) || aa.isArrayOf(aa.isNode)(value), "'content'");
-
-                                                if (type === 'tooltip') {
-                                                    elt.content = option;
-                                                } else {
-                                                    elt.innerHTML = '';
-                                                    if (aa.isNode(option)) {
-                                                        elt.appendChild(option);
-                                                    } else if (aa.isArray(option)) {
-                                                        option.forEach(node => {
-                                                            elt.appendChild(node);
-                                                        });
-                                                    }
-                                                }
-                                                break;
-                                            
                                             case "text":
-                                                if (type === 'tooltip') {
+                                                if (["tooltip"].includes(type)) {
                                                     if (aa.isString(option)) {
                                                         elt.text = option;
                                                     } else {
@@ -11306,27 +11429,9 @@
                                                 }
                                                 break;
                                             
-                                            case "draggable":
-                                                elt.draggable = (
-                                                    aa.isBool(option)
-                                                    ? option
-                                                    : false
-                                                );
-                                                break;
-                                            
                                             case "checked":
                                                 elt.defaultChecked = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
                                                 elt[key] = elt.defaultChecked;
-                                                break;
-                                            
-                                            case "colspan":
-                                            case "rowspan":
-                                                switch (nodeName) {
-                                                    case 'th':
-                                                    case 'td':
-                                                        elt.setAttribute(key, option+'');
-                                                        break;
-                                                }
                                                 break;
                                             
                                             case "min":
@@ -11353,16 +11458,6 @@
                                             case "required":
                                             case "selected":
                                                 elt[key] = ((aa.isString(option) && option.toLowerCase() === key.toLowerCase()) || option === true);
-                                                break;
-                                            
-                                            case "class":
-                                                if (aa.isString(option) && option.trim()) {
-                                                    option = option.trim().replace(/\s+/,' ');
-                                                    classes = option.split(' ');
-                                                    classes.forEach(function (classe) {
-                                                        return (elt.classList.add(classe));
-                                                    });
-                                                }
                                                 break;
                                             
                                             case "on":
@@ -11416,6 +11511,27 @@
                                                 });
                                                 break;
                                             
+                                            case "pastille":
+                                                (() => {
+                                                    aa.arg.test(
+                                                        option,
+                                                        arg =>  aa.isPositiveInt(arg)
+                                                                || (aa.isElement(arg) && arg.classList.contains('pastille-container')),
+                                                        "'pastille'"
+                                                    );
+                                                    
+                                                    elt.classList.add('with-pastille');
+                                                    if (aa.isNumber(option)) {
+                                                        const pastille = $$("pastille", {
+                                                            count: option
+                                                        });
+                                                        elt.append(pastille);
+                                                    } else {
+                                                        elt.append(option);
+                                                    }
+                                                })();
+                                                break;
+
                                             case "pattern":
                                                 switch (nodeName) {
                                                     case "input":

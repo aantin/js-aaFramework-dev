@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.8.0",
+        version: "3.9.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1227,7 +1227,7 @@
                 items.forEach(item => {
                     privates.emit.call(this, `removed`, item);
                 });
-                privates.emit.call(this, `datamodified`);
+                privates.emit.call(this, `datamodified`, this);
                 return items;
             },
             copy:               function () {
@@ -1278,7 +1278,7 @@
                 items.forEach(item => {
                     privates.emit.call(this, `added`, item);
                 });
-                privates.emit.call(this, `datamodified`);
+                privates.emit.call(this, `datamodified`, this);
             },
             join:               function () {
                 return (
@@ -1333,7 +1333,7 @@
                         });
                     }
                     privates.emit.call(this, `added`, item);
-                    privates.emit.call(this, `datamodified`);
+                    privates.emit.call(this, `datamodified`, this);
                 });
             },
             pushUnique:         function (...items) {
@@ -1360,7 +1360,7 @@
                                 delete this[this.length]
                             }
                             privates.emit.call(this, `removed`, removedItem[0]);
-                            privates.emit.call(this, `datamodified`);
+                            privates.emit.call(this, `datamodified`, this);
                             removedItems.push(removedItem[0]);
                         }
                     }
@@ -10937,7 +10937,7 @@
         });
      */
     aa.html = (() => {
-        const pastilleTypes = ["information", "warning", "critical"];
+        const pastilleTypes = ["information", "warning", "critical", "success"];
         return Object.freeze(function (nodeName) {
             let i,elt,res,rest,table,value,type,
                 id = null,
@@ -11064,7 +11064,25 @@
                     },
                     pastille: () => {
                         elt.classList.add("pastille-container");
-                        const valueNode = $$("div.pastille");
+                        const args = [...arguments].slice(1);
+                        let typeClass = "";
+                        let count = 0;
+                        args.forEach(arg => {
+                            if (aa.isObject(arg)) {
+                                if (arg.hasOwnProperty("count")) {
+                                    aa.arg.test(arg.count, aa.isPositiveInt, "'count'");
+                                    count = arg.count;
+                                    delete arg.count;
+                                    args.push(""+count);
+                                }
+                                if (arg.hasOwnProperty("type")) {
+                                    aa.arg.test(arg.type, aa.inArray(pastilleTypes), "'type'");
+                                    typeClass = "."+arg.type;
+                                    delete arg.type;
+                                }
+                            }
+                        });
+                        const valueNode = $$("div.pastille"+extracts.classes.map(cls => "."+cls).join("")+typeClass+(count > 0 ? "" : ".hidden"), ...args);
                         elt.append(valueNode);
                         Object.defineProperties(elt, {
                             count: {
@@ -11142,6 +11160,8 @@
                 if (type) {
                     if (specialNodes.hasOwnProperty(type)) {
                         specialNodes[type]();
+                        if (type === "pastille")
+                            return elt;
                     } else {
                         elt.type = type;
                     }
@@ -11343,6 +11363,7 @@
                                                         label:      aa.nonEmptyString,
                                                         name:       aa.nonEmptyString,
                                                         on:         aa.isObject,
+                                                        pastilles:  aa.isArrayOf(arg => aa.isPositiveInt(arg) || (aa.isElement(arg) && arg.classList.contains("pastille-container"))),
                                                         text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || aa.instanceof(DocumentFragment)),
                                                         title:      aa.nonEmptyString,
                                                         value:      aa.nonEmptyString,
@@ -11372,13 +11393,13 @@
                                                             dataset: {id: spec.id},
                                                             disabled: spec.disabled
                                                         });
-                                                        const span = $$("button", {
+                                                        const btn = $$("button", {
                                                             disabled: spec.disabled,
                                                             on: {click: e => radio.click()}
                                                         });
                                                         const label = $$("label.onglet",
                                                             radio,
-                                                            span
+                                                            btn
                                                         );
                                                         onglets.appendChild(label);
 
@@ -11387,12 +11408,28 @@
                                                         }
                                                         if (spec.label) {
                                                             spec.label = spec.label.trim();
-                                                            span.innerHTML = spec.label;
+                                                            btn.innerHTML = spec.label;
                                                         }
                                                         if (spec.name) {
                                                             spec.name = spec.name.trim();
                                                             radio.name = spec.name;
                                                         }
+
+                                                        // Pastilles:
+                                                        if (spec.pastilles.length) {
+                                                            spec.pastilles.forEach((pastille, i) => {
+                                                                if (aa.isNumber(pastille))
+                                                                    pastille = $$("pastille", {count: pastille});
+                                                                btn.classList.add("with-pastille");
+                                                                if (i === 0) {
+                                                                    btn.append(pastille);
+                                                                } else {
+                                                                    btn.querySelector("div.pastille-container").append(pastille.firstElementChild);
+                                                                }
+                                                            });
+                                                        }
+
+                                                        // Listeners:
                                                         if (spec.on) {
                                                             spec.on.forEach((callback, evtName) => {
                                                                 if (!aa.isFunction(callback)) { throw new TypeError("Onglets 'on' spec must be an Object of Functions."); }
@@ -11633,7 +11670,6 @@
 
                                                 case "type":
                                                     if (["pastille"].includes(type)) {
-                                                        log(option)
                                                         elt.type = option;
                                                     } else {
                                                         elt.setAttribute(key, option);

@@ -2369,11 +2369,10 @@ Pastilles:
 .aa .pastille-container {
     position: absolute;
     top: -4px;
-    right: 8px;
+    right: -4px;
 }
 .aa .pastille-container > div.pastille {
     z-index: 7;
-    position: absolute;
     display: block;
     --width: 12px;
 
@@ -2388,6 +2387,22 @@ Pastilles:
 .aa .pastille-container > div.pastille.critical {
     background-color: var(--button-red-bg-color);
     background-color: var(--color-magenta);
+}
+.aa .pastille-container > div.pastille.warning {
+    background-color: var(--color-orange);
+}
+.aa .pastille-container > div.pastille.success {
+    background-color: var(--color-green);
+}
+.aa fieldset.onglets > legend.onglets > label.onglet > button > .pastille-container {
+    top: -12px;
+    right: 0;
+    text-align: center;
+    width: 100%;
+}
+.aa fieldset.onglets > legend.onglets > label.onglet > button > .pastille-container > div.pastille {
+    display: inline-block;
+    margin: 0 1px;
 }
 
 /* --------------------------------

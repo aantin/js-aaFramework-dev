@@ -1604,7 +1604,8 @@ div.aaDialog .message fieldset.onglets legend label input[type="radio"]:disabled
 }
 
 /* Button without border */
-div.aaDialog .message fieldset.onglets.no-border legend {
+div.aaDialog .message fieldset.no-border legend {
+    color: #000;
     border-width: 0;
 }
 div.aaDialog .message fieldset.onglets.no-border legend label:first-child {

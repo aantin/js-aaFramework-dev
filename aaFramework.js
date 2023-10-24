@@ -4308,6 +4308,7 @@
                         width:          null,
                     },
                     privates: {
+                        appName:        null,
                         active:         null,
                         buttons:        true,
                         "btn-cancel":   null,
@@ -4693,12 +4694,10 @@
 
                     aa.deprecated("aa.gui.Dialog::callback");
                 },
-                setDefaultValue:    function (s) {
-                    if (!aa.nonEmptyString(s)) {
-                        throw new TypeError("Dialog text must be a non-empty String.");
-                        return false;
-                    }
-                    this.defaultValue = s.trim();
+                setDefaultValue:    function (txt) {
+                    aa.arg.test(txt, aa.nonEmptyString, "'txt'");
+                    const that = _(this);
+                    that.defaultValue = txt.trim();
                     return (!!this.defaultValue);
                 },
                 setDetails:         function (p) {
@@ -4736,7 +4735,8 @@
                     }
                 },
                 setMaxWidth:        function (n) {
-                    if (aa.isInt(n) && n>0) {
+                    const that = _(this);
+                    if (aa.isInt(n) && n > 0) {
                         n += '';
                     }
                     if (aa.isString(n)) {
@@ -4744,12 +4744,13 @@
                             n += 'px';
                         }
                         if (n.match(/^[0-9]+(px|\%)$/)) {
-                            this.maxWidth = n;
+                            that.maxWidth = n;
                         }
                     }
                 },
                 setMaxHeight:       function (n) {
-                    if (aa.isInt(n) && n>0) {
+                    const that = _(this);
+                    if (aa.isInt(n) && n > 0) {
                         n += '';
                     }
                     if (aa.isString(n)) {
@@ -4757,12 +4758,11 @@
                             n += 'px';
                         }
                         if (n.match(/^[0-9]+(px|\%)$/)) {
-                            this.maxHeight = n;
+                            that.maxHeight = n;
                         }
                     }
                 },
                 setMessage:         function (s) {
-
                     return this.setText(s);
                 },
                 setNo:              function (p) {
@@ -4870,6 +4870,7 @@
                     return !!that.validation;
                 },
                 setWidth:           function (n) {
+                    const that = _(this);
                     if (aa.isInt(n) && n>0) {
                         n += '';
                     }
@@ -4878,7 +4879,7 @@
                             n += 'px';
                         }
                         if (n.match(/^[0-9]+(px|\%)$/)) {
-                            this.width = n;
+                            that.width = n;
                         }
                     }
                 },
@@ -4894,8 +4895,9 @@
 
                 // Getters:
                 getID:              function () {
+                    const that = _(this);
                     if (!this.id) {
-                        this.id = aa.newID();
+                        that.id = aa.newID();
                     }
                     return this.id;
                 },
@@ -4924,8 +4926,9 @@
                     );
                 },
                 getAppName:         function () {
+                    const that = _(this);
                     if (!this.id) {
-                        this.id = aa.newID();
+                        that.id = aa.newID();
                     }
                     return "aaDialog-"+this.getID();
                 }
@@ -6035,7 +6038,8 @@
                         },
                         message:    function (message) {
                             aa.deprecated('<Notification.message>');
-                            this.text = message;
+                            const that = _(this);
+                            that.text = message;
                         },
                         text:       function (text) {
                             aa.arg.test(text, blueprint.verifiers.text, "'text'");
@@ -8748,9 +8752,9 @@
         const verify = aa.prototypes.verify({
             appName: aa.nonEmptyString,
             callback: aa.isFunction,
-            defaultValue: (v) => { return (!v || aa.nonEmptyString(v)); },
+            defaultValue: arg => (!arg || aa.nonEmptyString(arg)),
             evtName: aa.nonEmptyString,
-            shortcut: (str) => { return (aa.nonEmptyString(str) && str.match(re)); }
+            shortcut: str => (aa.nonEmptyString(str) && str.match(re)),
         });
         const btnText = "add a shortcut";
 

@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.9.0",
+        version: "3.9.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -11416,7 +11416,7 @@
                                                         }
 
                                                         // Pastilles:
-                                                        if (spec.pastilles.length) {
+                                                        if (spec.pastilles?.length) {
                                                             spec.pastilles.forEach((pastille, i) => {
                                                                 if (aa.isNumber(pastille))
                                                                     pastille = $$("pastille", {count: pastille});

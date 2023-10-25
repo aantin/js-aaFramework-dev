@@ -8915,7 +8915,7 @@
                     escape:     true,
                     buttons:    false,
                     width:      720,
-                    title:      "Edit shortcuts",
+                    title:      $$("div", $$("span.fa.fa-2x.fa-keyboard-o", {style: "color: var(--color-grey);"}), $$("div", "Edit shortcuts")),
                     text:       gui.getNode(appName),
                     on: {
                         resize: () => {

@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.9.2",
+        version: "3.9.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -11658,7 +11658,7 @@
                                                             option,
                                                             arg =>  aa.nonEmptyString(arg)
                                                                     || (aa.isElement(arg) && arg.classList.contains('tooltip-container')),
-                                                            "'tootltip'"
+                                                            "'tooltip'"
                                                         );
                                                         
                                                         elt.classList.add('with-tooltip');

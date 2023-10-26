@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.9.3",
+        version: "3.10.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -4109,7 +4109,6 @@
 
                     that.onclickout = e => {
                         if (!aa.isOver(e, "#aaContextMenu")) {
-                            // e.stopPropagation();
                             this.hide();
                         }
                     };
@@ -4122,7 +4121,6 @@
                         const menu = get(this, "menu");
                         const shortcut = shortcutMaker(get(this, "appName"));
 
-                        // const dom = $$("div#aaContextMenuBG.aa.bg");
                         that.node = $$("div#aaContextMenu", parse(menu.items, shortcut, this.hide.bind(this)));
 
                         // Theme:
@@ -4223,7 +4221,7 @@
                             that.node.style.top = `${top}px`;
                         }
                         
-                        privates.emit.call(this, `show`);
+                        privates.emit.call(this, `show`, this);
                     });
                 },
 
@@ -4588,7 +4586,7 @@
                             // Focus:
                             View.focus.call(this);
                         }
-                        fire.call(this, "show");
+                        fire.call(this, "show", this);
                     }
                     bgOpacity.call(this);
                     this.resize();
@@ -5046,7 +5044,7 @@
                     db.insert("reminders", reminders);
                 }
             };
-            const fire              = function (str) {
+            const fire              = function (str, attr) {
                 const that = _(this);
                 aa.prototypes.verify({str: (str) => { return that.listeners.keys().has(str); }})("str", str);
                 
@@ -5059,18 +5057,18 @@
                     // String:
                     if (aa.isString(item)) {
                         aa.action(item, (action) => {
-                            action.execute(data);
+                            action.execute(data, attr);
                         })
                     }
 
                     // Action:
                     else if (item instanceof aa.Action && item.isValid()) {
-                        item.execute(data);
+                        item.execute(data, attr);
                     }
 
                     // Function:
                     else if (aa.isFunction(item)) {
-                        item(data);
+                        item(data, attr);
                     }
                 });
             };

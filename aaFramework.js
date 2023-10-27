@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.11.0",
+        version: "3.12.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -718,7 +718,7 @@
                             this.fire("checkchange", checked);
                         }
                     }
-                    return bool;
+                    return checked;
                 },
                 setDescription:  function (description) {
                     aa.arg.test(description, verifiers.description, "'description'");
@@ -1814,6 +1814,9 @@
                 }
                 return this;
             },
+            moveTop:        function () {
+                aa.events.moveTop(this);
+            },
             pop:            function (evt) {
                 aa.arg.test(evt, privates.verifiers.evtName, "'evt'");
                 const that = _(this);
@@ -2880,173 +2883,183 @@
         });
 
         // Methods:
-        this.fire               = function (eventName /*, *args */) {
-            const args = arguments.reduce((args, arg, i) => {
-                if (i > 0) {
-                    args.push(arg);
-                }
-                return args;
-            }, []);
-            if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+        aa.deploy(this, {
+            fire:               function (eventName /*, *args */) {
+                const args = arguments.reduce((args, arg, i) => {
+                    if (i > 0) {
+                        args.push(arg);
+                    }
+                    return args;
+                }, []);
+                if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
 
-            eventName = eventName.trim();
-            const event = new CustomEvent(eventName, {detail: args});
-            document.dispatchEvent(event);
-        };
-        this.on                 = function (eventName, callback) {
-            if (aa.isObject(eventName)) {
-                eventName.forEach((callback, evtName) => {
-                    this.on(evtName, callback);
+                eventName = eventName.trim();
+                const event = new CustomEvent(eventName, {detail: args});
+                document.dispatchEvent(event);
+            },
+            on:                 function (eventName, callback) {
+                if (aa.isObject(eventName)) {
+                    eventName.forEach((callback, evtName) => {
+                        this.on(evtName, callback);
+                    });
+                    return this;
+                }
+                if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
+                if (!aa.isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
+
+                document.on(eventName.trim(), function (e) {
+                    const args = e.detail || undefined;
+                    callback.apply(null, e.detail);
                 });
                 return this;
-            }
-            if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
-            if (!aa.isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
+            },
+            app:                function () {
 
-            document.on(eventName.trim(), function (e) {
-                const args = e.detail || undefined;
-                callback.apply(null, e.detail);
-            });
-            return this;
-        };
-        this.app                = function () {
-
-            let app = "";
-            if (arguments && arguments.length) {
-                if (aa.nonEmptyString(arguments[0])) {
-                    app = arguments[0].trim();
+                let app = "";
+                if (arguments && arguments.length) {
+                    if (aa.nonEmptyString(arguments[0])) {
+                        app = arguments[0].trim();
+                    }
                 }
-            }
-            if (!this.appNames.has(app)) {
-                this.appNames.push(app);
-            }
-            if (!this.apps.hasOwnProperty(app)) {
-                this.apps[app] = new aa.EventApp(app);
-            }
-            return this.apps[app];
-        };
-        this.cancel             = function (shortcut /*, callback */) {
-        };
-        this.execute            = function (evtName /*, e */) {
-            /**
-             * @param {String} evtName
-             * @param {aa.Event} e=undefined (optional)
-             */
-            if (!aa.nonEmptyString(evtName)) { throw new TypeError("First argument must be a non-empty String."); }
-            const e = arguments && arguments.length>1 && arguments[1] instanceof Event ? arguments[1] : undefined;
+                if (!this.appNames.has(app)) {
+                    this.appNames.push(app);
+                }
+                if (!this.apps.hasOwnProperty(app)) {
+                    this.apps[app] = new aa.EventApp(app);
+                }
+                return this.apps[app];
+            },
+            cancel:             function (shortcut /*, callback */) {
+            },
+            execute:            function (evtName /*, e */) {
+                /**
+                 * @param {String} evtName
+                 * @param {aa.Event} e=undefined (optional)
+                 */
+                if (!aa.nonEmptyString(evtName)) { throw new TypeError("First argument must be a non-empty String."); }
+                const e = arguments && arguments.length>1 && arguments[1] instanceof Event ? arguments[1] : undefined;
 
-            let app, evts;
-            let response = new aa.EventResponse(e ? e.type : null);
-            let returnValues = null;
+                let app, evts;
+                let response = new aa.EventResponse(e ? e.type : null);
+                let returnValues = null;
 
-            evtName = aa.shortcut.cmdOrCtrl(evtName);
+                evtName = aa.shortcut.cmdOrCtrl(evtName);
 
-            if (this.appNames.length) {
+                if (this.appNames.length) {
 
-                // Execute 'forever' events:
-                this.appNames.forEach((appName, i) => {
-                    if (i < this.appNames.length-1) {
-                        let app = this.apps[appName];
-                        if (app instanceof aa.EventApp) {
-                            evts = app.getEvents(evtName);
-                            if (evts) {
-                                evts.forEach((evt) => {
-                                    if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("forever")) {
-                                        returnValues = evt.execute(response, e);
-                                        if (evt.hasOption("preventDefault")) {
-                                            response.preventDefault();
+                    // Execute 'forever' events:
+                    this.appNames.forEach((appName, i) => {
+                        if (i < this.appNames.length-1) {
+                            let app = this.apps[appName];
+                            if (app instanceof aa.EventApp) {
+                                evts = app.getEvents(evtName);
+                                if (evts) {
+                                    evts.forEach((evt) => {
+                                        if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("forever")) {
+                                            returnValues = evt.execute(response, e);
+                                            if (evt.hasOption("preventDefault")) {
+                                                response.preventDefault();
+                                            }
                                         }
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    // Execute current app events:
+                    app = this.apps[this.appNames.getLast()];
+                    if (app instanceof aa.EventApp) {
+                        evts = app.getEvents(evtName);
+                        if (evts) {
+                            let getReturnValues = function (evt, e) {
+                                returnValues = evt.execute(response, e);
+                                if (evt.hasOption("preventDefault")) {
+                                    response.preventDefault();
+                                }
+                            };
+
+                            // Execute every 'always' event:
+                            evts.filter((evt, i) => i < evts.length-1)
+                                .forEach(evt => {
+                                    if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("always")) {
+                                        getReturnValues(evt, e);
+                                    }
+                                });
+
+                            // Then execute top event:
+                            let evt = evts.last;
+                            if (evt instanceof aa.Event && evt.isValid()) {
+                                getReturnValues(evt, e);
+                            }
+                        }
+                    }
+                }
+
+                switch (evtName) {
+                    case "bodyload":
+                        storage.privates.loadOnce?.apply(this);
+                        break;
+                    
+                    case "windowunload":
+                    case "beforeunload":
+                        // undefined will close without warning
+                        // any other value will popup a warning before closing:
+                        return returnValues;
+                        break;
+                    
+                    default:
+                        break;
+                }
+
+                return response;
+            },
+            moveTop:            function (app) {
+                aa.arg.test(app, aa.instanceof(aa.EventApp), "'app'");
+                const oldIndex = this.appNames.indexOf(app.name);
+                if (oldIndex > -1) {
+                    const newIndex = this.appNames.length - 1;
+                    this.appNames.splice(newIndex, 0, this.appNames.splice(oldIndex, 1)[0]);
+                }
+            },
+            removeApp:          function (app) {
+                aa.arg.test(app, aa.nonEmptyString, "'app'")
+
+                app = app.trim();
+                // console.group('aa.events.remove('+app+')');
+                if (this.appNames.has(app) && typeof this.apps[app] !== 'undefined') {
+                    this.appNames.remove(app);
+                    delete this.apps[app];
+                }
+                // console.groupEnd();
+                return true;
+            },
+            restoreShortcuts:   function (appName) {
+                const data = db.select("shortcuts");
+                if (data) {
+                    if (data[appName]) {
+                        const actions = data[appName];
+                        actions.forEach((shortcuts, actionName) => {
+                            const action = aa.actionManager.get(actionName);
+                            if (action && action.isValid() && action.accessible) {
+                                shortcuts.forEach((shortcut) => {
+                                    if (aa.shortcut.isValid(shortcut)) {
+                                        aa.events.app(appName).dissociate(shortcut, action);
+                                    }
+                                });
+                                storage.privates.shortcuts.default[appName][actionName].forEach((shortcut) => {
+                                    if (aa.shortcut.isValid(shortcut)) {
+                                        aa.events.app(appName).on(shortcut, action);
                                     }
                                 });
                             }
-                        }
-                    }
-                });
-
-                // Execute current app events:
-                app = this.apps[this.appNames.getLast()];
-                if (app instanceof aa.EventApp) {
-                    evts = app.getEvents(evtName);
-                    if (evts) {
-                        let getReturnValues = function (evt, e) {
-                            returnValues = evt.execute(response, e);
-                            if (evt.hasOption("preventDefault")) {
-                                response.preventDefault();
-                            }
-                        };
-
-                        // Execute every 'always' event:
-                        evts.filter((evt, i) => i < evts.length-1)
-                            .forEach(evt => {
-                                if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("always")) {
-                                    getReturnValues(evt, e);
-                                }
-                            });
-
-                        // Then execute top event:
-                        let evt = evts.last;
-                        if (evt instanceof aa.Event && evt.isValid()) {
-                            getReturnValues(evt, e);
-                        }
+                        });
+                        delete(data[appName]);
                     }
                 }
-            }
-
-            switch (evtName) {
-                case "bodyload":
-                    storage.privates.loadOnce?.apply(this);
-                    break;
-                
-                case "windowunload":
-                case "beforeunload":
-                    // undefined will close without warning
-                    // any other value will popup a warning before closing:
-                    return returnValues;
-                    break;
-                
-                default:
-                    break;
-            }
-
-            return response;
-        };
-        this.removeApp          = function (app) {
-            aa.arg.test(app, aa.nonEmptyString, "'app'")
-
-            app = app.trim();
-            // console.group('aa.events.remove('+app+')');
-            if (this.appNames.has(app) && typeof this.apps[app] !== 'undefined') {
-                this.appNames.remove(app);
-                delete this.apps[app];
-            }
-            // console.groupEnd();
-            return true;
-        };
-        this.restoreShortcuts   = function (appName) {
-            const data = db.select("shortcuts");
-            if (data) {
-                if (data[appName]) {
-                    const actions = data[appName];
-                    actions.forEach((shortcuts, actionName) => {
-                        const action = aa.actionManager.get(actionName);
-                        if (action && action.isValid() && action.accessible) {
-                            shortcuts.forEach((shortcut) => {
-                                if (aa.shortcut.isValid(shortcut)) {
-                                    aa.events.app(appName).dissociate(shortcut, action);
-                                }
-                            });
-                            storage.privates.shortcuts.default[appName][actionName].forEach((shortcut) => {
-                                if (aa.shortcut.isValid(shortcut)) {
-                                    aa.events.app(appName).on(shortcut, action);
-                                }
-                            });
-                        }
-                    });
-                    delete(data[appName]);
-                }
-            }
-            db.insert("shortcuts", data);
-        };
+                db.insert("shortcuts", data);
+            },
+        }, {force: true});
 
         // Getters
         this.getShortcut        = function (e) { // abstract

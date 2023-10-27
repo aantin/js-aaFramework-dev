@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.10.0",
+        version: "3.11.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -643,8 +643,20 @@
                  * return {boolean} true if callback could be added, false if already existed
                  */
                 on:              function (evtName, callback) {
+                    if (aa.isObject(evtName)) {
+                        if (callback !== undefined)
+                            console.warn("In case an object is provided as first argument, any other argument will be ignored.");
+
+                        const listeners = evtName;
+                        listeners.forEach((callback, evtName) => {
+                            this.on(evtName, callback);
+                        });
+                        return;
+                    }
+
                     aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
                     aa.arg.test(callback, aa.isFunction, "'callback'");
+
                     const that = _(this);
                     let res = false;
                     

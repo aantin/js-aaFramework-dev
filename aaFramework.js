@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.12.0",
+        version: "3.13.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -10964,7 +10964,7 @@
         });
      */
     aa.html = (() => {
-        const pastilleTypes = ["information", "warning", "critical", "success"];
+        const pastilleTypes = ["information", "warning", "critical", "success", "purple", "magenta", "gold"];
         return Object.freeze(function (nodeName) {
             let i,elt,res,rest,table,value,type,
                 id = null,

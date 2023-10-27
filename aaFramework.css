@@ -38,7 +38,7 @@
     --color-green: #6c8;
     --color-green-darker: #4a7;
     --color-green-lighter: #aea;
-    --color-purple: #80f;
+    --color-purple: #a0f;
     --color-magenta: #f0f;
     --color-magenta-lighter: #f8f;
     --color-grey: #ccc;
@@ -2394,6 +2394,15 @@ Pastilles:
 }
 .aa .pastille-container > div.pastille.success {
     background-color: var(--color-green);
+}
+.aa .pastille-container > div.pastille.purple {
+    background-color: var(--color-purple);
+}
+.aa .pastille-container > div.pastille.magenta {
+    background-color: var(--color-magenta);
+}
+.aa .pastille-container > div.pastille.gold {
+    background-color: var(--color-gold);
 }
 .aa fieldset.onglets > legend.onglets > label.onglet > button > .pastille-container {
     top: -12px;

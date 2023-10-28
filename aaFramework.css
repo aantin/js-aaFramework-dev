@@ -2381,6 +2381,7 @@ Pastilles:
     color: var(--button-red-color);
     width: var(--width);
     height: var(--width);
+    text-align: center;
     font-size: 9px;
     line-height: var(--width);
     border-radius: 50%;

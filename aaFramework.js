@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.14.0",
+        version: "3.14.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -5910,6 +5910,7 @@
                         actions:    null,
                         id:         null,
                         text:       null,
+                        theme:      ENV.DEFAULT_THEME,
                         title:      null,
                         type:       null,
                     }
@@ -6089,6 +6090,7 @@
                     id:         aa.nonEmptyString,
                     text:       aa.nonEmptyString,
                     message:    aa.nonEmptyString,
+                    theme:      aa.inArray(ENV.THEMES),
                     title:      aa.nonEmptyString,
                     type:       aa.inArray(privates.types)
                 }

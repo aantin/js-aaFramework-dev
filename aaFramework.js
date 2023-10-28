@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.13.0",
+        version: "3.14.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1396,29 +1396,32 @@
                 return newCollection;
             },
             sort:               function (func) {
-                get(this, 'data').sort(func);
+                const that = _(this);
+                that.data.sort(func);
             },
 
             // Getters:
             toArray:            function () {
-                return [...get(this, 'data')];
+                const that = _(this);
+                return [...that.data];
             },
 
             // Setters:
             setAuthenticate:    function (verifier) {
                 aa.arg.test(verifier, aa.isFunction);
-                set(this, "authenticate", value => {
+                const that = _(this);
+                that.authenticate = value => {
                     const isVerified = verifier(value);
                     if (!aa.isBool(isVerified)) { throw new Error(`'authenticate' Function must return a Boolean.`); }
                     return isVerified;
-                });
+                };
             },
             setOn:              function (listeners) {
-            aa.arg.test(listeners, privates.verifiers.on, `'listeners'`);
+                aa.arg.test(listeners, privates.verifiers.on, `'listeners'`);
 
-            listeners.forEach((callback, eventName) => {
-                this.on(eventName, callback);
-            });
+                listeners.forEach((callback, eventName) => {
+                    this.on(eventName, callback);
+                });
             },
             setParent:          function (parent) {
 
@@ -4350,7 +4353,7 @@
                         suspendedModules:   [],
                         toolbar:            [],
                         validation:         null,
-                    }
+                    },
                 }, {getter: get, setter: set});
 
                 // Construct:
@@ -9845,7 +9848,7 @@
                             input.on('click', e => {
                             });
                             input.on("input", (e) => {
-                                if (spec.mixable && spec.mixable === true && input.checked === true) {
+                                if (spec?.mixable === true && input.checked === true) {
                                     if (events.onmix) {
                                         events.onmix.call();
                                     }
@@ -9875,7 +9878,11 @@
                                 // }}
                             };
                             if (spec.dataset) { buttonSpec.dataset = spec.dataset; }
-                            const btn = $$("button.text",
+                            const btn = $$("button.text", {
+                                on: {click: e => {
+                                    if (!spec?.mixable) input.click();
+                                }}
+                            },
                                 $$("span.unchecked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "square-o" : "circle-thin")),
                                 $$("span.checked.fa.fa-fw.fa-"+(tagName.toLowerCase() === "checkbox" ? "check-square" : "circle")),
                                 buttonSpec
@@ -9902,21 +9909,27 @@
                                     get: () => input.checked,
                                     set: checked => {
                                         aa.arg.test(checked, aa.isBool, "'checked'");
+                                        const isModified = checked !== input.checked;
                                         input.checked = checked;
+                                        if (isModified) spec?.on?.input?.();
                                     }
                                 },
                                 disabled: {
                                     get: () => input.disabled,
                                     set: disabled => {
                                         aa.arg.test(disabled, aa.isBool, "'disabled'");
+                                        const isModified = disabled !== input.disabled;
                                         input.disabled = disabled;
+                                        if (isModified) spec?.on?.disablechange?.();
                                     }
                                 },
                                 required: {
                                     get: () => input.required,
                                     set: required => {
                                         aa.arg.test(required, aa.isBool, "'required'");
+                                        const isModified = required !== input.required;
                                         input.required = required;
+                                        if (isModified) spec?.on?.requirechange?.();
                                     }
                                 },
 
@@ -11008,6 +11021,7 @@
                     "icon",
                     "icons",
                     "legend",
+                    "linkedWith",
                     "max",
                     "min",
                     "multiple",
@@ -11276,7 +11290,7 @@
                                 param.forEach(function (option, key) {
                                     let classes;
                                     if (aa.isString(key)) {
-                                        key = key.trim().toLowerCase();
+                                        key = key.trim();
                                         if (htmlAttributes.has(key)) {
                                             switch (key) {
                                                 case "class":
@@ -11378,6 +11392,16 @@
                                                             elt.insertAtFirst(legend);
                                                         }
                                                     }
+                                                    break;
+
+                                                case "linkedWith":
+                                                    aa.arg.test(option, arg => aa.isArray(arg) && arg.length > 1, "'option'");
+                                                    const obj = option.shift();
+                                                    const attr = option.shift();
+                                                    const callback = option.shift();
+                                                    obj?.on?.(attr.toLowerCase()+"changed", (e, value) => {
+                                                        callback(elt, value);
+                                                    });
                                                     break;
                                                 
                                                 case "onglets":
@@ -11731,7 +11755,7 @@
                                                     }
                                                     break;
                                             }
-                                        } else { warn("Attribute '"+key+"' not implemented yet. (aa.aaFramework.create)"); }
+                                        } else { warn("Attribute '"+key+"' not implemented yet. (aa.html)"); }
                                     }
                                     return false;
                                 });

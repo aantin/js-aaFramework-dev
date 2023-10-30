@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.14.2",
+        version: "3.14.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -3549,7 +3549,7 @@
 
             blueprint.construct?.apply(this, arguments);
             
-            this.hydrate(spec, blueprint.startHydratingWith);
+            this.hydrate(spec, blueprint.startHydratingWith.filter(attr => spec.hasOwnProperty(attr)));
         });
 
         function hydrator (key, value) {

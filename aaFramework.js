@@ -3461,7 +3461,8 @@
                 setters:        aa.isObjectOfFunctions
             }),
             on:                 aa.verifyObject({
-                hydrated:       aa.isFunction
+                hydrated:       aa.isFunction,
+                instanciated:   aa.isFunction,
             }),
             statics:            aa.isObject,
             verifiers:          aa.isObject,
@@ -3473,6 +3474,10 @@
                 privates: {},
                 publics:{},
                 setters: {}
+            },
+            on: {
+                hydrated:       () => {},
+                instanciated:   () => {},
             },
             statics: {},
             verifiers: {}
@@ -3550,6 +3555,8 @@
             blueprint.construct?.apply(this, arguments);
             
             this.hydrate(spec, blueprint.startHydratingWith.filter(attr => spec.hasOwnProperty(attr)));
+
+            blueprint.on.instanciated.call(this);
         });
 
         function hydrator (key, value) {
@@ -10718,6 +10725,233 @@
         // --------------------------------
         return diff;
     })());
+    aa.Dictionary               = (() => {
+        const {get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
+        function aaDictionary () { get(aaDictionary, "construct").apply(this, arguments); }
+        const blueprint = {
+            accessors: {
+                publics: {
+                    authenticate: null,
+                },
+                privates: {
+                    data:   null, // Map
+                    keys:   null,
+                },
+                execute: {
+                    size: function () {
+                        const that = _(this);
+                        return that.data.size;
+                    },
+                },
+            },
+            construct: function (/* [pairs=[]], [spec={}] */) {
+                const pairs = [...arguments].find(aa.isArray) ?? [];
+                const spec = [...arguments].find(aa.isObject) ?? {};
+
+                aa.arg.test(pairs, blueprint.verifiers.pairs, "'pairs'");
+                const that = _(this);
+
+                that.authenticate = {
+                    keys:   aa.nonEmptyString,
+                    values: aa.any,
+                };
+                that.keys = [];
+                that.data = new Map();
+                pairs.forEach(pair => {
+                    this.add(pair[0], pair[1]);
+                });
+                this.hydrate(spec);
+            },
+            methods: {
+                publics: {
+                    every:          function (callback, thisArg) {
+                        const that = _(this);
+                        return that.keys.every((key, i) => {
+                            const value = that.data.get(key);
+                            const isVerified = callback.call(thisArg, value, key, this);
+                            if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
+                            return isVerified;
+                        });
+                    },
+                    /**
+                     * @param {function} callback: A Function which will be used to filter the aaDictionary. This Function must return a Boolean.
+                     * @param {any} thisArg
+                     * 
+                     * @return {dictionary}
+                     */
+                    filter:         function (callback, thisArg) {
+                        const that = _(this);
+                        const dico = new aaDictionary();
+                        that.keys.forEach((key, i) => {
+                            const value = that.data.get(key);
+                            const isVerified = callback.call(thisArg, value, key, this);
+                            if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
+                            if (isVerified) dico.add(key, value);
+                        });
+                        return dico;
+                    },
+                    find:           function (callback, thisArg) {
+                        const that = _(this);
+                        const key = that.keys.find((key, i) => {
+                            const value = that.data.get(key);
+                            const isVerified = callback.call(thisArg, value, key, this);
+                            if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
+                            return isVerified;
+                        });
+                        return key !== undefined ? that.data.get(key) : undefined;
+                    },
+                    findKey:        function (callback, thisArg) {
+                        const that = _(this);
+                        const key = that.keys.find((key, i) => {
+                            const value = that.data.get(key);
+                            const isVerified = callback.call(thisArg, value, key, this);
+                            if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
+                            return isVerified;
+                        });
+                        return key;
+                    },
+                    forEach:        function (callback, thisArg) {
+                        const that = _(this);
+                        that.keys.forEach((key, i) => {
+                            callback.call(thisArg, that.data.get(key), key, this);
+                        });
+                    },
+                    map:            function (callback, thisArg) {
+                        const that = _(this);
+                        const dico = new aaDictionary({ authenticate: that.authenticate });
+                        that.keys.forEach((key, i) => {
+                            const value = that.data.get(key);
+                            dico.add(key, callback.call(thisArg, value, key, this));
+                        });
+                        return dico;
+                    },
+                    some:           function (callback, thisArg) {
+                        const that = _(this);
+                        return that.keys.some((key, i) => {
+                            const value = that.data.get(key);
+                            const isVerified = callback.call(thisArg, value, key, this);
+                            if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
+                            return isVerified;
+                        });
+                    },
+
+                    // Getters:
+                    entries:        function () {
+                        const that = _(this);
+                        return that.data.entries();
+                    },
+                    get:            function (key) {
+                        const that = _(this);
+                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        return that.data.get(key);
+                    },
+                    has:            function (key) {
+                        const that = _(this);
+                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        return that.data.has(key);
+                    },
+                    keys:           function () {
+                        const that = _(this);
+                        return [...that.keys];
+                    },
+                    toJSON:         function () {
+                        const that = _(this);
+                        return that.keys.reduce((acc, key) => {
+                            acc.push([key, that.data.get(key)]);
+                            return acc;
+                        }, []);
+                    },
+                    toObject:       function () {
+                        const that = _(this);
+                        return ({...that.values});
+                    },
+                    values:         function () {
+                        const that = _(this);
+                        return that.data.values();
+                    },
+
+                    // Setters:
+                    add:            function (key, value, shiftKeyToEndIfAlreadyExists=false) {
+                        const that = _(this);
+                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        aa.arg.test(value, that.authenticate.values, "'value'");
+                        aa.arg.test(shiftKeyToEndIfAlreadyExists, aa.isBool, "'shiftKeyToEndIfAlreadyExists'");
+
+                        if (aa.isString(key))
+                            key = key.trim();
+                        if (shiftKeyToEndIfAlreadyExists) {
+                            that.data.delete(key);
+                            that.keys.remove(key);
+                        }
+                        that.data.set(key, value);
+                        that.keys.pushUnique(key);
+                        // if (aa.isString(key)) {
+                        //     Object.defineProperty(this, key, {
+                        //         configurable:   true,
+                        //         enumerable:     true,
+                        //         get:            () => that.data.get(key),
+                        //         set:            value => this.add(key, value),
+                        //     });
+                        // }
+                    },
+                    clear:          function () {
+                        const that = _(this);
+                        that.data.clear();
+                        that.keys.clear();
+                    },
+                    delete:         function (key) {
+                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        const that = _(this);
+                        that.data.delete(key);
+                        that.keys.remove(key);
+                        // if (aa.isString(key)) {
+                        //     delete this[key];
+                        // }
+                    },
+                    remove:         function (key) {
+                        this.delete(key);
+                    },
+                },
+                setters: {
+                    authenticate:   function (authenticate) {
+                        const that = _(this);
+                        Object.keys(that.authenticate)
+                        .forEach(key => {
+                            if (authenticate.hasOwnProperty(key))
+                                that.authenticate[key] = authenticate[key];
+                        });
+                    },
+                },
+            },
+            statics: {
+                /**
+                 * @param {string|array[]} json: If an Array is provided, it must be an Array of Arrays containing two items: The first item will be used as dictionary key and must be a non-empty string; the second will be the associated value.
+                 */
+                fromJSON:   function (json) {
+                    json = aa.isString(json) ? JSON.parse(json) : json;
+                    return new aaDictionary(json);
+                },
+            },
+            verifiers: {
+                authenticate:   aa.verifyObject({
+                    keys:   aa.isFunction,
+                    values: aa.isFunction,
+                }),
+                pairs:  aa.isArrayLikeOf(pair => aa.isArrayLike(pair) && pair.length === 2 && aa.nonEmptyString(pair[0]))
+            }
+        };
+        aa.manufacture(aaDictionary, blueprint, {get, set});
+        
+        // Iterator:
+        aaDictionary.prototype[Symbol.iterator] = function* () {
+            for (let key of this.keys()) {
+                yield [key, this[key]];
+            }
+        };
+        
+        return aaDictionary;
+    })();
     aa.extractClassNameAndID    = Object.freeze(function (str) {
         if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
 

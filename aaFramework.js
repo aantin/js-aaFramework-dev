@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.15.0",
+        version: "3.16.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -95,17 +95,15 @@
         };
         Object.defineProperties(commons.accessors, {
             defaultValue: {
-                get: () => {
-                    return {
-                        publics: {
-                        },
-                        privates: {
-                            listeners: {}
-                        },
-                        read: {},
-                        execute: {},
-                    };
-                }
+                get: () => ({
+                    publics: {
+                    },
+                    privates: {
+                        listeners: {}
+                    },
+                    read: {},
+                    execute: {},
+                }),
             }
         });
         return commons;
@@ -307,7 +305,7 @@
     });
     // ----------------------------------------------------------------
     // Functions:
-    const {get, set} = aa.mapFactory();
+    const {cut, get, set} = aa.mapFactory();
     aa.definePublics        = function (keyValues /*, spec */) {
         const spec = arguments && arguments.length > 1 ? arguments[1] : {};
 
@@ -318,7 +316,7 @@
             getter: aa.isFunction,
             setter: aa.isFunction,
         }), `'spec'`);
-        spec.sprinkle({ get, set });
+        spec.sprinkle({ cut, get, set });
 
         const getter = spec.getter;
         const setter = spec.setter;
@@ -362,8 +360,8 @@
 
     // Classes:
     aa.Action                   = (() => {
-        const {get, set} = aa.mapFactory();
-        function _(that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
         /**
          * Usage:
@@ -456,7 +454,7 @@
                  * @return {void}
                  */
 
-                aa.defineAccessors.call(this, accessors, {getter: get, setter: set});
+                aa.defineAccessors.call(this, accessors, {cutter: cut, getter: get, setter: set});
                 const that = _(this);
 
                 that.constructing = true;
@@ -1054,8 +1052,8 @@
         construct.apply(this, arguments);
     };
     aa.Collection               = (() => {
-        const {get, set} = aa.mapFactory();
-        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
         /**
          * Usage:
@@ -1092,7 +1090,7 @@
                     last:   () => get(this, "data").last,
                     length: () => get(this, "data").length
                 }
-            }, { getter: get, setter: set });
+            }, { cutter: cut, getter: get, setter: set });
             privates.construct.apply(this, arguments);
         }
 
@@ -1129,7 +1127,7 @@
                     this.push(...data);
                 }
             },
-            emit:               aa.prototypes.events.getEmitter({get, set}, "listeners"),
+            emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
         };
 
         // Publics:
@@ -1582,8 +1580,8 @@
         return Event;
     })();
     aa.EventApp = (() => {
-        const {get, set} = aa.mapFactory();
-        function _(that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
         const privates = {
             construct: function (app) {
@@ -1610,7 +1608,7 @@
                     module: null,
                     events: {},
                 },
-            }, {getter: get, setter: set});
+            }, {cutter: cut, getter: get, setter: set});
 
 
             // Init:
@@ -1942,7 +1940,7 @@
                         isPreventDefault: false,
                         isStopPropagation: false,
                     },
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
 
                 this.type = type;
             },
@@ -3417,12 +3415,13 @@
          *      - construct
          *      - hydrate
          *      : emit event 'hydrated'
+         *      : callback 'instanciated'
          * 
          * Usage:
             const XXX = (() => {
-                const {get, set} = aa.mapfactory();
+                const {cut, get, set} = aa.mapfactory();
+                function _ (thisArg) { return aa.getAccessor.call(thisArg, {cut, get, set}); }
                 function XXX () { get(XXX, 'construct').apply(this, arguments); }
-                function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
                 const blueprint = {
                     accessors: {
                         publics: {
@@ -3431,7 +3430,7 @@
                         },
                     },
                     construct: function () {
-                        const that = getAccessor(this);
+                        const that = _(this);
                     },
                     methods: {
                         publics: {
@@ -3440,14 +3439,15 @@
                         }
                     },
                     on: {
-                        hydrated: function () {},
+                        hydrated:       function () {},
+                        instanciated:   function () {},
                     },
                     statics: {
                     },
                     verifiers: {
                     }
                 };
-                aa.manufacture(XXX, blueprint, {get, set});
+                aa.manufacture(XXX, blueprint, {cut, get, set});
                 return XXX;
             })();
          */
@@ -3500,14 +3500,16 @@
         });
 
         const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            cut: aa.isFunction,
             get: aa.isFunction,
             set: aa.isFunction,
         }));
 
         const getter = accessors.get ?? get;
         const setter = accessors.set ?? set;
+        const cutter = accessors.cut ?? cut;
 
-        const emit = aa.event.getEmitter({get: getter, set: setter});
+        const emit = aa.event.getEmitter({cut: cutter, get: getter, set: setter});
 
         // Define setters:
         Object.keys(blueprint.accessors.publics)
@@ -3546,11 +3548,11 @@
         });
 
         // Constructor:
-        setter(Instancer, `construct`, function (/* spec */) {
+        setter(Instancer, "construct", function (/* spec */) {
             const spec = aa.arg.optional(arguments, 0, {});
 
-            aa.defineAccessors.call(this, blueprint.accessors, { getter, setter, verifiers: blueprint.verifiers });
-            aa.definePrivateMethods.call(this, blueprint.methods?.privates, {get: getter, set: setter});
+            aa.defineAccessors.call(this, blueprint.accessors, { cutter, getter, setter, verifiers: blueprint.verifiers });
+            aa.definePrivateMethods.call(this, blueprint.methods?.privates, {cut: cutter, get: getter, set: setter});
 
             blueprint.construct?.apply(this, arguments);
             
@@ -3569,9 +3571,17 @@
 
         // Public:
         const methods = Object.assign({
-            hydrate:    function (/* spec, order */) {
+            hydrate:    function (/* spec={}, order=[] */) {
                 const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
                 const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
+                try {
+                    aa.arg.test(spec, arg => Object.keys(arg).every(key => Object.keys(blueprint.accessors.publics).includes(key)), "'spec'");
+                } catch (err) {
+                    const undefinedKeys = Object.keys(spec)
+                                        .filter(key => !Object.keys(blueprint.accessors.publics).includes(key));
+                    console.warn(`In order to hydrate properly, the '${undefinedKeys.joinNatural()}' key${undefinedKeys.length > 1 ? 's' : ''} must be defined in <${Instancer.name ?? ""}> public accessors.`);
+                    throw err;
+                }
 
                 // First assign with starting keys:
                 order
@@ -3585,7 +3595,7 @@
                 // Emit event 'hydrated':
                 emit.call(this, 'hydrated');
             },
-            on:         aa.event.getListener({get: getter, set: setter})
+            on:         aa.event.getListener({cut: cutter, get: getter, set: setter})
         }, blueprint.methods.publics);
         aa.deploy(Instancer.prototype, methods, {force: true});
 
@@ -3597,8 +3607,8 @@
         });
     });
     aa.gui                      = Object.freeze(new (function () {
-        const {get, set} = aa.mapFactory();
-        function _(that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
     
         // Attributes:
         const dialogs = []; // liste des <aa.gui.Dialog> ouvertes
@@ -3892,7 +3902,7 @@
         this.Menu           = (function () {
 
             // Private variables:
-            const emit = aa.prototypes.events.getEmitter({get, set});
+            const emit = aa.prototypes.events.getEmitter({cut, get, set});
             const construct = function () {
                 this.setTheme(aa.settings.theme);
                 aa.events.on('themechange', (theme) => {
@@ -3913,7 +3923,7 @@
                     },
                     privates: {
                     },
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
 
                 // Instanciate:
                 construct.apply(this, arguments);
@@ -3922,7 +3932,7 @@
             // Public:
             aa.deploy(Menu.prototype, {
                 hydrate:    aa.prototypes.hydrate,
-                on:         aa.prototypes.events.getListener({get, set}),
+                on:         aa.prototypes.events.getListener({cut, get, set}),
 
                 // Setters:
                 addActions: function (list) {
@@ -4047,8 +4057,8 @@
             return Object.freeze(Menu);
         })();
         this.ContextMenu    = (function () {
-            const {get, set} = aa.mapFactory();
-            function _(that) { return aa.getAccessor.call(that, {get, set}); }
+            const {cut, get, set} = aa.mapFactory();
+            function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
             // Closure private methods:
             const view = {
@@ -4082,7 +4092,7 @@
 
                     that.view = view.bind(this);
                 },
-                emit: aa.prototypes.events.getEmitter({get, set}),
+                emit: aa.prototypes.events.getEmitter({cut, get, set}),
             };
             const ContextMenu   = function () {
 
@@ -4100,7 +4110,7 @@
                         theme:          null,
                         view:           null
                     },
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
 
                 // Instanciate:
                 privates.construct.apply(this, arguments);
@@ -4117,7 +4127,7 @@
 
             // Public:
             aa.deploy(ContextMenu.prototype, {
-                on:     aa.prototypes.events.getListener({get, set}),
+                on:     aa.prototypes.events.getListener({cut, get, set}),
 
                 hide:   function () {
                     const that = _(this);
@@ -4309,7 +4319,7 @@
             const db = new aa.Storage("aaDialog");
             const dialogCollection = {}; // liste des <aa.gui.Dialog> ouvertes
 
-            function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {get, set}); }
+            function getAccessor (thisArg) { return aa.getAccessor.call(thisArg, {cut, get, set}); }
 
             const Dialog = function (type /* , spec */) {
                 /**
@@ -4361,7 +4371,7 @@
                         toolbar:            [],
                         validation:         null,
                     },
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
 
                 // Construct:
                 construct.apply(this, arguments);
@@ -5879,8 +5889,8 @@
             return Object.freeze(Dialog);
         })();
         this.Notification = (() => {
-            const {get, set} = aa.mapFactory();
-            function _(that) { return aa.getAccessor.call(that, {get, set}); }
+            const {cut, get, set} = aa.mapFactory();
+            function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
             /**
              * Display a notification in the bottom-right corner of the window.
@@ -6102,7 +6112,7 @@
                     type:       aa.inArray(privates.types)
                 }
             };
-            aa.manufacture(Notification, blueprint, {get, set});
+            aa.manufacture(Notification, blueprint, {cut, get, set});
             return Notification;
         })();
         this.Progress       = (function () {
@@ -6122,7 +6132,7 @@
             const view = {
                 percent: function (index, value) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     index = index.trim();
                     const nodes = that.nodes.collection;
@@ -6133,7 +6143,7 @@
             };
             const addNode   = function (index) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                const that = aa.getAccessor.call(this, {get, set});
+                const that = aa.getAccessor.call(this, {cut, get, set});
 
                 index = index.trim();
                 const container = that.nodes.container;
@@ -6171,7 +6181,7 @@
             const moveRange = function (index, value) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                const that = aa.getAccessor.call(this, {get, set});
+                const that = aa.getAccessor.call(this, {cut, get, set});
 
                 const nodes = that.nodes;
                 if (nodes.collection[index]) {
@@ -6198,7 +6208,7 @@
                         },
                         tasks: 0
                     }
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
 
                 construct.apply(this, arguments);
             };
@@ -6209,7 +6219,7 @@
                 hydrate: aa.prototypes.hydrate,
                 add:        function (index) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     index = index.trim();
                     that.tasks += 1;
@@ -6218,7 +6228,7 @@
                 },
                 complete:   function (index) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     index = index.trim();
                     const indexes = that.indexes;
@@ -6237,14 +6247,14 @@
                     }
                 },
                 hide:       function () {
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
                     el('aaProgress-'+that.id, node => {
                         node.removeNode();
                     });
                     delete collection[this.id];
                 },
                 show:       function () {
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
                     el('aaProgress', () => {}, () => {
                         const nodes = that.nodes;
                         nodes.container = $$('div.message');
@@ -6279,7 +6289,7 @@
                 move:       function (index, value) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
                     if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     index = index.trim();
                     if (that.indexes.hasOwnProperty(index)) {
@@ -6289,13 +6299,13 @@
                 },
                 setTitle:   function (title) {
                     if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     that.title = title.trim();
                 },
                 setVisible: function (visible) {
                     if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
-                    const that = aa.getAccessor.call(this, {get, set});
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
                     that.visible = visible;
                     el('aaProgress-'+that.id, (node) => {
@@ -9365,12 +9375,12 @@
             },
             statics: {}
         };
-        const emit = aa.manufacture(Animation, blueprint, {get, set}).emitter;
+        const emit = aa.manufacture(Animation, blueprint, {cut, get, set}).emitter;
         return Animation;
     })();
     aa.SelectionMatrix          = (() => {
-        const {get, set} = aa.mapFactory();
-        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function getAccessor (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         // ----------------
         const SelectionMatrix = (() => {
             const commands = {
@@ -9540,7 +9550,7 @@
                     })
                 }
             };
-            aa.manufacture(SelectionMatrix, blueprint, {get, set});
+            aa.manufacture(SelectionMatrix, blueprint, {cut, get, set});
             return SelectionMatrix;
         })();
         // ----------------
@@ -9589,7 +9599,7 @@
                     value:      aa.any
                 }
             };
-            aa.manufacture(SelectionMatrixItem, blueprint, {get, set});
+            aa.manufacture(SelectionMatrixItem, blueprint, {cut, get, set});
             return SelectionMatrixItem;
         })();
         // ----------------
@@ -9652,7 +9662,7 @@
                     },
                     read: {},
                     execute: {},
-                }, {getter: get, setter: set});
+                }, {cutter: cut, getter: get, setter: set});
                 Object.defineProperties(this, {
                     content: {
                         get: () => {},
@@ -9666,7 +9676,7 @@
                 privates.build.call(this, query, spec);
             },
             getAccessor: function (thisArg) {
-                return aa.getAccessor.call(thisArg, {get, set});
+                return aa.getAccessor.call(thisArg, {cut, get, set});
             }
         };
 
@@ -10044,8 +10054,8 @@
         return elt;
     });
     aa.diff                     = Object.freeze((() => {
-        const {get, set} = aa.mapFactory();
-        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         const changeTypes = [null, 'deletion', 'insertion']; // The first element will be used as default type.
         const diffTypes = ['Myers']; // The first element will be used as default type.
         // --------------------------------
@@ -10096,7 +10106,7 @@
                     value:  aa.any,
                 }
             };
-            aa.manufacture(Operation, blueprint, {get, set});
+            aa.manufacture(Operation, blueprint, {cut, get, set});
             return Operation;
         })();
         const Cell = (() => {
@@ -10152,7 +10162,7 @@
                     weight:     aa.isPositiveInt,
                 },
             };
-            aa.manufacture(Cell, blueprint, {get, set});
+            aa.manufacture(Cell, blueprint, {cut, get, set});
             return Cell;
         })();
         const Diff = (() => {
@@ -10252,7 +10262,7 @@
                     type:       aa.inArray(diffTypes),
                 },
             };
-            aa.manufacture(Diff, blueprint, {get, set});
+            aa.manufacture(Diff, blueprint, {cut, get, set});
             return Diff;
         })();
         const DiffEntry = (() => {
@@ -10316,7 +10326,7 @@
                     type:           aa.inArray(changeTypes),
                 },
             };
-            aa.manufacture(DiffEntry, blueprint, {get, set});
+            aa.manufacture(DiffEntry, blueprint, {cut, get, set});
             return DiffEntry;
         })();
         // --------------------------------
@@ -10726,8 +10736,8 @@
         return diff;
     })());
     aa.Dictionary               = (() => {
-        const {get, set} = aa.mapFactory();
-        function _ (that) { return aa.getAccessor.call(that, {get, set}); }
+        const {cut, get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         function aaDictionary () { get(aaDictionary, "construct").apply(this, arguments); }
         const blueprint = {
             accessors: {
@@ -10941,7 +10951,7 @@
                 pairs:  aa.isArrayLikeOf(pair => aa.isArrayLike(pair) && pair.length === 2 && aa.nonEmptyString(pair[0]))
             }
         };
-        aa.manufacture(aaDictionary, blueprint, {get, set});
+        aa.manufacture(aaDictionary, blueprint, {cut, get, set});
         
         // Iterator:
         aaDictionary.prototype[Symbol.iterator] = function* () {
@@ -11021,7 +11031,7 @@
         return Object.freeze(result);
     });
     aa.selection                = Object.freeze((() => {
-        function getAccessor (that) { return aa.getAccessor.call(that, {get, set}); }
+        function getAccessor (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         const shared = {
             verifiers: {
                 field: arg => aa.isElement(arg)
@@ -11158,7 +11168,7 @@
                 verifiers: {
                     field: shared.verifiers.field
                 }
-            }, {get, set});
+            }, {cut, get, set});
             return InputSelection;
         })();
         return {
@@ -11226,6 +11236,7 @@
                     "download",
                     "enctype",
                     "for",
+                    "frameborder",
                     "height",
                     "href",
                     "id",
@@ -11243,6 +11254,7 @@
                     "width",
                     
                     // Attributes to transform before including:
+                    "allowfullscreen",
                     "checked",
                     "class",
                     "colspan",
@@ -11831,6 +11843,7 @@
                                                     }
                                                     break;
                                                 
+                                                case "allowfullscreen":
                                                 case "default":
                                                 case "disabled":
                                                 case "multiple":
@@ -12008,7 +12021,7 @@
     aa.HTMLCollection           = (() => {
         function HTMLCollection (list) {
             const getAccessor = function (thisArg) {
-                return aa.getAccessor.call(thisArg, {get, set});
+                return aa.getAccessor.call(thisArg, {cut, get, set});
             }
             aa.arg.test(list, aa.isArrayOf(aa.isElement), "'HTMLCollection.list'");
 
@@ -12019,7 +12032,7 @@
                 execute: {
                     length: () => list.length
                 }
-            }, {getter: get, setter: set});
+            }, {cutter: cut, getter: get, setter: set});
 
             const that = getAccessor(this);
 
@@ -12417,7 +12430,7 @@
                 },
                 privates: {
                 }
-            }, {getter: get, setter: set});
+            }, {cutter: cut, getter: get, setter: set});
         };
 
         // Public methods:

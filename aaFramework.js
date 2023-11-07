@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.16.1",
+        version: "3.16.2",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -2387,7 +2387,6 @@
         const construct = function () {
             instance.getOS();
             instance.setCtrlKey();
-            instance.onResize();
 
             [
                 "Opera",
@@ -2594,22 +2593,10 @@
                 }
                 return that.os;
             },
-
-            // Events:
-            onResize:   function () {
-                let d = document;
-                let root = d.documentElement;
-                let body = d.body;
-                
-                // that.width  = window.innerWidth || root.clientWidth || body.clientWidth;
-                // that.height = window.innerHeight || root.clientHeight || body.clientHeight;
-                that.width = instance.getWidth();
-                that.height = instance.getHeight();
-            }
         };
         that.keys().forEach((key) => {
             Object.defineProperty(instance, key, {get: () => {
-                if (that.hasOwnProperty(key) && that[key] !== null) {
+                if (that[key] !== null) {
                     return that[key];
                 }
                 const method = 'get'+key.firstToUpper();

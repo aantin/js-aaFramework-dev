@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.18.0",
+        version: "3.18.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -8890,7 +8890,7 @@
                 }
             },
             find:       function (shortcut) {
-                nodes.search.value = shortcut ?? '';
+                nodes.search.value = shortcut ? aa.shortcut.format(shortcut, ["simple"]) : '';
                 const visibles = nodes.rows.byShortcut.reduce((acc, row, hotkey) => {
                     if (shortcut === hotkey) acc.push(row);
                     return acc;

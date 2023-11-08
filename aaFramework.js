@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.16.2",
+        version: "3.17.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1055,6 +1055,49 @@
         const {cut, get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
+        // Privates:
+        const privates = {
+            // Attributes:
+            verifiers: {
+                authenticate: aa.isFunction,
+                on: aa.verifyObject({
+                    added:    aa.isFunction,
+                    clear:    aa.isFunction,
+                    removed:  aa.isFunction
+                }),
+                parent: () => true
+            },
+            
+            // Methods:
+            construct:          function (/* spec */) {
+                const spec = aa.arg.optional(arguments, 0, {}, aa.isObject);
+
+                spec.sprinkle({ authenticate: aa.any });
+
+                const that = _(this);
+                let data = null;
+                if (spec.hasOwnProperty('data')) {
+                    data = spec.data;
+                    delete spec.data;
+                }
+
+                this.hydrate(spec);
+
+                if (data) {
+                    this.push(...data);
+                }
+            },
+            emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
+            set:                function (index, value) {
+                const that = _(this);
+                aa.arg.test(index, arg => aa.isPositiveInt(arg) && arg.between(0, that.data.length - 1), "'index'");
+                aa.arg.test(value, arg => this.authenticate ? this.authenticate(value) : true, "'value'");
+
+                that.data[index] = value;
+                privates.emit.call(this, "datamodified", this, {index, value});
+            },
+        };
+
         /**
          * Usage:
          * new aa.Collection({
@@ -1081,6 +1124,7 @@
                 privates: {
                     data: [],
                     listeners: {},
+                    set: (privates.set).bind(this),
                 },
                 read: {
                     parent: null
@@ -1093,42 +1137,6 @@
             }, { cutter: cut, getter: get, setter: set });
             privates.construct.apply(this, arguments);
         }
-
-        // Privates:
-        const privates = {
-            // Attributes:
-            verifiers: {
-                authenticate: aa.isFunction,
-                on: aa.verifyObject({
-                    added:    aa.isFunction,
-                    clear:    aa.isFunction,
-                    removed:  aa.isFunction
-                }),
-                parent: () => true
-            },
-            
-            // Methods:
-            construct:          function (/* spec */) {
-                const spec = aa.arg.optional(arguments, 0, {}, aa.isObject);
-
-                spec.sprinkle({ authenticate: aa.any });
-
-                const that = _(this);
-                let data = null;
-                if (spec.hasOwnProperty('data')) {
-                    // aa.throwErrorIf(!aa.isArrayLike(spec.data), "'data' attribute must be an Array-like.");
-                    data = spec.data;
-                    delete spec.data;
-                }
-
-                this.hydrate(spec);
-
-                if (data) {
-                    this.push(...data);
-                }
-            },
-            emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
-        };
 
         // Publics:
         function methodFactory (methodName) {
@@ -1314,7 +1322,8 @@
                             get:            () => {
                                 if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
                                 return that.data[index];
-                            }
+                            },
+                            set:            value => that.set(lastIndex, value),
                         });
                     }
                     const attributes = {
@@ -1339,7 +1348,8 @@
                         Object.defineProperty(this, lastIndex, {
                             configurable:   true,
                             enumerable:     true,
-                            get:            () => that.data[lastIndex]
+                            get:            () => that.data[lastIndex],
+                            set:            value => that.set(lastIndex, value),
                         });
                     }
                     privates.emit.call(this, `added`, item);
@@ -1370,7 +1380,7 @@
                                 delete this[this.length]
                             }
                             privates.emit.call(this, `removed`, removedItem[0]);
-                            privates.emit.call(this, `datamodified`, this);
+                            privates.emit.call(this, `datamodified`, this, {index, value: removedItem});
                             removedItems.push(removedItem[0]);
                         }
                     }

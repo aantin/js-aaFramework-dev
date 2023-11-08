@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.17.0",
+        version: "3.18.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -8815,6 +8815,25 @@
         let byShortcuts = {};
         let shortcuts = {};
         const os = aa.browser.getOS();
+        const guiID = "shortcuts-gui";
+        const actionSearchByShorcut = new aa.Action({
+            name: "aaDialog-"+guiID+"-find-byShortcut",
+            accessible: true,
+            app: "aaDialog-"+guiID,
+            disabled: true,
+            on: {
+                execute: shortcut => {
+                    gui.find(shortcut);
+                }
+            }
+        });
+        const nodes = {
+            rows: {
+                byShortcut: {},
+                byDescription: {},
+            },
+            search: null,
+        };
 
         // functions:
         const gui = {
@@ -8822,41 +8841,43 @@
             filter:     function (search) {
                 search = search.trim();
                 search = search.replace(/\s/gi, ".*");
-                
+
                 const cssTR = "hidden";
                 const cssSearch = "wrong";
 
                 let count   = 0;
-                let re      = null;
+                let regex   = null;
                 let isRegex = false;
                 try {
-                    re = new RegExp(search, "i");
+                    regex = new RegExp(search, "i");
                     isRegex = true;
                 } catch (e) {
                 }
                 if (isRegex) {
+                    const hiddens = nodes.rows.byDescription.reduce((acc, row, txt) => {
+                        if (!txt.match(regex)) acc.push(row);
+                        return acc;
+                    }, []);
+                    const visibles = nodes.rows.byDescription.reduce((acc, row, txt) => {
+                        if (!hiddens.includes(row)) acc.push(row);
+                        return acc;
+                    }, []);
+
+                    [...hiddens, ...visibles].forEach(row => {
+                        row?.classList?.[visibles.includes(row) ? "remove" : "add"]("hidden");
+                    });
+
                     if (searchNode) {
                         searchNode.classList.remove(cssSearch);
                         searchNode.title = "";
                     }
-                    if (node) {
-                        node.children.forEach((tr) => {
-                            if (tr.id !== "aaShortcuts-actionNotFound") {
-                                if (tr.children[1].innerText.trim().toLowerCase().match(re)) {
-                                    tr.classList.remove(cssTR);
-                                    count += 1;
-                                } else {
-                                    tr.classList.add(cssTR);
-                                }
-                            }
-                        });
-                    }
-                    el("aaShortcuts-actionNotFound", (tr) => {
-                        tr.classList[!search || count ? "add" : "remove"]("hidden");
+                    
+                    el("aaShortcuts-actionNotFound", tr => {
+                        tr.classList[!search || visibles.length > 0 ? "add" : "remove"]("hidden");
                     }, () => {
-                        if (search && !count) {
+                        if (search && visibles.length === 0) {
                             if (node) {
-                                node.appendChild(aa.html("tr#aaShortcuts-actionNotFound", aa.html("td.gris", "<i>No action matches the request.</i>")));
+                                node.appendChild($$("tr#aaShortcuts-actionNotFound", $$("td.gris", "<i>No action matches the request.</i>")));
                             }
                         }
                     });
@@ -8868,6 +8889,38 @@
                     dialog.resize();
                 }
             },
+            find:       function (shortcut) {
+                nodes.search.value = shortcut ?? '';
+                const visibles = nodes.rows.byShortcut.reduce((acc, row, hotkey) => {
+                    if (shortcut === hotkey) acc.push(row);
+                    return acc;
+                }, []);
+                const hiddens = nodes.rows.byShortcut.reduce((acc, row, hotkey) => {
+                    if (!visibles.includes(row)) acc.push(row);
+                    return acc;
+                }, []);
+
+                if (!shortcut) {
+                    nodes.rows.byShortcut.forEach(row => {
+                        row.classList.remove("hidden");
+                    });
+                } else {
+
+                    [...hiddens, ...visibles].forEach(row => {
+                        row?.classList?.[visibles.includes(row) ? "remove" : "add"]("hidden");
+                    });
+                }
+                
+                el("aaShortcuts-actionNotFound", tr => {
+                    tr.classList[!search || visibles.length > 0 ? "add" : "remove"]("hidden");
+                }, () => {
+                    if (shortcut && visibles.length === 0) {
+                        if (node) {
+                            node.appendChild($$("tr#aaShortcuts-actionNotFound", $$("td.gris", "<i>No action matches the request.</i>")));
+                        }
+                    }
+                });
+            },
             refresh:    function (appName) {
                 node.clear();
                 
@@ -8878,27 +8931,36 @@
                     if (parts) {
                         text = (parts[1] !== undefined ? "<b>"+parts[1]+"</b>" : '')+parts[2];
                     }
+                    const textCell = $$("td", text, {style: "width: 100%;"});
+                    textCell.title = textCell.innerText;
 
-                    const tr = aa.html("tr",
+                    const tr = $$("tr.hidden",
                         (() => {
-                            const td = aa.html("td#aaShortcutValue-"+action.name, {style: "min-width: 160px; text-align: right;"});
+                            const td = $$("td#aaShortcutValue-"+action.name, {style: "min-width: 160px; text-align: right;"});
                             let empty = true;
-                            shortcuts[action.name].forEach((s) => {
+                            shortcuts[action.name].forEach((shortcut) => {
+                                textCell.title += ` | ${shortcut}`;
                                 empty = false;
-                                td.appendChild(gui.getButton(appName, s, action));
+                                td.appendChild(gui.getButton(appName, shortcut, action));
                             });
                             if (empty) {
                                 td.appendChild(gui.getButton(appName, null, action));
                             }
                             return td;
                         })(),
-                        aa.html("td", text, {style: "width: 100%;"})
+                        textCell
                     );
+
+                    shortcuts[action.name].forEach(shortcut => {
+                        nodes.rows.byShortcut[shortcut] = tr;
+                        nodes.rows.byDescription[textCell.innerText] = tr;
+                    });
                     node.appendChild(tr);
                 });
-                gui.filter(searchNode.value);
-                // searchNode.focus();
-                searchNode.select();
+                if (actionSearchByShorcut.disabled) {
+                    gui.filter(searchNode.value);
+                    searchNode.select();
+                }
             },
             reload:     function (appName) {
                 
@@ -8925,13 +8987,9 @@
                         if (event) {
                             const action = event.action;
                             if (action.accessible) {
-                                if (!shortcuts.hasOwnProperty(action.name)) {
-                                    shortcuts[action.name] = [];
-                                }
-                                shortcuts[action.name].push(evtName);
-                                if (byShortcuts[evtName] === undefined) {
-                                    byShortcuts[evtName] = [];
-                                }
+                                shortcuts[action.name] ??= [];
+                                shortcuts[action.name].pushUnique(evtName);
+                                byShortcuts[evtName] ??= [];
                                 byShortcuts[evtName].push(action);
                             }
                         }
@@ -8957,32 +9015,48 @@
                     on: {}
                 });
 
+                const events = {
+                    keyboard: e => {
+                        if (!actionSearchByShorcut.disabled) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                        gui.refresh(appName);
+                        actionSearchByShorcut.execute(aa.shortcut.get(e));
+                    }
+                };
+
                 // Display window:
                 dialog = aa.gui.window({
+                    id:         guiID,
                     escape:     true,
                     buttons:    false,
                     width:      720,
                     title:      $$("div", $$("span.fa.fa-2x.fa-keyboard-o", {style: "color: var(--color-grey);"}), $$("div", "Edit shortcuts")),
                     text:       gui.getNode(appName),
                     on: {
-                        resize: () => {
-                            spec.on?.resize?.();
-                        },
                         hide: () => {
                             gui.reset();
                             isGuiOpened = false;
                             spec.on?.hide?.();
-                        }
+                            document.cancel("keydown", events.keyboard);
+                        },
+                        resize: () => {
+                            spec.on?.resize?.();
+                        },
+                        show: () => {
+                            document.on("keydown", events.keyboard);
+                        },
                     }
                 });
-                
+
                 // Display list:
                 gui.refresh(appName);
             },
 
             // Getters:
             getButton:  function (appName, s, action) {
-                return aa.html("button.link.key#aaAction-btn-"+action.name, {
+                return $$("button.link.key#aaAction-btn-"+action.name, {
                     title: "Edit shortcut",
                     text: (s ? aa.shortcut.format(s, ["css"]) : btnText),
                     on: {
@@ -9039,7 +9113,13 @@
                 });
             },
             getNode:    function (appName) {
-                restoreNode = aa.html("button.link", {
+                let hotkey = null;
+                const events = {
+                    byAction: e => {
+                        gui.filter(e.target.value);
+                    },
+                };
+                restoreNode = $$("button.link", {
                     text: "Restore default",
                     on: {
                         click: (e) => {
@@ -9049,27 +9129,58 @@
                         }
                     }
                 });
-                searchNode = aa.html("input", {
+                searchNode = $$("input", {
                     value: '',
-                    placeholder: "Search by action...",
+                    placeholder: "Search...",
                     on: {
-                        change: (e) => {
-                            gui.filter(e.target.value);
-                        },
-                        keyup: (e) => {
-                            gui.filter(e.target.value);
-                        }
+                        input: events.byAction,
                     }
                 });
-                node = aa.html("table");
-                return aa.html("div",
-                    aa.html("div",
-                        aa.html("label", searchNode)
+                nodes.search = searchNode;
+                node = $$("table");
+                return $$("div",
+                    $$("div", {
+                        onglets: [
+                            {
+                                label: "By action",
+                                name: "searchType",
+                                border: false,
+                                on: {
+                                    check: e => {
+                                        gui.refresh(appName);
+                                        actionSearchByShorcut.disable();
+                                        searchNode.disabled = false;
+                                        searchNode.on("input", events.byAction);
+                                        gui.filter(searchNode.value);
+                                        searchNode.focus();
+                                    }
+                                }
+                            },
+                            {
+                                label: "By shortcut",
+                                name: "searchType",
+                                border: false,
+                                on: {
+                                    check: e => {
+                                        gui.refresh(appName);
+                                        actionSearchByShorcut.enable();
+                                        searchNode.disabled = true;
+                                        searchNode.cancel("input", events.byAction);
+                                        searchNode.focus();
+                                    }
+                                }
+                            },
+                        ],
+                    }),
+                    $$("div",
+                        $$("div",
+                            $$("label", searchNode)
+                        ),
+                        $$("fieldset.scrollable", {style: "max-height: 240px;"},
+                            node
+                        ),
                     ),
-                    aa.html("fieldset.scrollable", {style: "max-height: 240px;"},
-                        node
-                    ),
-                    aa.html("div.right", restoreNode)
+                    $$("div.right", restoreNode)
                 );
             }
         };

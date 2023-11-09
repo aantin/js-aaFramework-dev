@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.18.1",
+        version: "3.18.2",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1180,6 +1180,7 @@
             return obj;
         }
         aa.deploy(Collection.prototype, {
+            every:              methodFactory('every'),
             forEach:            methodFactory('forEach'),
             loopThrough:        function (callback /*, spec */) {
                 aa.arg.test(callback, aa.isFunction, `callback`);
@@ -11378,6 +11379,7 @@
                     "width",
                     
                     // Attributes to transform before including:
+                    "allow",
                     "allowfullscreen",
                     "checked",
                     "class",

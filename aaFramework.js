@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.18.3",
+        version: "3.19.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -12595,6 +12595,29 @@
 
         return Object.freeze(new Settings());
     })();
+    aa.todoList                 = (list, label=null) => {
+        aa.arg.test(list, aa.isArrayLike, "'list'");
+        aa.arg.test(label, aa.isNullOrNonEmptyString, "'label'");
+
+        label = label?.trim() ?? null;
+
+        document.on("DOMContentLoaded", () => {
+            if (list.length && !aa.settings.production) {
+                const title = `todo${label ? ` (${label})` : ''}:`;
+                console.group(title);
+                list
+                .forEach(message => {
+                    console.warn(`todo: ${message}`);
+                    aa.gui.notif(message, {
+                        title,
+                        type: "warning",
+                    });
+                });
+                console.groupEnd();
+                console.log("");
+            }
+        });
+    };
     aa.xhr                      = function (method='GET', src, options={}) {
         aa.arg.test(method, aa.nonEmptyString, `'method'`);
         aa.arg.test(src, aa.nonEmptyString, `'src'`);

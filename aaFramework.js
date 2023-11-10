@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.18.2",
+        version: "3.18.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -9021,9 +9021,9 @@
                         if (!actionSearchByShorcut.disabled) {
                             e.preventDefault();
                             e.stopPropagation();
+                            gui.refresh(appName);
+                            actionSearchByShorcut.execute(aa.shortcut.get(e));
                         }
-                        gui.refresh(appName);
-                        actionSearchByShorcut.execute(aa.shortcut.get(e));
                     }
                 };
 

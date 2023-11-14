@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.19.1",
+        version: "3.20.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -3446,6 +3446,16 @@
                     return XXX;
                 })();
              */
+            const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+                cut: aa.isFunction,
+                get: aa.isFunction,
+                set: aa.isFunction,
+            }));
+
+            const getter = accessors.get ?? get;
+            const setter = accessors.set ?? set;
+            const cutter = accessors.cut ?? cut;
+
             aa.arg.test(blueprint, aa.verifyObject({
                 accessors:          aa.verifyObject(commons.accessors.verifiers),
                 construct:          aa.isFunction,
@@ -3462,11 +3472,14 @@
                 statics:            aa.isObject,
                 verifiers:          aa.isObject,
             }), `'blueprint'`);
+
             blueprint.sprinkle({
                 accessors: commons.accessors.defaultValue,
                 startHydratingWith: [],
                 methods: {
-                    privates: {},
+                    privates: {
+                        emit: aa.event.getEmitter({cut: cutter, get: getter, set: setter}),
+                    },
                     publics:{},
                     setters: {}
                 },
@@ -3494,18 +3507,6 @@
                 });
             });
 
-            const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
-                cut: aa.isFunction,
-                get: aa.isFunction,
-                set: aa.isFunction,
-            }));
-
-            const getter = accessors.get ?? get;
-            const setter = accessors.set ?? set;
-            const cutter = accessors.cut ?? cut;
-
-            const emit = aa.event.getEmitter({cut: cutter, get: getter, set: setter});
-
             // Define setters:
             Object.keys(blueprint.accessors.publics)
             .forEach(key => {
@@ -3524,7 +3525,7 @@
 
                         // Emit onchange event:
                         const isDifferent = (value !== getter(this, key));
-                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}change`, value); }
+                        if (isDifferent) { blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}change`, value); }
 
                         // Set value:
                         if (blueprint?.methods?.setters.hasOwnProperty(key)) {
@@ -3534,7 +3535,7 @@
                         }
 
                         // Emit onchanged event:
-                        if (isDifferent) { emit.call(this, `${key.toLowerCase()}changed`, value); }
+                        if (isDifferent) { blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value); }
                     }
 
                     // setter(this, methodName, method);
@@ -3590,7 +3591,7 @@
                     .forEach(key => { hydrator.call(this, key, spec[key]); });
 
                     // Emit event 'hydrated':
-                    emit.call(this, 'hydrated');
+                    blueprint.methods.privates.emit.call(this, 'hydrated');
                 },
                 on:         aa.event.getListener({cut: cutter, get: getter, set: setter})
             }, blueprint.methods.publics);
@@ -3600,7 +3601,7 @@
             aa.deploy(Instancer, blueprint.statics, {force: true});
 
             return Object.freeze({
-                emitter: emit
+                // emitter: emit
             });
         };
     })());
@@ -6113,32 +6114,8 @@
             aa.manufacture(Notification, blueprint, {cut, get, set});
             return Notification;
         })();
-        this.Progress       = (function () {
+        this.Progress = (() => {
             const collection = {};
-            const uid = () => {
-                let id;
-                do {
-                    id = aa.uid();
-                } while (collection.hasOwnProperty(id));
-                return id;
-            };
-            const construct = function () {
-                const id = get(this, 'id');
-                collection[id] = this;
-                this.hydrate.apply(this, arguments);
-            };
-            const view = {
-                percent: function (index, value) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    index = index.trim();
-                    const nodes = that.nodes.collection;
-                    if (nodes.hasOwnProperty(index)) {
-                        nodes[index].percent.innerHTML = value*100;
-                    }
-                }
-            };
             const addNode   = function (index) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
                 const that = aa.getAccessor.call(this, {cut, get, set});
@@ -6157,7 +6134,7 @@
                                 disabled: true,
                                 value: that.indexes[index]+''
                             }),
-                            percent: $$('span', )
+                            percent: $$('span')
                         };
                         nodes[index].container = $$('div.item',
                             $$('div'),
@@ -6165,11 +6142,6 @@
                             $$('div.percent',
                                 nodes[index].percent
                             ),
-                            // $$('label',
-                            //     $$('div',
-                            //         nodes[index].label
-                            //     )
-                            // )
                         );
                         container.appendChild(nodes[index].container);
                     }
@@ -6187,131 +6159,164 @@
                     nodes.collection[index].percent.innerHTML = Math.floor(value*100);
                 }
             };
-            const Progress = function () {
+            const uid = () => {
+                let id;
+                do {
+                    id = aa.uid();
+                } while (collection.hasOwnProperty(id));
+                return id;
+            };
+            const view = {
+                percent: function (index, value) {
+                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                    const that = aa.getAccessor.call(this, {cut, get, set});
 
-                // Attributes:
-                aa.defineAccessors.call(this, {
+                    index = index.trim();
+                    const nodes = that.nodes.collection;
+                    if (nodes.hasOwnProperty(index)) {
+                        nodes[index].percent.innerHTML = value*100;
+                    }
+                }
+            };
+            const {cut, get, set} = aa.mapFactory();
+            function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
+            function Progress () { get(Progress, "construct").apply(this, arguments); }
+            const blueprint = {
+                accessors: {
                     publics: {
                         title: null,
                         visible: true
                     },
-                    write: {
-                    },
                     privates: {
-                        indexes: {},
-                        id: uid(),
-                        nodes: {
-                            container: null,
-                            collection: {}
+                        id:         null,
+                        indexes:    null,
+                        nodes:      null,
+                        tasks:      0,
+                    },
+                },
+                construct: function () {
+                    const that = _(this);
+                    collection[that.id] = this;
+                    that.id = uid();
+                    that.indexes = new aa.Dictionary({ authenticate: { values: value => aa.isNumber(value) && value.between(0, 1) } });
+                    that.nodes = {
+                        container:  null,
+                        collection: {},
+                    };
+                },
+                methods: {
+                    privates: {
+                        hide:       function () {
+                            const that = _(this);
+                            el('aaProgress-'+that.id, node => {
+                                node.removeNode();
+                            });
+                            delete collection[this.id];
                         },
-                        tasks: 0
-                    }
-                }, {cutter: cut, getter: get, setter: set});
+                    },
+                    publics: {
+                        
+                        // Methods:
+                        add:        function (index) {
+                            if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                            const that = _(this);
 
-                construct.apply(this, arguments);
-            };
-
-            aa.deploy(Progress.prototype, {
-                
-                // Methods:
-                hydrate: aa.prototypes.hydrate,
-                add:        function (index) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    index = index.trim();
-                    that.tasks += 1;
-                    that.indexes[index] = 0;
-                    addNode.call(this, index);
-                },
-                complete:   function (index) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    index = index.trim();
-                    const indexes = that.indexes;
-                    const nodes = that.nodes.collection;
-                    if (indexes.hasOwnProperty(index)) {
-                        delete indexes[index];
-                    }
-                    if (nodes.hasOwnProperty(index)) {
-                        nodes[index].range.value = 100;
-                        nodes[index].range.classList.add('complete');
-                        nodes[index].container.removeNode();
-                        delete nodes[index];
-                    }
-                    if (indexes.keys().length <= 0) {
-                        this.hide();
-                    }
-                },
-                hide:       function () {
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-                    el('aaProgress-'+that.id, node => {
-                        node.removeNode();
-                    });
-                    delete collection[this.id];
-                },
-                show:       function () {
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-                    el('aaProgress', () => {}, () => {
-                        const nodes = that.nodes;
-                        nodes.container = $$('div.message');
-                        if (this.title) {
-                            nodes.container.appendChild($$('h2.title', this.title));
-                        }
-                        const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
-                            nodes.container
-                        );
-                        const node = $$('div#aaProgress-'+that.id+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
-                            $$('div.aaTable.fullscreen',
-                                $$('div.td',
-                                    dialog
-                                )
-                            )
-                        );
-                        document.body.appendChild(node);
-                        node.style.zIndex = aa.getMaxZIndex()+1;
-                        aa.events.on('themechange', (theme, previous) => {
-                            dialog.classList.remove(previous);
-                            dialog.classList.add(theme);
-                        });
-
-                        that.indexes.forEach((value, index) => {
+                            index = index.trim();
+                            that.tasks += 1;
+                            log("add:", index)
+                            that.indexes.add(index, 0);
                             addNode.call(this, index);
-                        });
-                    });
+                        },
+                        complete:   function (index) {
+                            if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                            const that = _(this);
+
+                            index = index.trim();
+                            
+                            const indexes = that.indexes;
+                            if (indexes.has(index)) {
+                                indexes.delete(index);
+                                that.emit("complete", index);
+
+                                const nodes = that.nodes.collection;
+                                if (nodes.hasOwnProperty(index)) {
+                                    nodes[index].range.value = 100;
+                                    nodes[index].range.classList.add('complete');
+                                    nodes[index].container.removeNode();
+                                    delete nodes[index];
+                                }
+                                if (indexes.size === 0) {
+                                    that.hide();
+                                }
+                            }
+                            
+                        },
+                        move:       function (index, value) {
+                            aa.arg.test(index, aa.nonEmptyString, "'index'");
+                            if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
+                            const that = _(this);
+
+                            index = index.trim();
+                            that.indexes.add(index, value);
+                            moveRange.call(this, index, value);
+                            if (value === 1) {
+                                this.complete(index);
+                            }
+                        },
+                        show:       function () {
+                            const that = _(this);
+                            el('aaProgress', () => {}, () => {
+                                const nodes = that.nodes;
+                                nodes.container = $$('div.message');
+                                if (this.title) {
+                                    nodes.container.appendChild($$('h2.title', this.title));
+                                }
+                                const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
+                                    nodes.container
+                                );
+                                const node = $$('div#aaProgress-'+that.id+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                                    $$('div.aaTable.fullscreen',
+                                        $$('div.td',
+                                            dialog
+                                        )
+                                    )
+                                );
+                                document.body.appendChild(node);
+                                node.style.zIndex = aa.getMaxZIndex()+1;
+                                aa.events.on('themechange', (theme, previous) => {
+                                    dialog.classList.remove(previous);
+                                    dialog.classList.add(theme);
+                                });
+
+                                that.indexes.forEach((value, index) => {
+                                    addNode.call(this, index);
+                                });
+                            });
+                        },
+                    },
+                    setters: {
+                        title:   function (title) {
+                            const that = _(this);
+
+                            that.title = title.trim();
+                        },
+                        visible: function (visible) {
+                            const that = _(this);
+
+                            that.visible = visible;
+                            el('aaProgress-'+that.id, (node) => {
+                                node.classList[visible ? 'remove' : 'add']('hidden');
+                            })
+                        },
+                    },
                 },
-
-                // Getters:
-                // Setters:
-                move:       function (index, value) {
-                    if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
-                    if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    index = index.trim();
-                    if (that.indexes.hasOwnProperty(index)) {
-                        that.indexes[index] = value;
-                    }
-                    moveRange.call(this, index, value);
+                verifiers: {
+                    title: aa.nonEmptyString,
+                    visible: aa.isBool,
                 },
-                setTitle:   function (title) {
-                    if (!aa.nonEmptyString(title)) { throw new TypeError("First argument must be a non-empty String."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    that.title = title.trim();
-                },
-                setVisible: function (visible) {
-                    if (!aa.isBool(visible)) { throw new TypeError("Argument must be a Boolean."); }
-                    const that = aa.getAccessor.call(this, {cut, get, set});
-
-                    that.visible = visible;
-                    el('aaProgress-'+that.id, (node) => {
-                        node.classList[visible ? 'remove' : 'add']('hidden');
-                    })
-                }
-            }, {force: true});
-            return Object.freeze(Progress);
+            };
+            aa.manufacture(Progress, blueprint, {cut, get, set});
+            return Progress;
         })();
 
         // Simplified aliases:
@@ -6322,7 +6327,6 @@
             return cm;
         };
         this.dialog         = function (type, spec) {
-
             return (new aa.gui.Dialog(type, spec)).show();
         };
         this.loading        = function (callback /*, resolve, reject, spec */) {
@@ -11014,14 +11018,6 @@
                         }
                         that.data.set(key, value);
                         that.keys.pushUnique(key);
-                        // if (aa.isString(key)) {
-                        //     Object.defineProperty(this, key, {
-                        //         configurable:   true,
-                        //         enumerable:     true,
-                        //         get:            () => that.data.get(key),
-                        //         set:            value => this.add(key, value),
-                        //     });
-                        // }
                     },
                     clear:          function () {
                         const that = _(this);
@@ -11029,8 +11025,8 @@
                         that.keys.clear();
                     },
                     delete:         function (key) {
-                        aa.arg.test(key, that.authenticate.keys, "'key'");
                         const that = _(this);
+                        aa.arg.test(key, that.authenticate.keys, "'key'");
                         that.data.delete(key);
                         that.keys.remove(key);
                         // if (aa.isString(key)) {
@@ -11080,7 +11076,6 @@
         
         return aaDictionary;
     })();
-    const dico = new aa.Dictionary();
     aa.extractClassNameAndID    = Object.freeze(function (str) {
         if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
 

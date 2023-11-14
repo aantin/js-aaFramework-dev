@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.19.0",
+        version: "3.19.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1088,6 +1088,23 @@
                 }
             },
             emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
+            incrementLength:    function (index=null) {
+                const that = _(this);
+                index ??= that.data.length - 1;
+                aa.arg.test(index, aa.isPositiveInt, "'index'");
+
+                if (!this.hasOwnProperty(index)) {
+                    Object.defineProperty(this, index, {
+                        configurable:   true,
+                        enumerable:     true,
+                        get:            () => {
+                            if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
+                            return that.data[index];
+                        },
+                        set:            value => that.set(lastIndex, value),
+                    });
+                }
+            },
             set:                function (index, value) {
                 const that = _(this);
                 aa.arg.test(index, arg => aa.isPositiveInt(arg) && arg.between(0, that.data.length - 1), "'index'");
@@ -1214,6 +1231,7 @@
                 return collection;
             },
             find:               methodFactory('find'),
+            findLast:           methodFactory('findLast'),
             findIndex:          methodFactory('findIndex'),
             findLastIndex:      methodFactory('findLastIndex'),
             includes:           methodFactory('includes'),
@@ -1278,22 +1296,18 @@
                  * @param <int> position
                  * @param <any> ...items: The items to add to the collection from 'position' parameter.
                  */
-                const that = _(this);
-
                 aa.arg.test(position, aa.isInt, "'position'");
+                aa.arg.test(items, aa.isArrayLikeOf(item => this.authenticate?.(item)), "'items'");
+                const that = _(this);
                 
                 if (position < 0) {
                     position += that.data.length;
                 }
                 const args = [position, 0];
-                items.forEach(item => {
-                    aa.throwErrorIf(
-                        (this.authenticate && !this.authenticate(item)),
-                        "Invalid collection item."
-                    );
-                    args.push(item);
-                });
-                that.data.splice.apply(that.data, args);
+                that.data.splice(position, 0, ...items);
+                for (let index = that.data.length - 1; index >= 0; index--) {
+                    privates.incrementLength.call(this, index);
+                }
                 items.forEach(item => {
                     privates.emit.call(this, `added`, item);
                 });
@@ -1315,18 +1329,7 @@
                     );
                     that.data.push(item);
                     
-                    const index = that.data.length - 1;
-                    if (!this.hasOwnProperty(index)) {
-                        Object.defineProperty(this, index, {
-                            configurable:   true,
-                            enumerable:     true,
-                            get:            () => {
-                                if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
-                                return that.data[index];
-                            },
-                            set:            value => that.set(lastIndex, value),
-                        });
-                    }
+                    privates.incrementLength.call(this);
                     const attributes = {
                         nextItem: () => {
                             const index = this.indexOf(item);
@@ -1344,15 +1347,7 @@
                             });
                         }
                     });
-                    const lastIndex = that.data.length - 1;
-                    if (!this.hasOwnProperty(lastIndex)) {
-                        Object.defineProperty(this, lastIndex, {
-                            configurable:   true,
-                            enumerable:     true,
-                            get:            () => that.data[lastIndex],
-                            set:            value => that.set(lastIndex, value),
-                        });
-                    }
+                    privates.incrementLength.call(this);
                     privates.emit.call(this, `added`, item);
                     privates.emit.call(this, `datamodified`, this);
                 });
@@ -9177,7 +9172,7 @@
                         $$("div",
                             $$("label", searchNode)
                         ),
-                        $$("fieldset.scrollable", {style: "max-height: 240px;"},
+                        $$("fieldset.scrollable", {style: "max-height: calc(100vh - 320px);"},
                             node
                         ),
                     ),
@@ -9296,7 +9291,6 @@
             }
         };
         this.isValid    = function (str) {
-
             return (aa.nonEmptyString(str) ? !!this.cmdOrCtrl(str).match(re) : false);
         };
         this.rename     = function (str) {

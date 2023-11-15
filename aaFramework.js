@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.21.0",
+        version: "3.22.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -3183,7 +3183,9 @@
                         event.target.files.forEach((file) => {
                             collection.push(file);
                         });
-                        const progress = new aa.gui.Progress({title: "Files loading..."});
+                        const progress = aa.gui.Progress.getBy({
+                            title: "Files loading..."
+                        });
                         // progress.show();
                         collection.forEach((file) => {
                             if (file) {
@@ -6353,13 +6355,35 @@
             return Notification;
         })();
         this.Progress = (() => {
-            const collection = new aa.Dictionary({ authenticate: {values: aa.instanceof(Progress) } });
+            const {cut, get, set} = aa.mapFactory();
+            function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
+            function Progress () { get(Progress, "construct").apply(this, arguments); }
+
+            class aaGUIProgressError extends Error {
+                constructor (message, filename, lineNumber) {
+                    super(message, filename, lineNumber);
+                    Object.defineProperty(this, "name", {
+                        get: () => "aaGUIProgressError",
+                    });
+                }
+            }
+
+            const defaultApp =      aa.uid();
+            const defaultSection =  aa.uid();
+            const token =           aa.uid();
+            const collection =      new aa.Dictionary({authenticate: {values: aa.instanceof(Progress)}});
+            const apps =            new aa.Dictionary({authenticate: {values: app => app instanceof aa.Dictionary && app.every(section => section instanceof Progress)}});
+            const nodes =           new aa.Dictionary({authenticate: {values: aa.isNode}});
+            const sectionLists =    new aa.Dictionary({authenticate: {values: aa.isNode}});
+            const counts =          new aa.Dictionary({authenticate: {values: app => app instanceof aa.Dictionary && app.every(section => section instanceof Progress)}});
+            const sections =        new aa.Dictionary({authenticate: {values: aa.isArrayOf(aa.nonEmptyString)}});
+
             const addNode   = function (index) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
                 const that = aa.getAccessor.call(this, {cut, get, set});
 
                 index = index.trim();
-                const container = that.nodes.container;
+                const container = that.nodes.section;
                 if (container) {
                     const nodes = that.nodes.collection;
                     if (!nodes.hasOwnProperty(index)) {
@@ -6381,7 +6405,7 @@
                                 nodes[index].percent
                             ),
                         );
-                        container.appendChild(nodes[index].container);
+                        container.append(nodes[index].container);
                     }
                     view.percent.call(this, index, 0);
                 }
@@ -6396,6 +6420,9 @@
                     nodes.collection[index].range.value = value*100;
                     nodes.collection[index].percent.innerHTML = Math.floor(value*100);
                 }
+            };
+            const newApp = function () {
+                return new aa.Dictionary({ authenticate: {values: section => section instanceof Progress} });
             };
             const uid = () => {
                 let id;
@@ -6416,14 +6443,14 @@
                     }
                 }
             };
-            const {cut, get, set} = aa.mapFactory();
-            function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
-            function Progress () { get(Progress, "construct").apply(this, arguments); }
             const blueprint = {
                 accessors: {
                     publics: {
+                        app:        null,
                         id:         null,
+                        section:    null,
                         title:      null,
+                        token:      null,
                         visible:    true
                     },
                     privates: {
@@ -6431,55 +6458,83 @@
                         nodes:      null,
                     },
                 },
-                construct: function () {
+                construct: function (spec={}) {
+                    if (spec.token !== token) throw new aaGUIProgressError("Constructor must not be called directly. Use <Progress.getBy> method instead.");
+
                     const that = _(this);
                     that.id ??= uid();
+                    this.app = defaultApp;
+                    this.section = defaultSection;
                     collection.add(that.id, this);
                     that.indexes = new aa.Dictionary({ authenticate: { values: value => aa.isNumber(value) && value.between(0, 1) } });
                     that.nodes = {
-                        container:  null,
-                        collection: {},
+                        container:      null,
+                        collection:     {},
+                        section:        null,
                     };
                 },
                 methods: {
                     privates: {
-                        hide:       function () {
+                        hideApp:        function () {
                             const that = _(this);
-                            el('aaProgress-'+aa.hash.md5(that.id), node => {
-                                node.removeNode();
-                            });
                             collection.delete(this.id);
-                        },
-                        show:       function () {
-                            const that = _(this);
-                            const hash = aa.hash.md5(that.id);
-                            els('#aaProgress-'+hash, () => {}, () => {
-                                const nodes = that.nodes;
-                                nodes.container = $$('div.message');
-                                if (this.title) {
-                                    nodes.container.appendChild($$('h2.title', this.title));
-                                }
-                                const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
-                                    nodes.container
-                                );
-                                const node = $$('div#aaProgress-'+hash+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
-                                    $$('div.aaTable.fullscreen',
-                                        $$('div.td',
-                                            dialog
-                                        )
-                                    )
-                                );
-                                document.body.appendChild(node);
-                                node.style.zIndex = aa.getMaxZIndex()+1;
-                                aa.events.on('themechange', (theme, previous) => {
-                                    dialog.classList.remove(previous);
-                                    dialog.classList.add(theme);
-                                });
+                            
+                            nodes.get(this.app)?.removeNode();
 
-                                that.indexes.forEach((value, index) => {
-                                    addNode.call(this, index);
-                                });
+                            apps.delete(this.app);
+                            sectionLists.delete(this.app);
+                            nodes.delete(this.app);
+                            sections.delete(this.app);
+                        },
+                        hideSection:    function () {
+                            const that = _(this);
+                            that.nodes.section?.classList?.add("complete");
+                            that.nodes.section?.removeNode();
+                            that.nodes.section = null;
+                            apps.get(this.app)?.delete(this.section);
+                            sections.get(this.app)?.remove(this.section);
+                            if (sections.get(this.app)?.length === 0) that.hideApp();
+                        },
+                        showApp:        function () {
+                            const that = _(this);
+                            const hash = aa.hash.md5(that.app);
+                            // const nodes = that.nodes;
+
+                            // Return if already in DOM:
+                            if (nodes.has(this.app)) return;
+
+                            sectionLists.add(this.app, $$('div.message'));
+                            if (this.title) {
+                                sectionLists.get(this.app).append($$('h2.title', this.title));
+                            }
+                            const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
+                                sectionLists.get(this.app)
+                            );
+                            const node = $$('div#aaProgress-'+hash+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                                $$('div.aaTable.fullscreen',
+                                    $$('div.td',
+                                        dialog
+                                    )
+                                )
+                            );
+
+                            nodes.add(this.app, node);
+                            document.body.appendChild(node);
+                            node.style.zIndex = aa.getMaxZIndex()+1;
+                            aa.events.on('themechange', (theme, previous) => {
+                                dialog.classList.remove(previous);
+                                dialog.classList.add(theme);
                             });
+                        },
+                        showSection:    function () {
+                            const that = _(this);
+                            let section = that.nodes.section;
+                            if (!that.nodes.section) {
+                                section = $$("fieldset.section");
+                                if (this.section !== defaultSection) section.append($$("legend", this.section));
+                                sectionLists.get(this.app)?.append(section);
+                                that.nodes.section = section;
+                            }
                         },
                     },
                     publics: {
@@ -6491,12 +6546,19 @@
 
                             index = index.trim();
                             that.indexes.add(index, 0);
-                            that.show();
+                            that.showApp();
+                            that.showSection();
                             addNode.call(this, index);
+                            sections.get(this.app).pushUnique(this.section);
                         },
-                        complete:   function (index) {
-                            if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
+                        complete:   function (index=null) {
+                            aa.arg.test(index, aa.isNullOrNonEmptyString, "'index'");
                             const that = _(this);
+                            
+                            if (!index) {
+                                that.hideSection();
+                                return;
+                            }
 
                             index = index.trim();
                             
@@ -6514,7 +6576,7 @@
                                 delete nodes[index];
                             }
                             if (indexes.size === 0) {
-                                that.hide();
+                                that.hideSection();
                             }
                         },
                         move:       function (index, value) {
@@ -6547,21 +6609,42 @@
                     },
                 },
                 statics: {
-                    getByLabel: function (label) {
-                        aa.arg.test(label, aa.nonEmptyString, "'label'");
-                        label = label.trim();
-
-                        if (collection.has(label)) return collection.get(label);
-
-                        return new Progress({
-                            id: label,
-                            title: label,
+                    getBy:      function (spec={}) {
+                        aa.arg.test(spec, aa.verifyObject({
+                            app:        blueprint.verifiers.app,
+                            id:         blueprint.verifiers.id,
+                            section:    blueprint.verifiers.section,
+                            title:      blueprint.verifiers.title,
+                            visible:    blueprint.verifiers.visible,
+                        }), "'spec'", 0, aaGUIProgressError);
+                        spec.sprinkle({
+                            app:        defaultApp,
+                            section:    defaultSection,
                         });
+                        const {app, section} = spec;
+
+                        if (!apps.has(app)) apps.add(app, newApp());
+                        if (!sections.has(app)) sections.add(app, []);
+
+                        if (!apps.get(app).has(section)) {
+                            const progress = new Progress({
+                                app,
+                                section,
+                                token,
+                            });
+                            apps.get(app).add(section, progress);
+
+                            return progress;
+                        }
+                        return apps.get(app).get(section);
                     },
                 },
                 verifiers: {
+                    app:        aa.nonEmptyString,
                     id:         aa.nonEmptyString,
+                    section:    aa.nonEmptyString,
                     title:      aa.nonEmptyString,
+                    token:      aa.nonEmptyString,
                     visible:    aa.isBool,
                 },
             };

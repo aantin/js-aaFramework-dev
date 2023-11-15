@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.20.1",
+        version: "3.21.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -91,7 +91,7 @@
                     read:           aa.isObject,
                     execute:        aa.isObject
                 }
-            }
+            },
         };
         Object.defineProperties(commons.accessors, {
             defaultValue: {
@@ -108,6 +108,9 @@
         });
         return commons;
     })();
+    const framework = {
+        isDOMContentLoaded: false,
+    };
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
@@ -3181,7 +3184,7 @@
                             collection.push(file);
                         });
                         const progress = new aa.gui.Progress({title: "Files loading..."});
-                        progress.show();
+                        // progress.show();
                         collection.forEach((file) => {
                             if (file) {
                                 progress.add(file.name);
@@ -6144,6 +6147,7 @@
                     publics: {
                         actions:    null,
                         id:         null,
+                        persistent: false,
                         text:       null,
                         theme:      ENV.DEFAULT_THEME,
                         title:      null,
@@ -6179,48 +6183,7 @@
                     });
                 },
                 methods: {
-                    publics: {
-
-                        // Methods:
-                        isValid:    function () {
-                            return (this.text !== null);
-                        },
-                        push:       function () {
-                            els('#aaNotifs', container => {
-                                container.style.zIndex = 1+aa.getMaxZIndex();
-                                let node = this.getHTML();
-                                if (node) {
-                                    container.insertAdjacentElement('afterbegin', node);
-                                }
-                            });
-                        },
-                        remove:     function (id) {
-                            let dom = document.getElementById('aaNotif_'+id);
-                            if (dom) {
-                                dom.classList.add('fadeOut');
-                                dom.on('animationend',(function (dom) {return function () {
-                                    dom.style.display = 'none';
-                                    dom.removeNode();
-                                };})(dom));
-                            }
-                        },
-
-                        // Setters:
-                        addAction:  function (action) {
-                            if (!(action instanceof aa.Action) && aa.isObject(action)) {
-                                action = new aa.Action(action);
-                            }
-                            aa.arg.test(action, aa.instanceof(aa.Action), "'action'");
-
-                            const that = _(this);
-                            if (action.isValid()) {
-                                that.actions.push(action);
-                                return true;
-                            }
-                            return false;
-                        },
-
-                        // Getters:
+                    privates: {
                         getHTML:    function () {
                             const that = _(this);
 
@@ -6242,7 +6205,15 @@
                             const message = $$('div.message', `${that.title ? `<h2>${that.title}</h2>` : ''}${that.text}`);
                             node.appendChild(message);
 
-                            if (that.actions.length > 0) {
+                            if (that.persistent || that.actions.length > 0) {
+                                if (that.persistent && that.actions.length === 0) {
+                                    this.addAction({
+                                        name: aa.uid(),
+                                        text: "Ok",
+                                        on: {execute: () => {
+                                        }}
+                                    });
+                                }
                                 const remove = () => { this.remove(that.id); };
                                 let buttons = document.createElement("div");
                                 buttons.classList.add("buttons");
@@ -6278,7 +6249,49 @@
                             }
                             
                             return node;
-                        }
+                        },
+                    },
+                    publics: {
+
+                        // Methods:
+                        isValid:    function () {
+                            return (this.text !== null);
+                        },
+                        push:       function () {
+                            const that = _(this);
+                            els('#aaNotifs', container => {
+                                container.style.zIndex = 1+aa.getMaxZIndex();
+                                let node = that.getHTML();
+                                if (node) {
+                                    container.insertAdjacentElement('afterbegin', node);
+                                }
+                            });
+                        },
+                        remove:     function (id) {
+                            let dom = document.getElementById('aaNotif_'+id);
+                            if (dom) {
+                                dom.classList.add('fadeOut');
+                                dom.on('animationend',(function (dom) {return function () {
+                                    dom.style.display = 'none';
+                                    dom.removeNode();
+                                };})(dom));
+                            }
+                        },
+
+                        // Setters:
+                        addAction:  function (action) {
+                            if (!(action instanceof aa.Action) && aa.isObject(action)) {
+                                action = new aa.Action(action);
+                            }
+                            aa.arg.test(action, aa.instanceof(aa.Action), "'action'");
+
+                            const that = _(this);
+                            if (action.isValid()) {
+                                that.actions.push(action);
+                                return true;
+                            }
+                            return false;
+                        },
                     },
                     setters: {
                         action:    function (action) {
@@ -6303,6 +6316,11 @@
                             const that = _(this);
                             that.text = message;
                         },
+                        persistent: function (persistent) {
+                            aa.arg.test(persistent, blueprint.verifiers.persistent, "'persistent'");
+                            const that = _(this);
+                            that.persistent = persistent;
+                        },
                         text:       function (text) {
                             aa.arg.test(text, blueprint.verifiers.text, "'text'");
                             const that = _(this);
@@ -6325,6 +6343,7 @@
                     id:         aa.nonEmptyString,
                     text:       aa.nonEmptyString,
                     message:    aa.nonEmptyString,
+                    persistent: aa.isBool,
                     theme:      aa.inArray(ENV.THEMES),
                     title:      aa.nonEmptyString,
                     type:       aa.inArray(privates.types)
@@ -6431,6 +6450,37 @@
                             });
                             collection.delete(this.id);
                         },
+                        show:       function () {
+                            const that = _(this);
+                            const hash = aa.hash.md5(that.id);
+                            els('#aaProgress-'+hash, () => {}, () => {
+                                const nodes = that.nodes;
+                                nodes.container = $$('div.message');
+                                if (this.title) {
+                                    nodes.container.appendChild($$('h2.title', this.title));
+                                }
+                                const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
+                                    nodes.container
+                                );
+                                const node = $$('div#aaProgress-'+hash+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
+                                    $$('div.aaTable.fullscreen',
+                                        $$('div.td',
+                                            dialog
+                                        )
+                                    )
+                                );
+                                document.body.appendChild(node);
+                                node.style.zIndex = aa.getMaxZIndex()+1;
+                                aa.events.on('themechange', (theme, previous) => {
+                                    dialog.classList.remove(previous);
+                                    dialog.classList.add(theme);
+                                });
+
+                                that.indexes.forEach((value, index) => {
+                                    addNode.call(this, index);
+                                });
+                            });
+                        },
                     },
                     publics: {
                         
@@ -6441,6 +6491,7 @@
 
                             index = index.trim();
                             that.indexes.add(index, 0);
+                            that.show();
                             addNode.call(this, index);
                         },
                         complete:   function (index) {
@@ -6477,37 +6528,6 @@
                             if (value === 1) {
                                 this.complete(index);
                             }
-                        },
-                        show:       function () {
-                            const that = _(this);
-                            const hash = aa.hash.md5(that.id);
-                            els('#aaProgress-'+hash, () => {}, () => {
-                                const nodes = that.nodes;
-                                nodes.container = $$('div.message');
-                                if (this.title) {
-                                    nodes.container.appendChild($$('h2.title', this.title));
-                                }
-                                const dialog = $$('div.aaDialog.progress.'+aa.settings.theme,
-                                    nodes.container
-                                );
-                                const node = $$('div#aaProgress-'+hash+'.aa.bg.shade'+(this.visible ? '' : '.hidden'),
-                                    $$('div.aaTable.fullscreen',
-                                        $$('div.td',
-                                            dialog
-                                        )
-                                    )
-                                );
-                                document.body.appendChild(node);
-                                node.style.zIndex = aa.getMaxZIndex()+1;
-                                aa.events.on('themechange', (theme, previous) => {
-                                    dialog.classList.remove(previous);
-                                    dialog.classList.add(theme);
-                                });
-
-                                that.indexes.forEach((value, index) => {
-                                    addNode.call(this, index);
-                                });
-                            });
                         },
                     },
                     setters: {
@@ -12596,12 +12616,20 @@
         return Object.freeze(new Settings());
     })();
     aa.todoList                 = (list, label=null) => {
+        // If an Object is provided, re-call on each property:
+        if (aa.isObject(list)) {
+            list.forEach((list, label) => {
+                aa.todoList(list, label);
+            });
+            return;
+        }
+
         aa.arg.test(list, aa.isArrayLike, "'list'");
         aa.arg.test(label, aa.isNullOrNonEmptyString, "'label'");
 
         label = label?.trim() ?? null;
 
-        document.on("DOMContentLoaded", () => {
+        const display = () => {
             if (list.length && !aa.settings.production) {
                 const title = `todo${label ? ` (${label})` : ''}:`;
                 console.group(title);
@@ -12616,7 +12644,10 @@
                 console.groupEnd();
                 console.log("");
             }
-        });
+        };
+
+        if (framework.isDOMContentLoaded) display();
+        else document.on("DOMContentLoaded", display);
     };
     aa.xhr                      = function (method='GET', src, options={}) {
         aa.arg.test(method, aa.nonEmptyString, `'method'`);
@@ -13225,6 +13256,7 @@
             if (document.addEventListener) {
                 // document.addEventListener("DOMContentLoaded", bodyload, false); // call the onload handler
                 document.on("DOMContentLoaded", bodyload);
+                framework.isDOMContentLoaded = true;
                 return;
             }
 

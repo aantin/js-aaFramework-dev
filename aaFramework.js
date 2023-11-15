@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.22.0",
+        version: "3.22.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1514,7 +1514,6 @@
 
             // Methods:
             isValid:                function () {
-
                 return (typeof this.callback === "function" || this.action instanceof aa.Action);
             },
             hasOption:              function (s) {
@@ -1525,7 +1524,6 @@
                 return (this.options.hasOwnProperty(s) && this.options[s]);
             },
             run:                    function () {
-
                 // this.suspended = false;
             },
             execute:                function () {
@@ -2738,7 +2736,7 @@
                 if (combinaison) {
                     this.logKeyCode();
                     ((show) => {
-                        if (show) {
+                        if (show && !aa.settings.production) {
                             clearTimeout(timerShow);
                             clearInterval(timerFade);
                             timerShow = null;
@@ -3069,6 +3067,15 @@
         };
     })();
     aa.file                     = Object.freeze(new (function () {
+        class aaFileError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaFileError",
+                });
+            }
+        }
+
         const verifier = {
             content:        p => (aa.isObject(p) || aa.isString(p)),
             lastModified:   p => aa.isInt(p),
@@ -3077,7 +3084,7 @@
             type:           p => aa.isString(p)
         };
         this.isValid    = function (file) {
-            if (!aa.isObject(file)) { throw new TypeError("Argument must be an Object."); }
+            if (!aa.isObject(file)) { throw new aaFileError("Argument must be an Object."); }
             const valid = (!file.find((v, k) => {
                 return (
                     !verifier.hasOwnProperty(k)
@@ -3091,32 +3098,31 @@
                 )
             );
         };
+        /**
+         * How to use:
+         * function (resolve) {}
+         * function (resolve, options) {}
+         * function (resolve, reject) {}
+         * function (resolve, reject, options) {}
+         * function (options, resolve, reject) {}
+         * function (resolve, options, reject) {}
+         *
+         * First given function will be called as 'resolve'
+         * Second given function will be called as 'reject'
+         *
+         * @param {function} resolve:
+         *      @param {object} anonymous: {content, lastModified, name, size, type}
+         *
+         *      @return void
+         * @param {function} reject (optional):
+         *      @param {FileReader} anonymous
+         *
+         *      @return void
+         * @param {object} options (optional: {base64, json, multiple})
+         *
+         * @return
+         */
         this.open       = function (/* resolve, reject, options */) {
-            /**
-             * How to use:
-             * function (resolve) {}
-             * function (resolve, options) {}
-             * function (resolve, reject) {}
-             * function (resolve, reject, options) {}
-             * function (options, resolve, reject) {}
-             * function (resolve, options, reject) {}
-             *
-             * First given function will be called as 'resolve'
-             * Second given function will be called as 'reject'
-             *
-             * @param {function} resolve:
-             *      @param {object} anonymous: {content, lastModified, name, size, type}
-             *
-             *      @return void
-             * @param {function} reject (optional):
-             *      @param {FileReader} anonymous
-             *
-             *      @return void
-             * @param {object} options (optional: {base64, json, multiple})
-             *
-             * @return
-             */
-
             if (!arguments || arguments.length < 1 || arguments.length > 3) {
                 throw new Error("Function needs between 1 and 3 arguments.");
             }
@@ -3129,18 +3135,18 @@
                     if (functions.length < 2) {
                         functions.push(arg);
                     } else {
-                        throw new TypeError("Reject callback argument has already been given.");
+                        throw new aaFileError("Reject callback argument has already been given.");
                     }
                 } else if(aa.isObject(arg)) {
                     if (options === undefined) {
                         options = arg;
                     } else {
-                        throw new TypeError("Options argument has already been given.");
+                        throw new aaFileError("Options argument has already been given.");
                     }
                 }
             }
             if (functions.length === 0) {
-                throw new TypeError("At least one function is needed as 'Resolve' callback.");
+                throw new aaFileError("At least one function is needed as 'Resolve' callback.");
             }
 
             let resolve = functions[0];
@@ -3298,16 +3304,16 @@
             })(options));
             input.click();
         };
+        /**
+         * @param {file} file
+         * @param {function} resolve
+         * @param {function} reject (optional)
+         * 
+         * @return {void}
+         */
         this.read       = function (file, resolve /*, reject */) {
-            /**
-             * @param {file} file
-             * @param {function} resolve
-             * @param {function} reject (optional)
-             * 
-             * @return {void}
-             */
-            aa.arg.test(file, file instanceof File, `'file'`);
-            aa.arg.test(resolve, aa.isFunction, `'resolve'`);
+            aa.arg.test(file, file instanceof File, `'file'`, aaFileError);
+            aa.arg.test(resolve, aa.isFunction, `'resolve'`, aaFileError);
             const reject = aa.arg.optional(arguments, 2, undefined, aa.isFunction);
 
             const task = () => {
@@ -3336,17 +3342,17 @@
                 task();
             }
         }
+        /**
+         * @param {string} fileName
+         * @param {string} content
+         * @param {object} options {<bool> base64, <bool> utf8}
+         *
+         * @return {void}
+         */
         this.saveAs     = function (fileName, content /*, options */) {
-            /**
-             * @param {string} fileName
-             * @param {string} content
-             * @param {object} options {<bool> base64, <bool> utf8}
-             *
-             * @return {void}
-             */
 
-            aa.arg.test(fileName, aa.nonEmptyString, `'fileName'`);
-            aa.arg.test(content, aa.isString, `'content'`);
+            aa.arg.test(fileName, aa.nonEmptyString, `'fileName'`, aaFileError);
+            aa.arg.test(content, aa.isString, `'content'`, aaFileError);
             const options = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
                 base64: aa.isBool,
                 mimetype: value => aa.isString(value) && !!value.match(/^[a-z0-9\-]+\/[a-z0-9\-]+$/i),
@@ -6484,7 +6490,6 @@
                             apps.delete(this.app);
                             sectionLists.delete(this.app);
                             nodes.delete(this.app);
-                            sections.delete(this.app);
                         },
                         hideSection:    function () {
                             const that = _(this);
@@ -6498,7 +6503,6 @@
                         showApp:        function () {
                             const that = _(this);
                             const hash = aa.hash.md5(that.app);
-                            // const nodes = that.nodes;
 
                             // Return if already in DOM:
                             if (nodes.has(this.app)) return;
@@ -6550,6 +6554,7 @@
                             that.showSection();
                             addNode.call(this, index);
                             sections.get(this.app).pushUnique(this.section);
+                            moveRange.call(this, index, 0);
                         },
                         complete:   function (index=null) {
                             aa.arg.test(index, aa.isNullOrNonEmptyString, "'index'");
@@ -6751,6 +6756,7 @@
             notif.push();
             return notif;
         };
+        this.progress       = this.Progress.getBy;
         this.todo           = function (message /*, show */) {
             /**
              * Usage:

@@ -21,7 +21,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.22.1",
+        version: "3.22.2",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -6486,6 +6486,7 @@
                             collection.delete(this.id);
                             
                             nodes.get(this.app)?.removeNode();
+                            document.body.classList.remove("freeze-progress");
 
                             apps.delete(this.app);
                             sectionLists.delete(this.app);
@@ -6523,6 +6524,7 @@
                             );
 
                             nodes.add(this.app, node);
+                            document.body.classList.add("freeze-progress");
                             document.body.appendChild(node);
                             node.style.zIndex = aa.getMaxZIndex()+1;
                             aa.events.on('themechange', (theme, previous) => {

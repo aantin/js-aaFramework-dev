@@ -88,7 +88,10 @@
     --dark-color-red: #c00;
     --dark-color-cyan: #1ed;
 }
-body.aaFrameworkFreeze{
+body.aaFrameworkFreeze {
+    overflow: hidden;
+}
+body.aa.freeze-progress {
     overflow: hidden;
 }
 @charset "utf-8";

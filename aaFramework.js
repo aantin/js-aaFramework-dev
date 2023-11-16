@@ -13,15 +13,17 @@
     if (aa === undefined) { throw new Error("'"+ENV.MODULE_NAME+"' needs 'aaJS' to be called first."); }
     // ----------------------------------------------------------------
     // Style:
-    aa.addStyleToScript(ENV.MODULE_NAME+".js", ENV.MODULE_NAME+".css");
-    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css");
-    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont/material-icons.css");
-    aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont-aa.css");
+    if (self.document) {
+        aa.addStyleToScript(ENV.MODULE_NAME+".js", ENV.MODULE_NAME+".css");
+        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css");
+        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont/material-icons.css");
+        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont-aa.css");
+    }
     // ----------------------------------------------------------------
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.22.2",
+        version: "3.22.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -2573,7 +2575,7 @@
             getOS:      function () {
                 if (!that.os) {
                     let sys,
-                        _os = window.navigator.appVersion.match(/^[^\(\)]+\((.+)$/),
+                        _os = self.window?.navigator.appVersion.match(/^[^\(\)]+\((.+)$/),
                         systems = {
                             mac: ["mac"],
                             windows: ["win"],
@@ -2630,7 +2632,7 @@
             click:      function (e) {
                 let result = null;
                 let chaine = [];
-                e = window.event || e;
+                e = self.window?.event || e;
                 
                 chaine[1] = "click.Left";
                 chaine[3] = "click.Right";
@@ -2651,7 +2653,7 @@
                 const allowKeyCodeLog   = false;
                 let result = new aa.EventResponse("keyboard");
 
-                e = window.event || e;
+                e = self.window?.event || e;
 
                 this.which          = e.which;
                 this.intKeyCode     = e.keyCode;
@@ -2787,7 +2789,7 @@
             mousewheel: function (e) {
                 let result = null;
                 let mouseWheel = e.wheelDelta || -e.detail;
-                e = window.event || e;
+                e = self.window?.event || e;
                 
                 if (mouseWheel && mouseWheel>0) {
                     result = aa.events.execute("mousewheel.Up", e);
@@ -3350,6 +3352,7 @@
          * @return {void}
          */
         this.saveAs     = function (fileName, content /*, options */) {
+            if (!self.window) throw new Error("window not defined.");
 
             aa.arg.test(fileName, aa.nonEmptyString, `'fileName'`, aaFileError);
             aa.arg.test(content, aa.isString, `'content'`, aaFileError);
@@ -3380,7 +3383,7 @@
                 }
             }
 
-            const url = window.URL.createObjectURL(
+            const url = self.window.URL.createObjectURL(
                 options.utf8 ?
                 new Blob([content], {type: options.mimetype})
                 : aa.blob.build(content)
@@ -3405,7 +3408,7 @@
             }
 
             // Revoke URL Object:
-            window.URL.revokeObjectURL(url);
+            self.window.URL.revokeObjectURL(url);
 
             return;
         };
@@ -3438,6 +3441,7 @@
                         construct: function () {
                             const that = _(this);
                         },
+                        startHydratingWith: ["attr"],
                         methods: {
                             publics: {
                             },
@@ -3581,6 +3585,9 @@
             // Public:
             const methods = Object.assign({
                 hydrate:    function (/* spec={}, order=[] */) {
+                    blueprint.verifiers.forEach((func, attr) => {
+                        blueprint.verifiers[attr] = func.bind(this);
+                    });
                     const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
                     const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
                     try {
@@ -4731,6 +4738,7 @@
                     }
                 },
                 resize:             function () {
+                    if (!self.window) throw new Error("window not defined.");
                     switch (this.type) {
                         case "win":{
                             let menu, form, buttons;
@@ -4738,7 +4746,7 @@
                                 if (!["height", "width"].has(dimension)) { throw new TypeError("Invalid dimension."); }
                                 if (!aa.isNode(elt)) { throw new TypeError("Invalid node."); }
 
-                                const v = window.getComputedStyle(elt)[dimension];
+                                const v = self.window.getComputedStyle(elt)[dimension];
                                 if (aa.isString(v)) {
                                     return parseInt(v.replace(/px/,''));
                                 }
@@ -5532,8 +5540,8 @@
                             let show = true;
                             node.riseTheDOM(function (nodeAlias) {
                                 if (nodeAlias.disabled
-                                    || window.getComputedStyle(nodeAlias,null).display === "none"
-                                    || window.getComputedStyle(nodeAlias,null).visibility !== "visible"
+                                    || self.window?.getComputedStyle(nodeAlias,null).display === "none"
+                                    || self.window?.getComputedStyle(nodeAlias,null).visibility !== "visible"
                                     || (nodeAlias.style && (
                                         (nodeAlias.style.display && nodeAlias.style.display === "none")
                                         || (nodeAlias.style.visibility && nodeAlias.style.visibility !== "visible")
@@ -9049,7 +9057,7 @@
             onMove: {
                 get: () => function (e) {
                     if (arguments.length) {
-                        let evt = window.event || arguments[0];
+                        let evt = self.window?.event || arguments[0];
                         
                         if (!aa.browser.is('ie')) {
                             privates.x = evt.clientX;
@@ -13239,7 +13247,7 @@
                 default:
                     if (aa.isElement(node)) {
                         // let zIndex = document.defaultView.getComputedStyle(node,null).getPropertyValue("z-index");
-                        let zIndex = window.getComputedStyle(node,null).getPropertyValue("z-index");
+                        let zIndex = self.window?.getComputedStyle(node,null).getPropertyValue("z-index");
                         if (zIndex !== 'auto') {
                             zIndex = parseInt(zIndex);
                             if (zIndex > highest) {
@@ -13298,22 +13306,22 @@
     const icon = aa.icon;
     // ----------------------------------------------------------------
     (function () { /* Events */
-        window.on("resize", function () { aa.events.execute("windowresize"); });
-        window.onbeforeunload   = function () { return aa.events.execute("beforeunload"); }; // return value has to be a String
-        window.onunload         = function () { return aa.events.execute("windowunload"); }; // return value has to be a String
+        if (!self.window || !self.document) return;
 
-        document.on((aa.browser.is("firefox") ? "DOMMouseScroll" : "mousewheel"), aa.events.custom.mousewheel);
-        document.on("keydown", (e) => { return aa.events.custom.keyboard(e); });
-        // document.on("keyup", aa.events.custom.keyboard);
-        // document.on("click", aa.events.custom.click);
-        document.on("contextmenu", (e) => { return aa.events.custom.click(e); });
-        document.on("mousemove", (e) => { return aa.mouse.onMove(e); });
-        document.on("mousedown", (e) => { return aa.events.execute("mousedown", e); });
-        document.on("mouseup", (e) => { return aa.events.execute("mouseup", e); });
+        self.window.on("resize", function () { aa.events.execute("windowresize"); });
+        self.window.onbeforeunload   = function () { return aa.events.execute("beforeunload"); }; // return value has to be a String
+        self.window.onunload         = function () { return aa.events.execute("windowunload"); }; // return value has to be a String
+        self.window.on("shortcutchange", (e) => { return aa.events.execute("shortcutchange", e); });
 
-        // Custom:
-        window.on("shortcutchange", (e) => { return aa.events.execute("shortcutchange", e); });
-        
+        self.document.on((aa.browser.is("firefox") ? "DOMMouseScroll" : "mousewheel"), aa.events.custom.mousewheel);
+        self.document.on("keydown", (e) => { return aa.events.custom.keyboard(e); });
+        // self.document.on("keyup", aa.events.custom.keyboard);
+        // self.document.on("click", aa.events.custom.click);
+        self.document.on("contextmenu", (e) => { return aa.events.custom.click(e); });
+        self.document.on("mousemove", (e) => { return aa.mouse.onMove(e); });
+        self.document.on("mousedown", (e) => { return aa.events.execute("mousedown", e); });
+        self.document.on("mouseup", (e) => { return aa.events.execute("mouseup", e); });
+
         // bodyload:
         (function () {
             let loadingTimer = null;
@@ -13344,9 +13352,9 @@
             };
             
             // for Mozilla:
-            if (document.addEventListener) {
-                // document.addEventListener("DOMContentLoaded", bodyload, false); // call the onload handler
-                document.on("DOMContentLoaded", bodyload);
+            if (self.document.addEventListener) {
+                // self.document.addEventListener("DOMContentLoaded", bodyload, false); // call the onload handler
+                self.document.on("DOMContentLoaded", bodyload);
                 framework.isDOMContentLoaded = true;
                 return;
             }
@@ -13354,8 +13362,8 @@
             // for Internet Explorer:
             /*@cc_on @*/
             /*@if(@_win32)
-                document.write('<script id="__ie_onload" defer src="javascript:void(0);"><\/script>');
-                var script = document.getElementById("__ie_onload");
+                self.document.write('<script id="__ie_onload" defer src="javascript:void(0);"><\/script>');
+                var script = self.document.getElementById("__ie_onload");
                 script.onreadystatechange = function () {
                     if (this.readyState == "complete") {
                         bodyload(); // call the onload handler
@@ -13366,7 +13374,7 @@
             // for Safari:
             if (/WebKit/i.test(navigator.userAgent)) { // sniff
                 loadingTimer = setInterval(function () {
-                    if (/loaded|complete/.test(document.readyState)) {
+                    if (/loaded|complete/.test(self.document.readyState)) {
                         bodyload(); // call the onload handler
                     }
                 }, 10);
@@ -13374,7 +13382,7 @@
             }
 
             // for other browsers:
-            window.onload = bodyload;
+            self.window.onload = bodyload;
         })();
     })();
     // ----------------------------------------------------------------

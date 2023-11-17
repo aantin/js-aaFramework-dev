@@ -3623,6 +3623,139 @@
             });
         };
     })());
+    aa.Animation                = (() => {
+        class aaAnimationError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaAnimationError",
+                });
+            }
+        }
+        /**
+         * Events:
+         *      - onstart
+         *      - onpause
+         *      - onresume
+         *      - onstop
+         */
+        const {cut, get, set} = aa.mapFactory();
+        function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
+        const emit = aa.event.getEmitter({cut, get, set});
+        function Animation () { get(Animation, "construct").apply(this, arguments); }
+        const getNowTime = () => ((window?.performance ?? Date)?.now());
+        const blueprint = {
+            accessors: {
+                publics: {},
+                privates: {
+                    callback:   null,
+                    delay:      null,
+                    fps:        null,
+                    id:         null,
+                    playingAt:  null,
+                    iterations: 0,
+                },
+                read: {
+                    isPlaying: false
+                },
+                execute: {}
+            },
+            verifiers: {
+                callback:   aa.isFunction,
+                delay:      aa.isNullOr(aa.isStrictlyPositiveInt),
+                id:         aa.isStrictlyPositiveInt,
+                options:    aa.verifyObject({
+                    fps: aa.isStrictlyPositiveNumber,
+                }),
+            },
+            construct: function (delay /*, callback, options={}*/) {
+                const args = [...arguments].slice(1);
+                const callback = args.find(aa.isFunction);
+                const options = args.find(aa.isObject) ?? {};
+
+                aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
+                aa.arg.test(callback, blueprint.verifiers.callback, `'callback'`, aaAnimationError);
+                aa.arg.test(options, blueprint.verifiers.options, "'options'", aaAnimationError);
+                const that = _(this);
+
+                that.callback = callback;
+                if (aa.isNumber(delay)) that.delay = delay;
+                else that.fps = options.fps ?? null;
+                that.isPlaying = false;
+                
+                if (!that.delay && !that.fps)   throw new aaAnimationError("'delay' or 'fps' must be provided.");
+                if (!that.callback)             throw new aaAnimationError("A callback Function must be provided.");
+            },
+            methods: {
+                privates: {
+                    emit,
+                },
+                publics: {
+                    draw:   function () {
+                        const that = _(this);
+                        if (that.id) {
+                            that.callback.call(this);
+                            that.emit('drawn');
+                        }
+                    },
+                    start:  function () {
+                        const that = _(this);
+                        if (that.id) {
+                            this.resume();
+                            return;
+                        }
+                        that.isPlaying = true;
+                        that.iterations = 0;
+                        that.playingAt = getNowTime();
+                        
+                        const delay = that.delay;
+                        
+                        that.emit('start');
+                        const draw = () => {
+                            const isPlaying = that.isPlaying;
+                            if (isPlaying) {
+                                if (getNowTime() >= that.playingAt + (that.iterations * (that.delay ?
+                                    that.delay
+                                    : (1000 / that.fps))
+                                )) {
+                                    that.iterations++;
+                                    that.callback.call(this);
+                                    that.emit('drawn');
+                                }
+                            }
+                            that.id = requestAnimationFrame(draw);
+                        }
+                        that.id = requestAnimationFrame(draw);
+                    },
+                    pause:  function () {
+                        const that = _(this);
+                        if (that.id) {
+                            that.isPlaying = false;
+                            that.emit('pause');
+                        }
+                    },
+                    resume: function () {
+                        const that = _(this);
+                        if (that.id) {
+                            that.isPlaying = true;
+                            that.iterations = 0;
+                            that.playingAt = getNowTime();
+                            that.emit('resume');
+                        }
+                    },
+                    stop:   function () {
+                        const that = _(this);
+                        cancelAnimationFrame(that.id);
+                        that.id = null;
+                        that.isPlaying = false;
+                        that.emit('stop');
+                    },
+                }
+            },
+        };
+        aa.manufacture(Animation, blueprint, {cut, get, set});
+        return Animation;
+    })();
     aa.Dictionary               = (() => {
         const {cut, get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
@@ -6391,6 +6524,7 @@
             const sectionLists =    new aa.Dictionary({authenticate: {values: aa.isNode}});
             const counts =          new aa.Dictionary({authenticate: {values: app => app instanceof aa.Dictionary && app.every(section => section instanceof Progress)}});
             const sections =        new aa.Dictionary({authenticate: {values: aa.isArrayOf(aa.nonEmptyString)}});
+            const anims =           new aa.Dictionary({authenticate: {values: aa.instanceof(aa.Animation)}});
 
             const addNode   = function (index) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
@@ -6427,7 +6561,7 @@
             const moveRange = function (index, value) {
                 if (!aa.nonEmptyString(index)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
-                const that = aa.getAccessor.call(this, {cut, get, set});
+                const that = _(this);
 
                 const nodes = that.nodes;
                 if (nodes.collection[index]) {
@@ -6494,20 +6628,37 @@
                             collection.delete(this.id);
                             
                             nodes.get(this.app)?.removeNode();
+                            nodes.delete(this.app);
                             document.body.classList.remove("freeze-progress");
 
                             apps.delete(this.app);
                             sectionLists.delete(this.app);
-                            nodes.delete(this.app);
+                            anims.get(this.app)?.stop();
+                            anims.delete(this.app);
                         },
                         hideSection:    function () {
                             const that = _(this);
                             that.nodes.section?.classList?.add("complete");
-                            that.nodes.section?.removeNode();
-                            that.nodes.section = null;
                             apps.get(this.app)?.delete(this.section);
                             sections.get(this.app)?.remove(this.section);
-                            if (sections.get(this.app)?.length === 0) that.hideApp();
+                            const temp = {
+                                opacity: 1,
+                                anim: new aa.Animation(null, {fps: 24}, () => {
+                                    temp.opacity = (temp.opacity - .1).bound(0);
+                                    if (that.nodes.section) that.nodes.section.style.opacity = `${temp.opacity}`;
+                                    if (temp.opacity === 0) {
+                                        temp.anim.stop();
+                                        delete temp.anim;
+                                        delete temp.opacity;
+                                        
+                                        that.nodes.section?.removeNode();
+                                        that.nodes.section = null;
+
+                                        if (sections.get(this.app)?.length === 0) that.hideApp();
+                                    }
+                                }),
+                            };
+                            temp.anim.start();
                         },
                         showApp:        function () {
                             const that = _(this);
@@ -6539,13 +6690,26 @@
                                 dialog.classList.remove(previous);
                                 dialog.classList.add(theme);
                             });
+                            const anim = anims.get(this.app) ?? new aa.Animation(null, () => {
+                                collection.forEach((progress, id) => {
+                                    progress.draw();
+                                });
+                            }, {
+                                fps: 24
+                            });
+                            if (!anims.has(this.app)) anims.add(that.app, anim);
+                            anim.start();
                         },
                         showSection:    function () {
                             const that = _(this);
                             let section = that.nodes.section;
                             if (!that.nodes.section) {
                                 section = $$("fieldset.section");
-                                if (this.section !== defaultSection) section.append($$("legend", this.section));
+                                if (this.section !== defaultSection) {
+                                    const legend = $$("legend", this.section);
+                                    legend.style.zIndex = aa.getMaxZIndex();
+                                    section.append(legend);
+                                }
                                 sectionLists.get(this.app)?.append(section);
                                 that.nodes.section = section;
                             }
@@ -6587,12 +6751,27 @@
                             if (nodes.hasOwnProperty(index)) {
                                 nodes[index].range.value = 100;
                                 nodes[index].range.classList.add('complete');
-                                nodes[index].container.removeNode();
-                                delete nodes[index];
+                                let opacity = 1;
+                                const anim = new aa.Animation(null, {fps: 24}, () => {
+                                    opacity = (opacity - .1).bound(0);
+                                    if (nodes[index]) nodes[index].container.style.opacity = `${opacity}`;
+                                    if (opacity === 0) {
+                                        anim.stop();
+                                        nodes[index]?.container.removeNode();
+                                        delete nodes[index];
+                                    }
+                                });
+                                anim.start();
                             }
                             if (indexes.size === 0) {
                                 that.hideSection();
                             }
+                        },
+                        draw:       function () {
+                            const that = _(this);
+                            that.indexes.forEach((value, index) => {
+                                moveRange.call(this, index, value);
+                            });
                         },
                         move:       function (index, value) {
                             aa.arg.test(index, aa.nonEmptyString, "'index'");
@@ -6601,7 +6780,6 @@
 
                             index = index.trim();
                             that.indexes.add(index, value);
-                            moveRange.call(this, index, value);
                             if (value === 1) {
                                 this.complete(index);
                             }
@@ -9744,111 +9922,6 @@
 
         return Object.freeze(action);
     });
-    aa.Animation                = (() => {
-        /**
-         * Events:
-         *      - onstart
-         *      - onpause
-         *      - onresume
-         *      - onstop
-         */
-        const {cut, get, set} = aa.mapFactory();
-        function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
-        const emit = aa.event.getEmitter({cut, get, set});
-        function Animation () { get(Animation, `construct`).apply(this, arguments); }
-        const blueprint = {
-            accessors: {
-                publics: {},
-                privates: {
-                    callback:   null,
-                    delay:      null,
-                    id:         null
-                },
-                read: {
-                    isPlaying: false
-                },
-                execute: {}
-            },
-            verifiers: {
-                callback:   aa.isFunction,
-                delay:      aa.isStrictlyPositiveInt,
-                id:         aa.isStrictlyPositiveInt,
-            },
-            construct: function (delay, callback) {
-                aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`);
-                aa.arg.test(callback, blueprint.verifiers.callback, `'callback'`);
-                const that = _(this);
-
-                that.callback = callback;
-                that.delay = delay;
-                that.isPlaying = false;
-            },
-            methods: {
-                privates: {
-                    emit,
-                },
-                publics: {
-                    draw:   function () {
-                        const that = _(this);
-                        if (that.id) {
-                            that.callback.call(this);
-                            that.emit('drawn');
-                        }
-                    },
-                    start:  function () {
-                        const that = _(this);
-                        if (that.id) {
-                            this.resume();
-                            return;
-                        }
-                        that.isPlaying = true;
-                        
-                        const delay = that.delay;
-                        let previousTime = Date.now();
-                        
-                        that.emit('start');
-                        const draw = () => {
-                            const isPlaying = that.isPlaying;
-                            const now = Date.now();
-                            
-                            if (isPlaying) {
-                                if (now >= previousTime + delay) {
-                                    previousTime = now;
-                                    that.callback.call(this);
-                                    that.emit('drawn');
-                                }
-                            }
-                            that.id = requestAnimationFrame(draw);
-                        }
-                        that.id = requestAnimationFrame(draw);
-                    },
-                    pause:  function () {
-                        const that = _(this);
-                        if (that.id) {
-                            that.isPlaying = false;
-                            that.emit('pause');
-                        }
-                    },
-                    resume: function () {
-                        const that = _(this);
-                        if (that.id) {
-                            that.isPlaying = true;
-                            that.emit('resume');
-                        }
-                    },
-                    stop:   function () {
-                        const that = _(this);
-                        cancelAnimationFrame(that.id);
-                        that.id = null;
-                        that.isPlaying = false;
-                        that.emit('stop');
-                    },
-                }
-            },
-        };
-        aa.manufacture(Animation, blueprint, {cut, get, set});
-        return Animation;
-    })();
     aa.SelectionMatrix          = (() => {
         const {cut, get, set} = aa.mapFactory();
         function getAccessor (that) { return aa.getAccessor.call(that, {cut, get, set}); }

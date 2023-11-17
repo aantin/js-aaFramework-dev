@@ -1196,22 +1196,23 @@ body.aaContextMenuFreeze {
 /***********/
 /* Dialogs */
 /***********/
-div.aaDialog *{
+div.aaDialog * {
     box-sizing: border-box;
 }
-div.aaDialog .red{
+div.aaDialog .red {
     color: var(--button-red-bg-color);
 }
-div.aaDialog .green{
+div.aaDialog .green {
     color: var(--color-green);
 }
-div.aaDialog .blue{
+div.aaDialog .blue {
     color: var(--submit-bg-color);
 }
-div.aaDialog .hidden{
+div.aaDialog .hidden {
     display: none;
 }
-div.aaDialog{
+div.aaDialog {
+    --bg-color: #fff;
     position: relative;
     display: inline-block;
     width: 480px;
@@ -1219,7 +1220,6 @@ div.aaDialog{
     overflow: hidden;
     overflow-y: auto;
     background: var(--bg-color);
-    background: #fff;
     font-size: 13px;
     font-size: 14px;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
@@ -2245,7 +2245,22 @@ Progress:
 -------------------------------- */
 
 div.aaDialog.progress {
-    padding: 16px;
+    padding: 0;
+}
+div.aaDialog.progress fieldset {
+    border-width: 0;
+}
+div.aaDialog.progress fieldset:last-child {
+    margin-bottom: 16px;
+}
+div.aaDialog.progress fieldset > legend {
+    margin: 0;
+    padding: 16px 0 0 0;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    background: var(--bg-color);
+    border-bottom: 1px solid #ddd;
 }
 div.aaDialog.progress fieldset.section.complete {
     /*background: #efe;*/

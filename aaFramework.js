@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.23.0",
+        version: "3.23.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -6695,7 +6695,7 @@
                                     progress.draw();
                                 });
                             }, {
-                                fps: 24
+                                fps: 2
                             });
                             if (!anims.has(this.app)) anims.add(that.app, anim);
                             anim.start();

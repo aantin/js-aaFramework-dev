@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.23.1",
+        version: "3.23.2",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -6681,6 +6681,9 @@
                                     )
                                 )
                             );
+                            aa.wait(20, () => {
+                                node.style.zIndex = `${aa.getMaxZIndex()}`;
+                            });
 
                             nodes.add(this.app, node);
                             document.body.classList.add("freeze-progress");

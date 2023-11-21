@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.23.2",
+        version: "3.24.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1057,6 +1057,14 @@
         construct.apply(this, arguments);
     };
     aa.Collection               = (() => {
+        class aaCollectionError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaCollectionError",
+                });
+            }
+        }
         const {cut, get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
@@ -1074,12 +1082,17 @@
             },
             
             // Methods:
-            construct:          function (/* spec */) {
-                const spec = aa.arg.optional(arguments, 0, {}, aa.isObject);
-
+            construct:          function (spec={}, length=null) {
+                aa.arg.test(spec, aa.isObject, "'spec'", aaCollectionError);
+                aa.arg.test(length, aa.isNullOr(aa.isPositiveInt), "'length'");
                 spec.sprinkle({ authenticate: aa.any });
 
                 const that = _(this);
+                if (length !== null) {
+                    that.data = new Array(length);
+                    privates.incrementLength.call(this, length);
+                }
+
                 let data = null;
                 if (spec.hasOwnProperty('data')) {
                     data = spec.data;
@@ -1096,24 +1109,26 @@
             incrementLength:    function (index=null) {
                 const that = _(this);
                 index ??= that.data.length - 1;
-                aa.arg.test(index, aa.isPositiveInt, "'index'");
+                aa.arg.test(index, aa.isPositiveInt, "'index'", aaCollectionError);
 
-                if (!this.hasOwnProperty(index)) {
-                    Object.defineProperty(this, index, {
-                        configurable:   true,
-                        enumerable:     true,
-                        get:            () => {
-                            if (index >= that.data.length) { throw new Error(`Index is out of range.`); }
-                            return that.data[index];
-                        },
-                        set:            value => that.set(lastIndex, value),
-                    });
+                for (let i = 0; i < that.data.length; i++) {
+                    if (!this.hasOwnProperty(i)) {
+                        Object.defineProperty(this, i, {
+                            configurable:   true,
+                            enumerable:     true,
+                            get:            () => {
+                                if (i > that.data.length - 1) { throw new Error(`Index is out of range.`); }
+                                return that.data[i];
+                            },
+                            set:            value => that.set(i, value),
+                        });
+                    }
                 }
             },
             set:                function (index, value) {
                 const that = _(this);
-                aa.arg.test(index, arg => aa.isPositiveInt(arg) && arg.between(0, that.data.length - 1), "'index'");
-                aa.arg.test(value, arg => this.authenticate ? this.authenticate(value) : true, "'value'");
+                aa.arg.test(index, arg => aa.isPositiveInt(arg) && arg.between(0, that.data.length - 1), "'index'", aaCollectionError);
+                aa.arg.test(value, arg => this.authenticate ? this.authenticate(value) : true, "'value'", aaCollectionError);
 
                 that.data[index] = value;
                 privates.emit.call(this, "datamodified", this, {index, value});
@@ -1138,7 +1153,7 @@
          * 
          * @return {void}
          */
-        function Collection (/* spec */) {
+        function Collection (/* spec, length */) {
             aa.defineAccessors.call(this, {
                 publics: {
                     authenticate:   null
@@ -1152,18 +1167,19 @@
                     parent: null
                 },
                 execute: {
-                    first:  () => get(this, "data").first,
-                    last:   () => get(this, "data").last,
-                    length: () => get(this, "data").length
+                    first:  () => get(this, "data")[0],
+                    last:   () => get(this, "data")[get(this, "data").length - 1],
+                    length: () => get(this, "data").length,
                 }
             }, { cutter: cut, getter: get, setter: set });
+            const that = _(this);
             privates.construct.apply(this, arguments);
         }
 
         // Publics:
         function methodFactory (methodName) {
             const func = function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
+                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
                 const that = _(this);
@@ -1203,20 +1219,8 @@
         }
         aa.deploy(Collection.prototype, {
             every:              methodFactory('every'),
-            forEach:            methodFactory('forEach'),
-            loopThrough:        function (callback /*, spec */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
-                const spec = aa.arg.optional(arguments, 1, {});
-                
-                const that = _(this);
-                spec.sprinkle({context: undefined});
-                
-                return that.data.loopThrough((item, i, list) => {
-                    return callback.call(spec.context, item, i, this);
-                }, spec);
-            },
             filter:             function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
+                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
                 const thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
                 const that = _(this);
@@ -1239,11 +1243,49 @@
             findLast:           methodFactory('findLast'),
             findIndex:          methodFactory('findIndex'),
             findLastIndex:      methodFactory('findLastIndex'),
+            forEach:            methodFactory('forEach'),
+            forEachAsync:       function (callback, resolve=null, options={}) {
+                aa.arg.test(callback, aa.isFunction, "'callback'");
+                aa.arg.test(resolve, aa.isNullOr(aa.isFunction), "'resolve'");
+                aa.arg.test(options, aa.verifyObject({
+                    skipEmpty:      aa.isBool,
+                    parallel:       aa.isBool,
+                }), "'options'");
+                options.sprinkle({
+                    skipEmpty:      true,
+                    parallel:       false,
+                })
+                const that = _(this);
+
+                if (options.parallel) warn("todo: <aa.Collection> parallel...");
+
+                let i = 0;
+                const iteration = () => {
+                    if (i in that.data || !options.skipEmpty) callback(that.data[i], i, this);
+                    i++;
+                    if (i < that.data.length)
+                        setTimeout(iteration, 0);
+                    else
+                        resolve?.();
+                };
+                if (that.data.length > 0) iteration();
+            },
             includes:           methodFactory('includes'),
+            loopThrough:        function (callback /*, spec */) {
+                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
+                const spec = aa.arg.optional(arguments, 1, {});
+                
+                const that = _(this);
+                spec.sprinkle({context: undefined});
+                
+                return that.data.loopThrough((item, i, list) => {
+                    return callback.call(spec.context, item, i, this);
+                }, spec);
+            },
             map:                methodFactory('map'),
             ...fromArrayPrototype('pop'),
             reduce:             function (callback, accumulator /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`);
+                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
                 const thisArg = aa.arg.optional(arguments, 2, undefined);
 
                 const that = _(this);
@@ -1283,7 +1325,7 @@
                 return (that.data.indexOf(value) > -1);
             },
             hydrate:            function (spec) {
-                aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`);
+                aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`, aaCollectionError);
                 aa.prototypes.hydrate.call(this, spec);
             },
             indexOf:            function (/* item, from */) {
@@ -1301,8 +1343,8 @@
                  * @param <int> position
                  * @param <any> ...items: The items to add to the collection from 'position' parameter.
                  */
-                aa.arg.test(position, aa.isInt, "'position'");
-                aa.arg.test(items, aa.isArrayLikeOf(item => this.authenticate?.(item)), "'items'");
+                aa.arg.test(position, aa.isInt, "'position'", aaCollectionError);
+                aa.arg.test(items, aa.isArrayLikeOf(item => this.authenticate?.(item)), "'items'", aaCollectionError);
                 const that = _(this);
                 
                 if (position < 0) {
@@ -1334,7 +1376,6 @@
                     );
                     that.data.push(item);
                     
-                    privates.incrementLength.call(this);
                     const attributes = {
                         nextItem: () => {
                             const index = this.indexOf(item);
@@ -1417,7 +1458,7 @@
 
             // Setters:
             setAuthenticate:    function (verifier) {
-                aa.arg.test(verifier, aa.isFunction);
+                aa.arg.test(verifier, aa.isFunction, aaCollectionError);
                 const that = _(this);
                 that.authenticate = value => {
                     const isVerified = verifier(value);
@@ -1426,7 +1467,7 @@
                 };
             },
             setOn:              function (listeners) {
-                aa.arg.test(listeners, privates.verifiers.on, `'listeners'`);
+                aa.arg.test(listeners, privates.verifiers.on, `'listeners'`, aaCollectionError);
 
                 listeners.forEach((callback, eventName) => {
                     this.on(eventName, callback);
@@ -1449,7 +1490,7 @@
         // Static:
         aa.deploy(Collection, {
             fromArray: function (list /* spec */) {
-                aa.arg.test(list, aa.isArray, `'list'`);
+                aa.arg.test(list, aa.isArray, `'list'`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
 
                 const collection = new aa.Collection(spec);

@@ -2,7 +2,7 @@
 :root{
     --duration: .2s;
 
-    --font-family: 'Fira L', 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    --font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     --color: #666;
     --submit-bg-color: #49f;
     --submit-color: #fff;
@@ -97,28 +97,36 @@ body.aa.freeze-progress {
 @charset "utf-8";
 /* -------------------------------- */
 @font-face {
-    font-family: 'Fira UL';
+    font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-UltraLight.ttf');
+    font-weight: 200; /* extra-light */
 }
 @font-face {
-    font-family: 'Fira EL';
+    font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-ExtraLight.ttf');
+    font-weight: 300; /* light */
 }
 @font-face {
-    font-family: 'Fira L';
+    font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-Light.ttf');
+    font-weight: normal;
 }
 @font-face {
-    font-family: 'Fira L-i';
+    font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-LightItalic.ttf');
+    font-weight: normal;
+    font-style: italic;
 }
 @font-face {
     font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-Regular.ttf');
+    font-weight: bold;
 }
 @font-face {
-    font-family: 'Fira-i';
+    font-family: 'Fira';
     src: url('vendors/fonts/fira-sans/FiraSans-RegularItalic.ttf');
+    font-weight: bold;
+    font-style: italic;
 }
 @font-face {
     font-family: 'pencilkaisho';
@@ -849,7 +857,7 @@ div.aaTable.fullscreen div.td{
     right: 8px;
     display: table-cell;
     float: right;
-    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     font-size: 14px;
     color: var(--menu-shortcut-color);
     color: var(--submit-bg-color);

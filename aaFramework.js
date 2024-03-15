@@ -11673,6 +11673,7 @@
                     type = "button";
                     break;
                 case "checkbox":
+                case "date":
                 case "file":
                 case "password":
                 case "hidden":

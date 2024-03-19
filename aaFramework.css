@@ -191,7 +191,8 @@ body.aa.freeze-progress {
 }
 /* -------------------------------- */
 /**/
-*{
+* {
+    box-sizing: border-box;
     outline: 0;
     font-family: var(--font-family);
 }

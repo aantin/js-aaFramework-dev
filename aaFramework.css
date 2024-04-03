@@ -173,7 +173,7 @@ body.aa.freeze-progress {
 }
 @font-face {
     font-family: 'Fira';
-    src: url('vendors/fonts/fira-sans/FiraSans-RegularItalic.ttf');
+    src: url('vendors/fonts/fira-sans/FiraSans-Italic.ttf');
     font-weight: bold;
     font-style: italic;
 }

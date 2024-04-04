@@ -893,6 +893,20 @@
             // Init:
             construct.apply(this, arguments);
         }
+
+        // Statics:
+        aa.deploy(Action, {
+            disableByName:  function (...names) {
+                names.forEach(name => {
+                    aa.action(name, action => action.disable());
+                });
+            },
+            enableByName:   function (...names) {
+                names.forEach(name => {
+                    aa.action(name, action => action.enable());
+                });
+            },
+        }, {force: true});
         return Action;
     })();
     (function () { /* aa.Action static */
@@ -3200,30 +3214,30 @@
                     console.warn("Rejected aa.file.open:", r);
                 }
             );
-            options = {
-                base64: ((aa.isObject(options)
-                    && options.base64 !== undefined
-                    && aa.isBool(options.base64)
-                ) ?
-                    options.base64
-                    : false
-                ),
-                json: ((aa.isObject(options)
-                    && options.json !== undefined
-                    && aa.isBool(options.json)
-                ) ?
-                    options.json
-                    : false
-                ),
-                multiple: ((aa.isObject(options)
-                    && options.multiple !== undefined
-                    && aa.isBool(options.multiple)
-                ) ?
-                    options.multiple
-                    : false
-                )
-            }
-            let input = aa.html("file" ,{style: "display: none;", multiple: options.multiple});
+            options = options ?? {};
+            aa.arg.test(options, aa.verifyObject({
+                accept:     arg => aa.nonEmptyString(arg) || aa.isArrayLikeOf(aa.nonEmptyString),
+                base64:     aa.isBool,
+                json:       aa.isBool,
+                multiple:   aa.isBool,
+            }), "'options'");
+            options.sprinkle({
+                accept:     null,
+                base64:     false,
+                json:       false,
+                multiple:   false,
+            });
+            const input = aa.html("file" ,{
+                multiple: options.multiple,
+                style: "display: none;",
+                ...(() => {
+                    const more = {};
+                    if (options.accept) {
+                        more.accept = aa.isString(options.accept) ? options.accept : options.accept.join(", ");
+                    }
+                    return more;
+                })()
+            });
             input.on("input", (function (options) {
                 return function (event) {
                     if (event.target !== undefined && event.target.files !== undefined && event.target.files.length) {
@@ -11615,6 +11629,7 @@
                     "width",
                     
                     // Attributes to transform before including:
+                    "accept",
                     "allow",
                     "allowfullscreen",
                     "checked",
@@ -11904,6 +11919,15 @@
                                         key = key.trim();
                                         if (htmlAttributes.has(key)) {
                                             switch (key) {
+                                                case "accept":
+                                                    if (aa.isString(option)) {
+                                                        elt.setAttribute("accept", option);
+                                                    } else if (aa.isArrayLike(option)) {
+                                                        elt.setAttribute("accept", option.join?.(", ") ?? "");
+                                                    } else {
+                                                        warn(`Invalid 'accept' value:`, option);
+                                                    }
+                                                    break;
                                                 case "class":
                                                     if (aa.isString(option) && option.trim()) {
                                                         option = option.trim().replace(/\s+/,' ');

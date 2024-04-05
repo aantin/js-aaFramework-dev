@@ -9982,24 +9982,24 @@
     });
     aa.SelectionMatrix          = (() => {
         const {cut, get, set} = aa.mapFactory();
-        function getAccessor (that) { return aa.getAccessor.call(that, {cut, get, set}); }
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         // ----------------
         const SelectionMatrix = (() => {
             const commands = {
                 next:       function () {
-                    const that = getAccessor(this);
+                    const that = _(this);
                 },
                 previous:   function () {
-                    const that = getAccessor(this);
+                    const that = _(this);
                 },
                 expandTo:   function (...indexes) {
-                    const that = getAccessor(this);
+                    const that = _(this);
                 },
                 add:        function (index) {
-                    const that = getAccessor(this);
+                    const that = _(this);
                 },
                 toggle:        function (index) {
-                    const that = getAccessor(this);
+                    const that = _(this);
                 },
             };
             function SelectionMatrix () { get(SelectionMatrix, 'construct').apply(this, arguments); }
@@ -10020,16 +10020,17 @@
                     },
                     execute: {
                         lastSelected:   function () {
-                            const that = getAccessor(this);
+                            const that = _(this);
                             return Object.freeze([...that._lastSelected]);
                         },
                     }
                 },
                 startHydratingWith: ['dimension'],
                 construct: function () {
-                    const that = getAccessor(this);
-                    
+                    const that = _(this);
+
                     that._lastSelected  = [];
+                    that.collection     = new aa.Collection();
                     that.id             = aa.uid(16);
                     that.lengths        = [1];
                     that.list           = [];
@@ -10037,16 +10038,34 @@
                 methods: {
                     publics: {
                         diagram: function () {
-                            const that = getAccessor(this);
+                            const that = _(this);
                             const diamonds = $$('div');
                             const node = $$('section.SelectionMatrix',
                                 diamonds
                             );
-                            const diamond = (new SelectionMatrixItem({
-                                // selected: true,
-                                parent: this
-                            }));
-                            diamonds.appendChild(diamond.node);
+                            const indexes = [];
+                            aa.repeat(that.dimension, i => {
+                                indexes.push(null);
+                            });
+                            log(indexes)
+                            const diveTheCollection = (depth, collection) => {
+                                if (depth < that.dimension) {
+                                    collection.forEach((item, i) => {
+                                        indexes[depth] = i;
+                                        if (depth === that.dimension - 1) {
+                                            const diamond = (new SelectionMatrixItem({
+                                                // selected: true,
+                                                parent: this
+                                            }));
+                                            diamonds.appendChild(diamond.node);
+                                            diamond.node.style.left = `${7 + i * 14}px`;
+                                            diamond.node.style.top = `${i * 7 + indexes[depth - 1] * 17}px`;
+                                        }
+                                        if (depth < that.dimension - 1) diveTheCollection(depth + 1, collection);
+                                    });
+                                }
+                            };
+                            diveTheCollection(0, that.collection);
                             document.body.appendChild(node);
                         },
                         exec: function (cmd) {
@@ -10057,7 +10076,7 @@
                         pos: function (...indexes) {
                             aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers");
 
-                            const that = getAccessor(this);
+                            const that = _(this);
                             let itemPointer = that.collection;
 
                             aa.throwErrorIf(!that.collection, "Collection reference is null.");
@@ -10072,30 +10091,33 @@
 
                             const methods = {
                                 exec: function (cmd) {
+                                    const that = _(this);
+                                    if (cmd.match(/<Click>$/)) {
+                                        switch (cmd) {
+                                        case '<Click>':
+                                        case 'alt <Click>':
+                                            break;
+                                        
+                                        case 'shift <Click>':
+                                        case 'alt+shift <Click>':
+                                            break;
+                                        
+                                        case 'cmd <Click>':
+                                        case 'alt+cmd <Click>':
+                                        case 'ctrl <Click>':
+                                        case 'alt+ctrl <Click>':
+                                            break;
+                                        }
+                                        return;
+                                    }
                                     aa.arg.test(cmd, blueprint.verifiers.commands, "'command'");
 
-                                    const that = getAccessor(this);
 
-                                    switch (cmd) {
-                                    case '<Click>':
-                                    case 'alt <Click>':
-                                        break;
-                                    
-                                    case 'shift <Click>':
-                                    case 'alt+shift <Click>':
-                                        break;
-                                    
-                                    case 'cmd <Click>':
-                                    case 'alt+cmd <Click>':
-                                    case 'ctrl <Click>':
-                                    case 'alt+ctrl <Click>':
-                                        break;
-                                    }
                                 },
                                 get: function () {
                                 },
                                 set: function (value) {
-                                    const that = getAccessor(this);
+                                    const that = _(this);
 
                                     let list = that.list;
                                     indexes.forEach((index, depth) => {
@@ -10116,18 +10138,17 @@
                     },
                     setters: {
                         collection:     function (collection) {
-                            const that = getAccessor(this);
+                            const that = _(this);
 
                             const verifyCollectionInDepth = (depth, collection) => {
-                                aa.throwErrorIf(
-                                    !blueprint.verifiers.collection(collection),
-                                    "Every dimension of SelectionMatrix must be a Collection.",
-                                    TypeError
-                                );
-
-                                if (depth < that.dimension) {
+                                if (depth < that.dimension - 1) {
+                                    aa.throwErrorIf(
+                                        !blueprint.verifiers.collection(collection),
+                                        "Every dimension of SelectionMatrix must be a Collection.",
+                                        TypeError
+                                    );
                                     collection.forEach(item => {
-                                        verifyCollectionInDepth(depth+1, collection);
+                                        verifyCollectionInDepth(depth+1, item);
                                     });
                                 }
                             };
@@ -10138,11 +10159,16 @@
                             });
                             that.collection = collection;
                         },
+                        // lengths:        function (lengths) {
+                        //     const that = _(this);
+                        //     that.lengths = [...lengths];
+                        //     that.dimension = lengths.length;
+                        // },
                     }
                 },
                 verifiers: {
-                    collection:     arg => arg instanceof aa.Collection,
-                    commands:       aa.inArray(Object.keys(commands)),
+                    collection:     aa.instanceof(aa.Collection),
+                    commands:       arg => isString(arg) && (!!arg.match(/\<Click\>$/) || aa.inArray(Object.keys(commands))),
                     dimension:      aa.isStrictlyPositiveInt,
                     lengths:        aa.isArrayOf(aa.isStrictlyPositiveInt),
                     list:           aa.isArray,
@@ -10160,7 +10186,8 @@
             function SelectionMatrixItem () { get(SelectionMatrixItem, 'construct').apply(this, arguments); }
             const view = {
                 getNode: function () {
-                    return $$(`div.diamond${this.selected ? '.selected' : ''}`,
+                    const that = _(this);
+                    that._node = that._node ??  $$(`div.diamond${this.selected ? '.selected' : ''}`,
                         $$('span.diamond.top-left'),
                         $$('span.diamond.top-right'),
                         $$('span.diamond.left'),
@@ -10169,8 +10196,10 @@
                         $$('span.diamond.bottom-right'),
                         {on: {click: e => {
                             this.parent.pos().exec(aa.shortcut.get(e));
-                        }
-                    }});
+                            that._node.classList.toggle("selected")
+                        }}
+                    });
+                    return that._node;
                 }
             };
             const blueprint = {
@@ -10181,8 +10210,9 @@
                         value:      undefined
                     },
                     privates: {
-                        list: null,
-                        lastClickedItem: null
+                        list:               null,
+                        lastClickedItem:    null,
+                        _node:              null,
                     },
                     read: {
                     },
@@ -10192,7 +10222,7 @@
                     }
                 },
                 construct: function () {
-                    const that = getAccessor(this);
+                    const that = _(this);
                     that.list = [];
                 },
                 verifiers: {

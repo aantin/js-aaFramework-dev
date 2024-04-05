@@ -2672,13 +2672,21 @@ section.SelectionMatrix {
     justify-content: center;
     align-items: center;
 }
+section.SelectionMatrix > div {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    
+    position: relative;
+}
 section.SelectionMatrix div.diamond {
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
 
-    position: relative;
+    position: absolute;
 }
 
 section.SelectionMatrix div.diamond > span.diamond {

@@ -10097,12 +10097,12 @@
                                         switch (cmd) {
                                         case "<Click>":
                                         case "alt <Click>":
+                                            Object.keys(that.dataByKey)
+                                            .filter(key => that.dataByKey[key].selected)
+                                            .forEach(key => {
+                                                that.dataByKey[key].selected = false;
+                                            });
                                             if (!that.dataByKey[key].selected) {
-                                                Object.keys(that.dataByKey)
-                                                .filter(key => that.dataByKey[key].selected)
-                                                .forEach(key => {
-                                                    that.dataByKey[key].selected = false;
-                                                });
                                                 that.dataByKey[key].selected = true;
                                             }
                                             break;
@@ -10115,6 +10115,7 @@
                                         case "alt+cmd <Click>":
                                         case "ctrl <Click>":
                                         case "alt+ctrl <Click>":
+                                            that.dataByKey[key].selected = !that.dataByKey[key].selected;
                                             break;
                                         }
                                         return;

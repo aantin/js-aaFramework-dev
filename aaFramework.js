@@ -9999,9 +9999,14 @@
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         // ----------------
         const SelectionMatrix = (() => {
-            const indexesToKey = indexes => `${indexes.join(",")}`;
-            const keyToIndexes = key => key.split(",");
-            const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/)
+            const keyFromIndexes = indexes => `${indexes.join(",")}`;
+            const indexesFromKey = key => key.split(",");
+            const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/);
+            const setLastKey = function (key) {
+                aa.arg.test(key, aa.isNullOr(isKey), "'key'");
+                const that = _(this);
+                that.lastSelectedKey = key;
+            };
             const commands = {
                 next:       function () {
                     const that = _(this);
@@ -10053,8 +10058,24 @@
                     that.selected = new aa.Collection({authenticate: isKey});
                 },
                 methods: {
+                    privates: {
+                        keys:       function () {
+                            const that = _(this);
+                            return Object.keys(that.dataByKey).sortNatural();
+                        },
+                        removeKey:  function (key) {
+                            aa.arg.test(key, isKey, "'key'");
+                            const that = _(this);
+                            const indexes = indexesFromKey(key);
+                            const keys = that.keys();
+                            const after = keys.filter(key => indexesFromKey(key).every((index, i) => index >= indexes[i]));
+                            const before = keys.filter(key => indexesFromKey(key).every((index, i) => index <= indexes[i]));
+                            const found = after.first ?? before.reverse().first;
+                            setLastKey.call(this, found ?? null);
+                        },
+                    },
                     publics: {
-                        diagram: function () {
+                        diagram:        function () {
                             const that = _(this);
                             const diamonds = $$('div');
                             const node = $$('section.SelectionMatrix',
@@ -10073,17 +10094,18 @@
                             .forEach(key => {
                                 that.dataByKey[key].selected = false;
                             });
+                            that.lastSelectedKey = null;
                         },
-                        exec: function (cmd) {
+                        exec:           function (cmd) {
                             aa.arg.test(cmd, blueprint.verifiers.commands, "'cmd'");
                             commands[cmd].call(this);
                             return this;
                         },
-                        pos: function (...indexes) {
+                        pos:            function (...indexes) {
                             aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers");
 
                             const that = _(this);
-                            const key = indexesToKey(indexes);
+                            const key = keyFromIndexes(indexes);
                             aa.throwErrorIf(
                                 indexes.length !== that.dimension,
                                 __("The element position (:1) must match the matrix dimension (:2).")
@@ -10108,6 +10130,7 @@
                                             if (!that.dataByKey[key].selected) {
                                                 that.dataByKey[key].selected = true;
                                             }
+                                            setLastKey.call(this, key);
                                             break;
                                         
                                         case "shift <Click>":
@@ -10119,6 +10142,11 @@
                                         case "ctrl <Click>":
                                         case "alt+ctrl <Click>":
                                             that.dataByKey[key].selected = !that.dataByKey[key].selected;
+                                            if (that.dataByKey[key].selected) {
+                                                setLastKey.call(this, key);
+                                            } else {
+                                                that.removeKey(key);
+                                            }
                                             break;
                                         }
                                         return;
@@ -10223,7 +10251,7 @@
                     Object.keys(that.dataByKey)
                     .sortNatural()
                     .forEach(key => {
-                        const indexes = keyToIndexes(key);
+                        const indexes = indexesFromKey(key);
                         callback(that.dataByKey[key], ...indexes);
                     });
                 },

@@ -10029,27 +10029,22 @@
                         on:         {}
                     },
                     privates: {
-                        _data:          null,
-                        dataByKey:      null,
-                        lastSelected:   null,
-                        _lengths:       null,
-                        selected:       null,
+                        _data:              null,
+                        dataByKey:          null,
+                        lastSelectedKey:    null,
+                        _lengths:           null,
+                        selected:           null,
                     },
                     read: {
-                        id:             null,
+                        id: null,
                     },
                     execute: {
-                        lastSelected:   function () {
-                            const that = _(this);
-                            return Object.freeze([...that.lastSelected]);
-                        },
                     }
                 },
                 startHydratingWith: ["dimension", "lengths"],
                 construct: function () {
                     const that = _(this);
 
-                    that.lastSelected  = [];
                     that.data           = [];
                     that._data          = [];
                     that.dataByKey     = {};
@@ -10070,6 +10065,14 @@
                                 diamonds.appendChild(diamond.node);
                             });
                             document.body.appendChild(node);
+                        },
+                        deselectAll:    function () {
+                            const that = _(this);
+                            Object.keys(that.dataByKey)
+                            .filter(key => that.dataByKey[key].selected)
+                            .forEach(key => {
+                                that.dataByKey[key].selected = false;
+                            });
                         },
                         exec: function (cmd) {
                             aa.arg.test(cmd, blueprint.verifiers.commands, "'cmd'");
@@ -10162,7 +10165,15 @@
                                 }
                             };
                             return Object.freeze(methods.bind(this));
-                        }
+                        },
+                        selectAll:      function () {
+                            const that = _(this);
+                            Object.keys(that.dataByKey)
+                            .filter(key => !that.dataByKey[key].selected)
+                            .forEach(key => {
+                                that.dataByKey[key].selected = true;
+                            });
+                        },
                     },
                     setters: {
                         data: function (data) {

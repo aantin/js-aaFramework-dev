@@ -2654,12 +2654,19 @@ Tooltip:
 
 
 section.SelectionMatrix {
-    --item-top: rgba(64,128,255,.1);
-    --item-left: rgba(64,128,255,.2);
-    --item-right: rgba(64,128,255,.3);
-    --item-top-selected: rgba(64,128,255,.8);
-    --item-left-selected: rgba(64,128,255,.9);
-    --item-right-selected: rgba(64,128,255,1);
+    --item-top: #ecf2ff;
+    --item-left: #d9e6ff;
+    --item-right: #c5daff;
+    --item-top-hover: #f8f3ed;
+    --item-left-hover: #f1e8dc;
+    --item-right-hover: #eaddc9;
+
+    --item-top-selected: #69f;
+    --item-left-selected: #538cff;
+    --item-right-selected: #3f80ff;
+    --item-top-selected-hover: #c8a571;
+    --item-left-selected-hover: #c1995e;
+    --item-right-selected-hover: #b98e4e;
     position: fixed;
     top: 0;
     left: 0;
@@ -2677,7 +2684,7 @@ section.SelectionMatrix > div {
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    
+
     position: relative;
 }
 section.SelectionMatrix div.diamond {
@@ -2687,6 +2694,7 @@ section.SelectionMatrix div.diamond {
     align-items: center;
 
     position: absolute;
+    cursor: pointer;
 }
 
 section.SelectionMatrix div.diamond > span.diamond {
@@ -2737,6 +2745,25 @@ section.SelectionMatrix div.diamond > span.diamond.bottom-right {
     border-top-color: var(--item-right);
 }
 
+section.SelectionMatrix div.diamond:hover > span.diamond.top-left {
+    border-right-color: var(--item-top-hover);
+}
+section.SelectionMatrix div.diamond:hover > span.diamond.top-right {
+    border-left-color: var(--item-top-hover);
+}
+section.SelectionMatrix div.diamond:hover > span.diamond.left {
+    border-left-color: var(--item-left-hover);
+}
+section.SelectionMatrix div.diamond:hover > span.diamond.right {
+    border-right-color: var(--item-right-hover);
+}
+section.SelectionMatrix div.diamond:hover > span.diamond.bottom-left {
+    border-top-color: var(--item-left-hover);
+}
+section.SelectionMatrix div.diamond:hover > span.diamond.bottom-right {
+    border-top-color: var(--item-right-hover);
+}
+
 section.SelectionMatrix div.diamond.selected > span.diamond.top-left {
     border-right-color: var(--item-top-selected);
 }
@@ -2754,6 +2781,25 @@ section.SelectionMatrix div.diamond.selected > span.diamond.bottom-left {
 }
 section.SelectionMatrix div.diamond.selected > span.diamond.bottom-right {
     border-top-color: var(--item-right-selected);
+}
+
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.top-left {
+    border-right-color: var(--item-top-selected-hover);
+}
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.top-right {
+    border-left-color: var(--item-top-selected-hover);
+}
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.left {
+    border-left-color: var(--item-left-selected-hover);
+}
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.right {
+    border-right-color: var(--item-right-selected-hover);
+}
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.bottom-left {
+    border-top-color: var(--item-left-selected-hover);
+}
+section.SelectionMatrix div.diamond.selected:hover > span.diamond.bottom-right {
+    border-top-color: var(--item-right-selected-hover);
 }
 
 .aa table.diff {

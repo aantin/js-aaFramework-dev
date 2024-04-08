@@ -10372,12 +10372,6 @@
                         },
                     },
                 },
-                on: {
-                    hydrated: function () {
-                        const that = _(this);
-                        log(that.selected)
-                    },
-                },
                 verifiers: {
                     parent:     arg => arg instanceof SelectionMatrix,
                     position:   aa.isArrayLikeOf(aa.isPositiveInt),

@@ -10000,12 +10000,12 @@
         // ----------------
         const SelectionMatrix = (() => {
             const keyFromIndexes = indexes => `${indexes.join(",")}`;
-            const indexesFromKey = key => key.split(",");
+            const indexesFromKey = key => key.split(",").map(index => parseInt(index));
             const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/);
             const setLastKey = function (key) {
                 aa.arg.test(key, aa.isNullOr(isKey), "'key'");
                 const that = _(this);
-                that.lastSelectedKey = key;
+                that.lastSelectedKey = that.dataByKey.hasOwnProperty(key) ? key : null;
             };
             const commands = {
                 next:       function () {
@@ -10135,6 +10135,19 @@
                                         
                                         case "shift <Click>":
                                         case "alt+shift <Click>":
+                                            const start = that.lastSelectedKey ? indexesFromKey(that.lastSelectedKey) : [];
+                                            if (start.length === 0) aa.repeat(that.dimension, () => {start.push(0);});
+                                            
+                                            that.keys().forEach(k => {
+                                                const indxs = indexesFromKey(k);
+                                                let toSelect = true;
+                                                for (let i=0; toSelect && i<that.dimension; i++) {
+                                                    if (!indxs[i].between(Math.min(start[i], indexes[i]), Math.max(start[i], indexes[i]))) {
+                                                        toSelect = false;
+                                                    }
+                                                }
+                                                if (toSelect && !that.dataByKey[k].selected) that.dataByKey[k].selected = true;
+                                            });
                                             break;
                                         
                                         case "cmd <Click>":

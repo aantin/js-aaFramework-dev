@@ -10036,6 +10036,7 @@
                     privates: {
                         _data:              null,
                         dataByKey:          null,
+                        keysWithShift:      null,
                         lastSelectedKey:    null,
                         _lengths:           null,
                         selected:           null,
@@ -10052,13 +10053,48 @@
 
                     that.data           = [];
                     that._data          = [];
-                    that.dataByKey     = {};
+                    that.dataByKey      = {};
                     that.id             = aa.uid(16);
                     that._lengths       = [1];
-                    that.selected = new aa.Collection({authenticate: isKey});
+                    that.selected       = new aa.Collection({authenticate: isKey});
+                    that.keysWithShift  = new aa.Collection({authenticate: isKey});
                 },
                 methods: {
                     privates: {
+                        deselectExpansion:  function (key) {
+                            aa.arg.test(key, isKey, "'key'");
+                            
+                            const that = _(this);
+
+                            that.keysWithShift
+                            .filter(k => k !== that.lastSelectedKey)
+                            .forEach(k => {
+                                if (that.dataByKey[k].selected) that.dataByKey[k].selected = false;
+                            });
+                            that.keysWithShift.clear();
+                        },
+                        expandSelection:    function (key) {
+                            aa.arg.test(key, isKey, "'key'");
+
+                            const that = _(this);
+                            const indexes = indexesFromKey(key);
+                            const start = that.lastSelectedKey ? indexesFromKey(that.lastSelectedKey) : [];
+                            if (start.length === 0) aa.repeat(that.dimension, () => {start.push(0);});
+                            
+                            that.keys().forEach(k => {
+                                const indxs = indexesFromKey(k);
+                                let toSelect = true;
+                                for (let i=0; toSelect && i<that.dimension; i++) {
+                                    if (!indxs[i].between(Math.min(start[i], indexes[i]), Math.max(start[i], indexes[i]))) {
+                                        toSelect = false;
+                                    }
+                                }
+                                if (toSelect) {
+                                    if (!that.dataByKey[k].selected) that.dataByKey[k].selected = true;
+                                    if (k !== that.lastSelectedKey) that.keysWithShift.pushUnique(k);
+                                }
+                            });
+                        },
                         keys:       function () {
                             const that = _(this);
                             return Object.keys(that.dataByKey).sortNatural();
@@ -10131,23 +10167,13 @@
                                                 that.dataByKey[key].selected = true;
                                             }
                                             setLastKey.call(this, key);
+                                            that.keysWithShift.clear();
                                             break;
                                         
                                         case "shift <Click>":
                                         case "alt+shift <Click>":
-                                            const start = that.lastSelectedKey ? indexesFromKey(that.lastSelectedKey) : [];
-                                            if (start.length === 0) aa.repeat(that.dimension, () => {start.push(0);});
-                                            
-                                            that.keys().forEach(k => {
-                                                const indxs = indexesFromKey(k);
-                                                let toSelect = true;
-                                                for (let i=0; toSelect && i<that.dimension; i++) {
-                                                    if (!indxs[i].between(Math.min(start[i], indexes[i]), Math.max(start[i], indexes[i]))) {
-                                                        toSelect = false;
-                                                    }
-                                                }
-                                                if (toSelect && !that.dataByKey[k].selected) that.dataByKey[k].selected = true;
-                                            });
+                                            that.deselectExpansion(key);
+                                            that.expandSelection(key);
                                             break;
                                         
                                         case "cmd <Click>":
@@ -10160,6 +10186,7 @@
                                             } else {
                                                 that.removeKey(key);
                                             }
+                                            that.keysWithShift.clear();
                                             break;
                                         }
                                         return;

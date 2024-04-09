@@ -2802,6 +2802,44 @@ section.SelectionMatrix div.diamond.selected:hover > span.diamond.bottom-right {
     border-top-color: var(--item-right-selected-hover);
 }
 
+section.SelectionMatrix div.diamond.last > span.diamond.top-left {
+    border-right-color: rgba(64,192,128,.1);
+}
+section.SelectionMatrix div.diamond.last > span.diamond.top-right {
+    border-left-color: rgba(64,192,128,.1);
+}
+section.SelectionMatrix div.diamond.last > span.diamond.left {
+    border-left-color: rgba(64,192,128,.2);
+}
+section.SelectionMatrix div.diamond.last > span.diamond.right {
+    border-right-color: rgba(64,192,128,.3);
+}
+section.SelectionMatrix div.diamond.last > span.diamond.bottom-left {
+    border-top-color: rgba(64,192,128,.2);
+}
+section.SelectionMatrix div.diamond.last > span.diamond.bottom-right {
+    border-top-color: rgba(64,192,128,.3);
+}
+
+section.SelectionMatrix div.diamond.selected.last > span.diamond.top-left {
+    border-right-color: rgba(64,192,128,.6);
+}
+section.SelectionMatrix div.diamond.selected.last > span.diamond.top-right {
+    border-left-color: rgba(64,192,128,.6);
+}
+section.SelectionMatrix div.diamond.selected.last > span.diamond.left {
+    border-left-color: rgba(64,192,128,.7);
+}
+section.SelectionMatrix div.diamond.selected.last > span.diamond.right {
+    border-right-color: rgba(64,192,128,.8);
+}
+section.SelectionMatrix div.diamond.selected.last > span.diamond.bottom-left {
+    border-top-color: rgba(64,192,128,.7);
+}
+section.SelectionMatrix div.diamond.selected.last > span.diamond.bottom-right {
+    border-top-color: rgba(64,192,128,.8);
+}
+
 .aa table.diff {
     --radius: 6px;
     --sep-color: var(--color-grey);

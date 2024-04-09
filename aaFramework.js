@@ -10002,11 +10002,6 @@
             const keyFromIndexes = indexes => `${indexes.join(",")}`;
             const indexesFromKey = key => key.split(",").map(index => parseInt(index));
             const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/);
-            const setLastKey = function (key) {
-                aa.arg.test(key, aa.isNullOr(isKey), "'key'");
-                const that = _(this);
-                that.lastSelectedKey = that.dataByKey.hasOwnProperty(key) ? key : null;
-            };
             const commands = {
                 next:       function () {
                     const that = _(this);
@@ -10020,7 +10015,7 @@
                 add:        function (index) {
                     const that = _(this);
                 },
-                toggle:        function (index) {
+                toggle:     function (index) {
                     const that = _(this);
                 },
             };
@@ -10069,7 +10064,7 @@
                             that.keysWithShift
                             .filter(k => k !== that.lastSelectedKey)
                             .forEach(k => {
-                                if (that.dataByKey[k].selected) that.dataByKey[k].selected = false;
+                                if (that.dataByKey[k].selected) that.selectKey(k, false);
                             });
                             that.keysWithShift.clear();
                         },
@@ -10090,7 +10085,7 @@
                                     }
                                 }
                                 if (toSelect) {
-                                    if (!that.dataByKey[k].selected) that.dataByKey[k].selected = true;
+                                    if (!that.dataByKey[k].selected) that.selectKey(k);
                                     if (k !== that.lastSelectedKey) that.keysWithShift.pushUnique(k);
                                 }
                             });
@@ -10101,13 +10096,41 @@
                         },
                         removeKey:  function (key) {
                             aa.arg.test(key, isKey, "'key'");
+
                             const that = _(this);
                             const indexes = indexesFromKey(key);
                             const keys = that.keys();
-                            const after = keys.filter(key => indexesFromKey(key).every((index, i) => index >= indexes[i]));
-                            const before = keys.filter(key => indexesFromKey(key).every((index, i) => index <= indexes[i]));
+                            const after = keys.filter(k => 
+                                k !== key
+                                && that.dataByKey[k] instanceof SelectionMatrixItem
+                                && that.dataByKey[k].selected
+                                && indexesFromKey(k).every((index, i) => index >= indexes[i])
+                            );
+                            const before = keys.filter(k =>
+                                k !== key
+                                && that.dataByKey[k] instanceof SelectionMatrixItem
+                                && that.dataByKey[k].selected
+                                && indexesFromKey(k).every((index, i) => index <= indexes[i])
+                            );
                             const found = after.first ?? before.reverse().first;
-                            setLastKey.call(this, found ?? null);
+                            that.setLastKey(found ?? null);
+                        },
+                        selectKey:  function (key, selected=true) {
+                            aa.arg.test(key, isKey, "'key'");
+                            aa.arg.test(selected, aa.isBool, "'selected'");
+                            const that = _(this);
+
+                            // that.dataByKey[key].selected = selected;
+                            itemMethods.setters.selected.call(that.dataByKey[key], selected);
+                        },
+                        setLastKey: function (key) {
+                            aa.arg.test(key, aa.isNullOr(isKey), "'key'");
+                            const that = _(this);
+                            // if (that.dataByKey[that.lastSelectedKey]) that.dataByKey[that.lastSelectedKey].last = false;
+                            if (that.dataByKey[that.lastSelectedKey]) itemMethods.setters.last.call(that.dataByKey[that.lastSelectedKey], false);
+                            that.lastSelectedKey = that.dataByKey.hasOwnProperty(key) ? key : null;
+                            // if (that.dataByKey[that.lastSelectedKey]) that.dataByKey[that.lastSelectedKey].last = true;
+                            if (that.dataByKey[that.lastSelectedKey]) itemMethods.setters.last.call(that.dataByKey[that.lastSelectedKey], true);
                         },
                     },
                     publics: {
@@ -10125,10 +10148,11 @@
                         },
                         deselectAll:    function () {
                             const that = _(this);
-                            Object.keys(that.dataByKey)
+                            that.keys()
                             .filter(key => that.dataByKey[key].selected)
                             .forEach(key => {
-                                that.dataByKey[key].selected = false;
+                                // that.dataByKey[key].selected = false;
+                                itemMethods.setters.selected.call(that.dataByKey[key], false);
                             });
                             that.lastSelectedKey = null;
                         },
@@ -10158,15 +10182,15 @@
                                         switch (cmd) {
                                         case "<Click>":
                                         case "alt <Click>":
-                                            Object.keys(that.dataByKey)
+                                            that.keys()
                                             .filter(key => that.dataByKey[key].selected)
                                             .forEach(key => {
-                                                that.dataByKey[key].selected = false;
+                                                that.selectKey(key, false);
                                             });
                                             if (!that.dataByKey[key].selected) {
-                                                that.dataByKey[key].selected = true;
+                                                that.selectKey(key);
                                             }
-                                            setLastKey.call(this, key);
+                                            that.setLastKey(key);
                                             that.keysWithShift.clear();
                                             break;
                                         
@@ -10180,9 +10204,9 @@
                                         case "alt+cmd <Click>":
                                         case "ctrl <Click>":
                                         case "alt+ctrl <Click>":
-                                            that.dataByKey[key].selected = !that.dataByKey[key].selected;
+                                            that.selectKey(key, !that.dataByKey[key].selected);
                                             if (that.dataByKey[key].selected) {
-                                                setLastKey.call(this, key);
+                                                that.setLastKey(key);
                                             } else {
                                                 that.removeKey(key);
                                             }
@@ -10223,12 +10247,12 @@
                                         }
                                     });
 
-                                    const item = new SelectionMatrixItem({
-                                        parent:     this,
-                                        position:   indexes,
-                                        spec,
-                                    });
-                                    item.on(listeners);
+                                    const item = new SelectionMatrixItem();
+                                    itemMethods.setters.parent.call(item, this);
+                                    itemMethods.setters.position.call(item, indexes);
+                                    if (spec.selected)  itemMethods.setters.selected.call(item, spec.selected);
+
+                                    item.listen(listeners);
                                     that.dataByKey[key] = item;
                                 }
                             };
@@ -10236,10 +10260,10 @@
                         },
                         selectAll:      function () {
                             const that = _(this);
-                            Object.keys(that.dataByKey)
+                            that.keys()
                             .filter(key => !that.dataByKey[key].selected)
                             .forEach(key => {
-                                that.dataByKey[key].selected = true;
+                                that.selectKey(key);
                             });
                         },
                     },
@@ -10275,7 +10299,7 @@
                 },
                 verifiers: {
                     data:           aa.isArrayLike,
-                    commands:       arg => isString(arg) && (!!arg.match(/\<Click\>$/) || aa.inArray(Object.keys(commands))),
+                    commands:       arg => aa.isString(arg) && (!!arg.match(/\<Click\>$/) || aa.inArray(Object.keys(commands))),
                     dimension:      aa.isStrictlyPositiveInt,
                     lengths:        aa.isArrayOf(aa.isStrictlyPositiveInt),
                     on:             aa.verifyObject({
@@ -10288,8 +10312,7 @@
             aa.deploy(SelectionMatrix.prototype, {
                 forEach:    function (callback) {
                     const that = _(this);
-                    Object.keys(that.dataByKey)
-                    .sortNatural()
+                    that.keys()
                     .forEach(key => {
                         const indexes = indexesFromKey(key);
                         callback(that.dataByKey[key], ...indexes);
@@ -10299,6 +10322,59 @@
             return SelectionMatrix;
         })();
         // ----------------
+        const itemMethods = {
+            emit:   function (evtName, value) {
+                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                const that = _(this);
+                that._listeners[evtName]?.forEach(callback => {
+                    callback(null, value, this);
+                });
+            },
+            setters: {
+                last:       function (last) {
+                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
+                    aa.arg.test(last, itemMethods.verifiers.last, "'last'");
+                    const that = _(this);
+                    const isDifferent = that.last !== last;
+
+                    that.last = last;
+                    if (isDifferent) itemMethods.emit.call(this, "lastchanged", last);
+                },
+                parent:     function (matrix) {
+                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
+                    aa.arg.test(matrix, itemMethods.verifiers.parent, "'matrix'");
+                    const that = _(this);
+
+                    aa.throwErrorIf(
+                        !!that.parent,
+                        __("'parent attribute' can not be set more than once."),
+                    );
+                    that.parent = matrix;
+                },
+                position:   function (position) {
+                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
+                    aa.arg.test(position, itemMethods.verifiers.position, "'position'");
+                    const that = _(this);
+
+                    that.position = position;
+                },
+                selected:   function (selected) {
+                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
+                    aa.arg.test(selected, itemMethods.verifiers.selected, "'selected'");
+                    const that = _(this);
+                    const isDifferent = that.selected !== selected;
+
+                    that.selected = selected;
+                    if (isDifferent) itemMethods.emit.call(this, "selectedchanged", selected);
+                },
+            },
+            verifiers: {
+                parent:     arg => arg instanceof SelectionMatrix,
+                last:       aa.isBool,
+                position:   aa.isArrayLikeOf(aa.isPositiveInt),
+                selected:   aa.isBool,
+            },
+        };
         const SelectionMatrixItem = (() => {
             function SelectionMatrixItem () { get(SelectionMatrixItem, "construct").apply(this, arguments); }
             const view = {
@@ -10315,11 +10391,16 @@
                         $$("span.diamond.bottom-left"),
                         $$("span.diamond.bottom-right"),
                         {on: {click: e => {
-                            this.parent.pos(...this.position).exec(aa.shortcut.get(e));
+                            that.parent.pos(...this.position).exec(aa.shortcut.get(e));
                         }}
                     });
-                    this.on("selectedchanged", (e, selected) => {
-                        node.classList[selected ? "add" : "remove"]("selected");
+                    this.on({
+                        lastchanged: (e, isLast) => {
+                            node.classList[isLast ? "add" : "remove"]("last");
+                        },
+                        selectedchanged: (e, selected) => {
+                            node.classList[selected ? "add" : "remove"]("selected");
+                        },
                     });
                     
                     const i = that.position[0] ?? 0;
@@ -10340,49 +10421,50 @@
             };
             const blueprint = {
                 accessors: {
-                    publics: {
-                        parent:     null,
+                    read: {
+                        last:       false,
                         position:   null,
                         selected:   false,
-                        spec:       undefined,
                     },
                     privates: {
                         lastClickedItem:    null,
+                        _listeners:         null,
                         _node:              null,
-                    },
-                    read: {
+                        parent:             null,
                     },
                     execute: {
                         node:   function () { return view.getNode.call(this); },
                     }
                 },
                 construct: function () {
+                    const that = _(this);
+                    that._listeners = {};
                 },
                 methods: {
-                    setters: {
-                        spec: function (spec={}) {
-                            aa.arg.test(spec, aa.verifyObject({
-                                selected: blueprint.verifiers.selected,
-                            }), "'spec'");
-                            spec.sprinkle({
-                                selected: false,
-                            });
+                    publics: {
+                        listen: function (evtName, callback=undefined) {
+                            if (aa.isString(evtName)) {
+                                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                                aa.arg.test(callback, aa.isFunction, "'callback'");
+                                const listener = {};
+                                listener[evtName] = callback;
+                                this.listen(listener);
+                                return;
+                            }
+                            aa.arg.test(evtName, aa.isObjectOfFunctions, "'evtName'");
                             const that = _(this);
-                            that.selected = spec.selected;
+                            const listeners = evtName;
+                            listeners.forEach((callback, evtName) => {
+                                that._listeners[evtName] ??= [];
+                                that._listeners[evtName].push(callback);
+                            });
                         },
                     },
                 },
-                verifiers: {
-                    parent:     arg => arg instanceof SelectionMatrix,
-                    position:   aa.isArrayLikeOf(aa.isPositiveInt),
-                    selected:   aa.isBool,
-                    spec:       aa.verifyObject({
-                        value:      aa.any,
-                        selected:   aa.isBool,
-                    }),
-                }
+                verifiers: itemMethods.verifiers
             };
             aa.manufacture(SelectionMatrixItem, blueprint, {cut, get, set});
+            SelectionMatrixItem.prototype.on = SelectionMatrixItem.prototype.listen;
             return SelectionMatrixItem;
         })();
         // ----------------

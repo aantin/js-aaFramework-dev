@@ -3483,6 +3483,14 @@
         };
     })());
     aa.manufacture              = Object.freeze((() => {
+        class aaManufactureError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaManufactureError",
+                });
+            }
+        }
         const closure = aa.mapFactory();
         return function (Instancer, blueprint /*, accessors */) {
             /**
@@ -3585,7 +3593,8 @@
                     ?.forEach(attributeVisibility => {
                         aa.throwErrorIf(
                             blueprint.accessors?.[attributeVisibility]?.hasOwnProperty(methodName),
-                            `Property '${methodName}' must not be declared in both attributes and methods.`
+                            `Property '${methodName}' must not be declared in both attributes and methods.`,
+                            aaManufactureError
                         );
                     });
                 });
@@ -9995,28 +10004,110 @@
         return Object.freeze(action);
     });
     aa.SelectionMatrix          = (() => {
+        class aaSelectionMatrixError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaSelectionMatrixError",
+                });
+            }
+        }
+        class aaSelectionMatrixItemError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaSelectionMatrixItemError",
+                });
+            }
+        }
         const {cut, get, set} = aa.mapFactory();
+        const none = aa.uid();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         // ----------------
+        /**
+         * A class that represents a matrix of selectionable cells. Each cell's position coordinates must fit the matrix dimension. Each cell may correspond to some data if provided.
+         * 
+         * Usage:
+            // obj is an object related to a cell of the matrix, at the position x, y.
+            const matrix = new aa.SelectionMatrix({
+                dimension: 2
+            });
+            matrix.pos(x,y).set(obj, {
+                selected: false,
+            });
+            // matrix.pos(x, y).exec("shift <Click>");
+            matrix.pos(x, y).exec(aa.shortcut.get(e));
+            matrix.pos(x, y).deselect();
+            matrix.pos(x, y).expand();
+            matrix.pos(x, y).select();
+            matrix.pos(x, y).toggle();
+            matrix.selectAll({
+                // ignoreDisabled: true,
+            });
+            matrix.deselectAll({
+                // ignoreDisabled: false,
+            });
+            matrix.filter(item =>
+                item.selected
+                && !item.disabled
+            );
+            matrix.find(item => item.value === obj);
+            matrix.getSelected({
+                // ignoreDisabled: true,
+            });
+         * 
+         * @param object spec={}    Optional.
+         *  @key int dimension      The dimension of the matrix.
+         */
         const SelectionMatrix = (() => {
+            const testArg = (...args) => {
+                aa.arg.test(...args, aaSelectionMatrixError);
+            };
             const keyFromIndexes = indexes => `${indexes.join(",")}`;
             const indexesFromKey = key => key.split(",").map(index => parseInt(index));
             const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/);
             const commands = {
+                deselect:   function (...indexes) {
+                    const that = _(this);
+                    const key = keyFromIndexes(indexes);
+                    
+                    itemMethods.setters.selected.call(that.dataByKey[key], false);
+                    that.resetLastKey(key);
+                    that.keysWithShift.clear();
+                },
+                expand:     function (...indexes) {
+                    const that = _(this);
+                    const key = keyFromIndexes(indexes);
+                    that.deselectExpansion(key);
+                    that.expandSelection(key);
+                },
                 next:       function () {
                     const that = _(this);
                 },
                 previous:   function () {
                     const that = _(this);
                 },
-                expandTo:   function (...indexes) {
+                select:     function (...indexes) {
                     const that = _(this);
+                    const key = keyFromIndexes(indexes);
+                    
+                    if (!that.dataByKey[key].selected) {
+                        that.selectKey(key);
+                    }
+                    that.setLastKey(key);
+                    that.keysWithShift.clear();
                 },
-                add:        function (index) {
+                toggle:     function (...indexes) {
                     const that = _(this);
-                },
-                toggle:     function (index) {
-                    const that = _(this);
+                    const key = keyFromIndexes(indexes);
+
+                    that.selectKey(key, !that.dataByKey[key].selected);
+                    if (that.dataByKey[key].selected) {
+                        that.setLastKey(key);
+                    } else {
+                        that.resetLastKey(key);
+                    }
+                    that.keysWithShift.clear();
                 },
             };
             function SelectionMatrix () { get(SelectionMatrix, 'construct').apply(this, arguments); }
@@ -10025,7 +10116,6 @@
                     publics: {
                         data:       null,
                         dimension:  1,
-                        lengths:    null,
                         on:         {}
                     },
                     privates: {
@@ -10033,16 +10123,29 @@
                         dataByKey:          null,
                         keysWithShift:      null,
                         lastSelectedKey:    null,
-                        _lengths:           null,
                         selected:           null,
                     },
                     read: {
-                        id: null,
+                        id:         null,
+                        lengths:    null,
                     },
                     execute: {
+                        selection: function () {
+                        },
+                        selectedPositions: function () {
+                            const that = _(this);
+                            return (
+                                that.keys()
+                                .filter(key =>
+                                    that.dataByKey[key]?.selected
+                                    && !that.dataByKey[key]?.disabled
+                                )
+                                .reduce()
+                            );
+                        },
                     }
                 },
-                startHydratingWith: ["dimension", "lengths"],
+                startHydratingWith: ["dimension"],
                 construct: function () {
                     const that = _(this);
 
@@ -10050,33 +10153,35 @@
                     that._data          = [];
                     that.dataByKey      = {};
                     that.id             = aa.uid(16);
-                    that._lengths       = [1];
+                    that.lengths        = [1];
                     that.selected       = new aa.Collection({authenticate: isKey});
                     that.keysWithShift  = new aa.Collection({authenticate: isKey});
                 },
                 methods: {
                     privates: {
                         deselectExpansion:  function (key) {
-                            aa.arg.test(key, isKey, "'key'");
+                            testArg(key, isKey, "'key'");
                             
                             const that = _(this);
 
                             that.keysWithShift
-                            .filter(k => k !== that.lastSelectedKey)
+                            .filter(k => k !== that.lastSelectedKey && !that.dataByKey[k].disabled)
                             .forEach(k => {
                                 if (that.dataByKey[k].selected) that.selectKey(k, false);
                             });
                             that.keysWithShift.clear();
                         },
                         expandSelection:    function (key) {
-                            aa.arg.test(key, isKey, "'key'");
+                            testArg(key, isKey, "'key'");
 
                             const that = _(this);
                             const indexes = indexesFromKey(key);
                             const start = that.lastSelectedKey ? indexesFromKey(that.lastSelectedKey) : [];
                             if (start.length === 0) aa.repeat(that.dimension, () => {start.push(0);});
                             
-                            that.keys().forEach(k => {
+                            that.keys()
+                            .filter(k => !that.dataByKey[k].disabled)
+                            .forEach(k => {
                                 const indxs = indexesFromKey(k);
                                 let toSelect = true;
                                 for (let i=0; toSelect && i<that.dimension; i++) {
@@ -10090,12 +10195,15 @@
                                 }
                             });
                         },
-                        keys:       function () {
+                        keys:               function () {
                             const that = _(this);
-                            return Object.keys(that.dataByKey).sortNatural();
+                            return (
+                                Object.keys(that.dataByKey)
+                                .sortNatural()
+                            );
                         },
-                        removeKey:  function (key) {
-                            aa.arg.test(key, isKey, "'key'");
+                        resetLastKey:       function (key) {
+                            testArg(key, isKey, "'key'");
 
                             const that = _(this);
                             const indexes = indexesFromKey(key);
@@ -10115,16 +10223,16 @@
                             const found = after.first ?? before.reverse().first;
                             that.setLastKey(found ?? null);
                         },
-                        selectKey:  function (key, selected=true) {
-                            aa.arg.test(key, isKey, "'key'");
-                            aa.arg.test(selected, aa.isBool, "'selected'");
+                        selectKey:          function (key, selected=true) {
+                            testArg(key, isKey, "'key'");
+                            testArg(selected, aa.isBool, "'selected'");
                             const that = _(this);
 
                             // that.dataByKey[key].selected = selected;
                             itemMethods.setters.selected.call(that.dataByKey[key], selected);
                         },
-                        setLastKey: function (key) {
-                            aa.arg.test(key, aa.isNullOr(isKey), "'key'");
+                        setLastKey:         function (key) {
+                            testArg(key, aa.isNullOr(isKey), "'key'");
                             const that = _(this);
                             // if (that.dataByKey[that.lastSelectedKey]) that.dataByKey[that.lastSelectedKey].last = false;
                             if (that.dataByKey[that.lastSelectedKey]) itemMethods.setters.last.call(that.dataByKey[that.lastSelectedKey], false);
@@ -10146,33 +10254,105 @@
                             });
                             document.body.appendChild(node);
                         },
-                        deselectAll:    function () {
+                        deselectAll:    function (spec={}) {
+                            aa.arg.test(spec, aa.verifyObject({
+                                ignoreDisabled: aa.isBool,
+                            }), "'spec'");
+                            spec.sprinkle({
+                                ignoreDisabled: true,
+                            })
                             const that = _(this);
                             that.keys()
-                            .filter(key => that.dataByKey[key].selected)
+                            .filter(key =>
+                                that.dataByKey[key].selected
+                                && spec.ignoreDisabled || !that.dataByKey[key].disabled
+                            )
                             .forEach(key => {
-                                // that.dataByKey[key].selected = false;
                                 itemMethods.setters.selected.call(that.dataByKey[key], false);
                             });
                             that.lastSelectedKey = null;
                         },
+                        deselectBy:     function (spec={}) {
+                            const that = _(this);
+
+                            that.keys()
+                            .filter(key => spec.item && that.dataByKey[key]?.value === spec.item)
+                            .forEach(key => {
+                                const indexes = indexesFromKey(key);
+                                commands.deselect.call(this, ...indexes);
+                            });
+                        },
                         exec:           function (cmd) {
-                            aa.arg.test(cmd, blueprint.verifiers.commands, "'cmd'");
+                            testArg(cmd, blueprint.verifiers.commands, "'cmd'");
                             commands[cmd].call(this);
                             return this;
                         },
+                        filter:         function (callback=null) {
+                            testArg(callback, aa.isFunction, "'callback'");
+                            const that = _(this);
+                            return (
+                                that.keys()
+                                .filter(key => {
+                                    const item = that.dataByKey[key];
+                                    const result = callback?.(item);
+                                    aa.throwErrorIf(
+                                        !aa.isBool(result),
+                                        __("The 'filter' callback Function must return a Boolean."),
+                                        aaSelectionMatrixError
+                                    );
+                                    return result;
+                                })
+                                .map(key => that.dataByKey[key])
+                            );
+                        },
+                        find:           function (callback=null) {
+                            testArg(callback, aa.isFunction, "'callback'");
+                            const that = _(this);
+                            const found = (
+                                that.keys()
+                                .find(key => {
+                                    const item = that.dataByKey[key];
+                                    const result = callback?.(item);
+                                    aa.throwErrorIf(
+                                        !aa.isBool(result),
+                                        __("The 'find' callback Function must return a Boolean."),
+                                        aaSelectionMatrixError
+                                    );
+                                    return result;
+                                })
+                            );
+                            return found ? that.dataByKey[found] : undefined;
+                        },
+                        getSelected:    function (spec={}) {
+                            const that = _(this);
+                            testArg(spec, aa.verifyObject({
+                                ignoreDisabled: aa.isBool,
+                            }), "'spec'");
+                            spec.sprinkle({
+                                ignoreDisabled: false,
+                            });
+
+                            return (
+                                that.keys()
+                                .filter(key =>
+                                    that.dataByKey[key]?.selected
+                                    && (spec.ignoreDisabled || !that.dataByKey[key].disabled)
+                                )
+                                .map(key => that.dataByKey[key])
+                            );
+                        },
                         pos:            function (...indexes) {
-                            aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers");
+                            aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers", aaSelectionMatrixError);
 
                             const that = _(this);
                             const key = keyFromIndexes(indexes);
                             aa.throwErrorIf(
                                 indexes.length !== that.dimension,
                                 __("The element position (:1) must match the matrix dimension (:2).")
-                                .replace(/\:1/, key)
-                                .replace(/\:2/, that.dimension)
+                                    .replace(/\:1/, key)
+                                    .replace(/\:2/, that.dimension)
                                 ,
-                                RangeError
+                                aaSelectionMatrixError
                             );
 
                             const methods = {
@@ -10187,35 +10367,25 @@
                                             .forEach(key => {
                                                 that.selectKey(key, false);
                                             });
-                                            if (!that.dataByKey[key].selected) {
-                                                that.selectKey(key);
-                                            }
-                                            that.setLastKey(key);
-                                            that.keysWithShift.clear();
+                                            commands.select.call(this, indexes);
                                             break;
                                         
                                         case "shift <Click>":
                                         case "alt+shift <Click>":
-                                            that.deselectExpansion(key);
-                                            that.expandSelection(key);
+                                            commands.expand.call(this, indexes);
                                             break;
                                         
                                         case "cmd <Click>":
                                         case "alt+cmd <Click>":
                                         case "ctrl <Click>":
                                         case "alt+ctrl <Click>":
-                                            that.selectKey(key, !that.dataByKey[key].selected);
-                                            if (that.dataByKey[key].selected) {
-                                                that.setLastKey(key);
-                                            } else {
-                                                that.removeKey(key);
-                                            }
-                                            that.keysWithShift.clear();
+                                            commands.toggle.call(this, indexes);
                                             break;
                                         }
                                         return;
                                     }
-                                    aa.arg.test(cmd, blueprint.verifiers.commands, "'command'");
+                                    testArg(cmd, blueprint.verifiers.commands, "'command'");
+                                    commands[cmd]?.call(this, indexes);
                                 },
                                 get:    function () {
                                     const that = _(this);
@@ -10224,8 +10394,8 @@
                                 },
                                 on:     function (evtName, callback) {
                                     if (aa.isString(evtName)) {
-                                        aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                                        aa.arg.test(callback, aa.isFunction, "'callback'");
+                                        testArg(evtName, aa.nonEmptyString, "'evtName'");
+                                        testArg(callback, aa.isFunction, "'callback'");
 
                                         const listeners = {};
                                         listeners[evtName] = callback;
@@ -10235,33 +10405,59 @@
                                     const listeners = evtName;
                                     that.dataByKey[key].on(evtName);
                                 },
-                                set:    function (spec) {
-                                    aa.arg.test(spec, aa.isObject, "'value'");
+                                set:    function (value=none, spec) {
+                                    testArg(spec, aa.verifyObject({
+                                        last:       itemMethods.verifiers.last,
+                                        on:         aa.any,
+                                        selected:   itemMethods.verifiers.selected,
+                                        value:      itemMethods.verifiers.value,
+                                    }), "'spec'");
                                     const that = _(this);
                                     const listeners = spec.hasOwnProperty("on") ? spec.on : {};
                                     delete spec.on;
 
                                     indexes.forEach((index, i) => {
-                                        if (that._lengths[i] - 1 > index) {
-                                            that._lengths[i] = index + 1;
+                                        if (that.lengths[i] - 1 > index) {
+                                            that.lengths[i] = index + 1;
                                         }
                                     });
 
                                     const item = new SelectionMatrixItem();
                                     itemMethods.setters.parent.call(item, this);
                                     itemMethods.setters.position.call(item, indexes);
-                                    if (spec.selected)  itemMethods.setters.selected.call(item, spec.selected);
+                                    if (value !== none) itemMethods.setters.value.call(item, value);
+                                    spec.forEach((value, key) => {
+                                        itemMethods.setters[key].call(item, value);
+                                    });
 
-                                    item.listen(listeners);
+                                    item.on(listeners);
                                     that.dataByKey[key] = item;
                                 }
                             };
+                            commands.forEach((func, cmd) => {
+                                aa.throwErrorIf(
+                                    methods.hasOwnProperty(cmd),
+                                    __("Method ':?' has already been defined.").replace(/\:\?/, cmd),
+                                    aaSelectionMatrixError
+                                );
+                                methods[cmd] = function () {
+                                    func.call(this, indexes);
+                                }
+                            });
                             return Object.freeze(methods.bind(this));
                         },
-                        selectAll:      function () {
+                        selectAll:      function (spec={}) {
+                            aa.arg.test(spec, aa.verifyObject({
+                                ignoreDisabled: aa.isBool,
+                            }), "'spec'");
+                            spec.sprinkle({
+                                ignoreDisabled: false,
+                            })
                             const that = _(this);
                             that.keys()
-                            .filter(key => !that.dataByKey[key].selected)
+                            .filter(key => !that.dataByKey[key].selected
+                                && spec.ignoreDisabled || !that.dataByKey[key].disabled
+                            )
                             .forEach(key => {
                                 that.selectKey(key);
                             });
@@ -10290,16 +10486,11 @@
                             });
                             that._data = data;
                         },
-                        lengths:    function (lengths) {
-                            const that = _(this);
-                            that._lengths = [...lengths];
-                            that.dimension = lengths.length;
-                        },
                     }
                 },
                 verifiers: {
                     data:           aa.isArrayLike,
-                    commands:       arg => aa.isString(arg) && (!!arg.match(/\<Click\>$/) || aa.inArray(Object.keys(commands))),
+                    commands:       arg => aa.isString(arg) && (!!arg.match(/\<Click\>$/) || Object.keys(commands).indexOf(arg) > -1),
                     dimension:      aa.isStrictlyPositiveInt,
                     lengths:        aa.isArrayOf(aa.isStrictlyPositiveInt),
                     on:             aa.verifyObject({
@@ -10322,9 +10513,12 @@
             return SelectionMatrix;
         })();
         // ----------------
+        const testArg = (...args) => {
+            aa.arg.test(...args, aaSelectionMatrixItemError);
+        };
         const itemMethods = {
             emit:   function (evtName, value) {
-                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                testArg(evtName, aa.nonEmptyString, "'evtName'");
                 const that = _(this);
                 that._listeners[evtName]?.forEach(callback => {
                     callback(null, value, this);
@@ -10332,8 +10526,8 @@
             },
             setters: {
                 last:       function (last) {
-                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
-                    aa.arg.test(last, itemMethods.verifiers.last, "'last'");
+                    testArg(this, aa.instanceof(SelectionMatrixItem), "this");
+                    testArg(last, itemMethods.verifiers.last, "'last'");
                     const that = _(this);
                     const isDifferent = that.last !== last;
 
@@ -10341,8 +10535,8 @@
                     if (isDifferent) itemMethods.emit.call(this, "lastchanged", last);
                 },
                 parent:     function (matrix) {
-                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
-                    aa.arg.test(matrix, itemMethods.verifiers.parent, "'matrix'");
+                    testArg(this, aa.instanceof(SelectionMatrixItem), "this");
+                    testArg(matrix, itemMethods.verifiers.parent, "'matrix'");
                     const that = _(this);
 
                     aa.throwErrorIf(
@@ -10352,27 +10546,34 @@
                     that.parent = matrix;
                 },
                 position:   function (position) {
-                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
-                    aa.arg.test(position, itemMethods.verifiers.position, "'position'");
+                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this", aaSelectionMatrixItemError)
+                    testArg(position, itemMethods.verifiers.position, "'position'");
                     const that = _(this);
 
                     that.position = position;
                 },
                 selected:   function (selected) {
-                    aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this")
-                    aa.arg.test(selected, itemMethods.verifiers.selected, "'selected'");
+                    testArg(this, aa.instanceof(SelectionMatrixItem), "this");
+                    testArg(selected, itemMethods.verifiers.selected, "'selected'");
                     const that = _(this);
                     const isDifferent = that.selected !== selected;
 
                     that.selected = selected;
                     if (isDifferent) itemMethods.emit.call(this, "selectedchanged", selected);
                 },
+                value:      function (value) {
+                    testArg(value, itemMethods.verifiers.value, "'value'");
+                    const that = _(this);
+                    that.value = value;
+                },
             },
             verifiers: {
+                disabled:   aa.isBool,
                 parent:     arg => arg instanceof SelectionMatrix,
                 last:       aa.isBool,
                 position:   aa.isArrayLikeOf(aa.isPositiveInt),
                 selected:   aa.isBool,
+                value:      aa.any,
             },
         };
         const SelectionMatrixItem = (() => {
@@ -10421,10 +10622,14 @@
             };
             const blueprint = {
                 accessors: {
+                    publics: {
+                    },
                     read: {
+                        disabled:   false,
                         last:       false,
                         position:   null,
                         selected:   false,
+                        value:      null,
                     },
                     privates: {
                         lastClickedItem:    null,
@@ -10442,29 +10647,42 @@
                 },
                 methods: {
                     publics: {
-                        listen: function (evtName, callback=undefined) {
-                            if (aa.isString(evtName)) {
-                                aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                                aa.arg.test(callback, aa.isFunction, "'callback'");
-                                const listener = {};
-                                listener[evtName] = callback;
-                                this.listen(listener);
-                                return;
-                            }
-                            aa.arg.test(evtName, aa.isObjectOfFunctions, "'evtName'");
+                        enable:     function (enabled=true) {
+                            testArg(enabled, aa.isBool, "'enabled'");
+                            this.disable(!enabled);
+                        },
+                        disable:    function (disabled=true) {
+                            testArg(disabled, aa.isBool, "'disabled'");
                             const that = _(this);
-                            const listeners = evtName;
-                            listeners.forEach((callback, evtName) => {
-                                that._listeners[evtName] ??= [];
-                                that._listeners[evtName].push(callback);
-                            });
+                            const isDifferent = that.disabled !== disabled;
+
+                            that.disabled = disabled;
+                            if (isDifferent) itemMethods.emit.call(this, "disablechanged", disabled);
                         },
                     },
                 },
                 verifiers: itemMethods.verifiers
             };
             aa.manufacture(SelectionMatrixItem, blueprint, {cut, get, set});
-            SelectionMatrixItem.prototype.on = SelectionMatrixItem.prototype.listen;
+            aa.deploy(SelectionMatrixItem.prototype, {
+                on: function (evtName, callback=undefined) {
+                    if (aa.isString(evtName)) {
+                        testArg(evtName, aa.nonEmptyString, "'evtName'");
+                        testArg(callback, aa.isFunction, "'callback'");
+                        const listener = {};
+                        listener[evtName] = callback;
+                        this.on(listener);
+                        return;
+                    }
+                    testArg(evtName, aa.isObjectOfFunctions, "'evtName'");
+                    const that = _(this);
+                    const listeners = evtName;
+                    listeners.forEach((callback, evtName) => {
+                        that._listeners[evtName] ??= [];
+                        that._listeners[evtName].push(callback);
+                    });
+                },
+            }, {force: true});
             return SelectionMatrixItem;
         })();
         // ----------------

@@ -6947,28 +6947,47 @@
              */
             if (!aa.isFunction(callback)) { throw new TypeError("First argument must be a Function."); }
 
-            const resolve = arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined;
-            const reject = arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined;
+            let resolve = arguments && arguments.length > 1 && aa.isFunction(arguments[1]) ? arguments[1] : undefined;
+            let reject = arguments && arguments.length > 2 && aa.isFunction(arguments[2]) ? arguments[2] : undefined;
             const spec = arguments && arguments.length && aa.isObject(arguments.last) ? arguments.last : {};
 
             const gui = new aa.gui.Dialog("loading", spec);
+            Object.defineProperties(gui, {
+                catch: {
+                    get: () => function (callback) {
+                        aa.arg.test(callback, aa.isFunction, "'callback'");
+                        reject = callback;
+                        return gui;
+                    },
+                },
+                then: {
+                    get: () => function (callback) {
+                        aa.arg.test(callback, aa.isFunction, "'callback'");
+                        resolve = callback;
+                        return gui;
+                    },
+                },
+            });
             gui.show();
             setTimeout(() => {
                 let ok = true;
                 try {
                     callback();
-                } catch (e) {
+                } catch (err) {
                     ok = false;
-                    warn(e);
                     if (reject) {
-                        reject();
+                        reject(err);
                     }
                 }
                 gui.hide();
                 if (resolve && ok) {
-                    resolve();
+                    try {
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
                 }
-            }, transitionDuration*1000);
+            }, TRANSITION_DURATION*1000);
             return gui;
         };
         this.notification   = function (message, spec={}) {

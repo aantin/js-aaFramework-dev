@@ -1082,9 +1082,10 @@
             },
             
             // Methods:
-            construct:          function (spec={}, length=null) {
+            construct:          function (spec={}, arg=null) {
+                let data = aa.isArrayLike(arg) ? arg : null;
+                const length = aa.isPositiveInt(arg) ? arg : null;
                 aa.arg.test(spec, aa.isObject, "'spec'", aaCollectionError);
-                aa.arg.test(length, aa.isNullOr(aa.isPositiveInt), "'length'");
                 spec.sprinkle({ authenticate: aa.any });
 
                 const that = _(this);
@@ -1093,16 +1094,17 @@
                     privates.incrementLength.call(this, length);
                 }
 
-                let data = null;
-                if (spec.hasOwnProperty('data')) {
+                if (!data && spec.hasOwnProperty('data')) {
                     data = spec.data;
                     delete spec.data;
                 }
-
                 this.hydrate(spec);
+                
+                if (data?.some(item => !this.authenticate(item))) throw new aaCollectionError("Every item must be verify authentication.");
+                if (data) that.data = data;
 
                 if (data) {
-                    this.push(...data);
+                    // this.push(...data);
                 }
             },
             emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
@@ -3684,115 +3686,140 @@
         function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
         const emit = aa.event.getEmitter({cut, get, set});
         function Animation () { get(Animation, "construct").apply(this, arguments); }
-        const getNowTime = () => ((window?.performance ?? Date)?.now());
         const blueprint = {
             accessors: {
-                publics: {},
-                privates: {
-                    callback:   null,
-                    delay:      null,
-                    fps:        null,
+                publics: {
                     id:         null,
-                    playingAt:  null,
+                    fps:        null,
+                },
+                privates: {
+                    // callback:   null,
+                    delay:      null,
+                    fromStart:  0,
                     iterations: 0,
+                    strokes:    null,
+                    timer:      null,
                 },
                 read: {
                     isPlaying: false
                 },
                 execute: {}
             },
-            verifiers: {
-                callback:   aa.isFunction,
-                delay:      aa.isNullOr(aa.isStrictlyPositiveInt),
-                id:         aa.isStrictlyPositiveInt,
-                options:    aa.verifyObject({
-                    fps: aa.isStrictlyPositiveNumber,
-                }),
-            },
+            /**
+             * @param <integer|object>  delay|options:  If an Integer is provided, it will be used as 'delay' attribute; else, if an Object is provided, it will be used as 'options' attribute.
+             *      @param <number>     options.fps:    The 'frames per second' framerate at which the animation will be played.
+             */
             construct: function (delay /*, callback, options={}*/) {
+                const options = [...arguments].find(aa.isObject) ?? {};
                 const args = [...arguments].slice(1);
                 const callback = args.find(aa.isFunction);
-                const options = args.find(aa.isObject) ?? {};
-
-                aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
-                aa.arg.test(callback, blueprint.verifiers.callback, `'callback'`, aaAnimationError);
                 aa.arg.test(options, blueprint.verifiers.options, "'options'", aaAnimationError);
                 const that = _(this);
 
-                that.callback = callback;
-                if (aa.isNumber(delay)) that.delay = delay;
-                else that.fps = options.fps ?? null;
+                if (aa.isNumber(delay)) {
+                    aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
+                    that.delay = delay;
+                } else {
+                    that.fps = options.fps ?? null;
+                    this.id = options.id ?? aa.uid();
+                }
+
+                if (!that.delay && !that.fps)   throw new aaAnimationError("'delay' or 'fps' must be provided.");
+
                 that.isPlaying = false;
                 
-                if (!that.delay && !that.fps)   throw new aaAnimationError("'delay' or 'fps' must be provided.");
-                if (!that.callback)             throw new aaAnimationError("A callback Function must be provided.");
+                if (callback) {
+                    this.on("draw", callback);
+                }
             },
             methods: {
                 privates: {
                     emit,
+                    play:   function () {
+                        const that = _(this);
+                        if (that.isPlaying) return;
+
+                        const playingAt = aa.now();
+                        that.isPlaying = true;
+                        that.iterations = 0;
+                        
+                        const draw = () => {
+                            if (that.isPlaying) {
+                                const delay = that.delay ?? (1000 / that.fps);
+                                if (aa.now() >= playingAt + (that.iterations * delay)) {
+                                    that.emit("draw", that.fromStart);
+                                    that.fromStart++;
+                                    that.iterations++;
+                                    that.emit('drawn');
+                                }
+                                that.timer = requestAnimationFrame(draw);
+                            }
+                        }
+                        that.timer = requestAnimationFrame(draw);
+                    },
                 },
                 publics: {
                     draw:   function () {
                         const that = _(this);
-                        if (that.id) {
-                            that.callback.call(this);
+                        if (that.timer) {
+                            that.emit("draw", that.fromStart);
+                            that.fromStart++;
+                            that.iterations++;
                             that.emit('drawn');
                         }
                     },
                     start:  function () {
                         const that = _(this);
-                        if (that.id) {
-                            this.resume();
-                            return;
-                        }
-                        that.isPlaying = true;
-                        that.iterations = 0;
-                        that.playingAt = getNowTime();
-                        
-                        const delay = that.delay;
-                        
+                        that.fromStart = 0;
+                        that.play();
                         that.emit('start');
-                        const draw = () => {
-                            const isPlaying = that.isPlaying;
-                            if (isPlaying) {
-                                if (getNowTime() >= that.playingAt + (that.iterations * (that.delay ?
-                                    that.delay
-                                    : (1000 / that.fps))
-                                )) {
-                                    that.iterations++;
-                                    that.callback.call(this);
-                                    that.emit('drawn');
-                                }
-                            }
-                            that.id = requestAnimationFrame(draw);
-                        }
-                        that.id = requestAnimationFrame(draw);
                     },
                     pause:  function () {
                         const that = _(this);
-                        if (that.id) {
+                        if (that.timer) {
+                            cancelAnimationFrame(that.timer);
+                            that.timer = null;
                             that.isPlaying = false;
                             that.emit('pause');
                         }
                     },
                     resume: function () {
                         const that = _(this);
-                        if (that.id) {
-                            that.isPlaying = true;
-                            that.iterations = 0;
-                            that.playingAt = getNowTime();
+                        if (!that.isPlaying) {
+                            if (that.fromStart === 0) {
+                                this.start();
+                                return;
+                            }
+                            that.play();
                             that.emit('resume');
                         }
                     },
                     stop:   function () {
+                        this.pause();
                         const that = _(this);
-                        cancelAnimationFrame(that.id);
-                        that.id = null;
-                        that.isPlaying = false;
+                        that.fromStart = 0;
                         that.emit('stop');
+                    },
+                },
+                setters: {
+                    id: function (id) {
+                        const that = _(this);
+                        id = id.trim();
+                        that.id = id;
                     },
                 }
             },
+            verifiers: {
+                callback:   aa.isFunction,
+                delay:      aa.isNullOr(aa.isStrictlyPositiveInt),
+                id:         aa.nonEmptyString,
+                fps:        aa.isStrictlyPositiveNumber,
+                timer:      aa.isStrictlyPositiveInt,
+                options:    aa.verifyObject({
+                    id:     aa.nonEmptyString,
+                    fps:    aa.isStrictlyPositiveNumber,
+                }),
+            }
         };
         aa.manufacture(Animation, blueprint, {cut, get, set});
         return Animation;
@@ -6684,7 +6711,7 @@
                             sections.get(this.app)?.remove(this.section);
                             const temp = {
                                 opacity: 1,
-                                anim: new aa.Animation(null, {fps: 24}, () => {
+                                anim: new aa.Animation({fps: 24, id: "progress.hideSection"}, () => {
                                     temp.opacity = (temp.opacity - .1).bound(0);
                                     if (that.nodes.section) that.nodes.section.style.opacity = `${temp.opacity}`;
                                     if (temp.opacity === 0) {
@@ -6734,12 +6761,10 @@
                                 dialog.classList.remove(previous);
                                 dialog.classList.add(theme);
                             });
-                            const anim = anims.get(this.app) ?? new aa.Animation(null, () => {
+                            const anim = anims.get(this.app) ?? new aa.Animation({fps: 2, id: "progress.showApp"}, () => {
                                 collection.forEach((progress, id) => {
                                     progress.draw();
                                 });
-                            }, {
-                                fps: 2
                             });
                             if (!anims.has(this.app)) anims.add(that.app, anim);
                             anim.start();
@@ -6796,7 +6821,7 @@
                                 nodes[index].range.value = 100;
                                 nodes[index].range.classList.add('complete');
                                 let opacity = 1;
-                                const anim = new aa.Animation(null, {fps: 24}, () => {
+                                const anim = new aa.Animation({fps: 24, id: "progress.complete"}, () => {
                                     opacity = (opacity - .1).bound(0);
                                     if (nodes[index]) nodes[index].container.style.opacity = `${opacity}`;
                                     if (opacity === 0) {

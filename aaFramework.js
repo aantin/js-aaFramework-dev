@@ -1505,6 +1505,7 @@
         }, {force: true});
 
         return Collection;
+        return Collection;
     })();
     aa.Event = (() => {
         /**
@@ -9802,11 +9803,9 @@
 
             // Verify arguments integrity:
             verify("shortcut", str);
-            if (arguments && arguments.length>1) {
-                if (!aa.isArray(arguments[1])) { throw new TypeError("Second argument must be an Array."); }
-                if (arguments[1].verify((v) => { return allowedOptions.has(v); })) { throw new TypeError("Invalid items found in second argument."); }
-            }
-            const options = (arguments && arguments.length>1 ? arguments[1] : []);
+            if (arguments.length > 1 && !aa.isArray(arguments[1])) throw new TypeError("The second argument must be an Array.");
+            const options = arguments[1] ?? [];
+            if (options.some(option => allowedOptions.indexOf(option) < 0)) { throw new TypeError("Invalid items found in second argument."); }
 
             // Main:
             str = aa.shortcut.cmdOrCtrl(str);
@@ -9912,14 +9911,13 @@
 
         // Getters:
         this.get = function (event) {
-            if (event.constructor && event.constructor.name) {
+            if (event.constructor?.name) {
+                const prefix = specialKeys
+                            .filter(modifier => event[(modifier === "cmd" ? "meta" : modifier)+"Key"])
+                            .join('+');
                 if (event.constructor.name === "KeyboardEvent") {
-                    if (!["Alt", "Meta", "Shift", "Control"].has(event.key)) {
+                    if (["Alt", "Meta", "Shift", "Control"].indexOf(event.key) < 0) {
                         let key = null;
-                        const prefix = (specialKeys.filter((specialKey) => {
-                            const special = (specialKey === "cmd" ? "meta" : specialKey);
-                            return event[special+"Key"];
-                        })).join('+');
                         
                         if (aa.inbetween(event.keyCode, 65, 90)) {
                             key = String.fromCharCode(event.keyCode).toUpperCase();
@@ -9933,30 +9931,20 @@
                         } else {
                             key = event.key;
                         }
-                        const str = (prefix ? prefix+' ' : '')+'<'+key+'>';
-                        return str;
+                        return (prefix ? prefix+' ' : '')+'<'+key+'>';
                     }
                 } else if (
                     event.constructor.name === "MouseEvent"
                     || event.constructor.name === "PointerEvent"
                     || event.constructor.name === "Event"
                 ) {
-                    const parts = [];
-                    const prefix = (specialKeys.filter((specialKey) => {
-                        const special = (specialKey === "cmd" ? "meta" : specialKey);
-                        return event[special+"Key"];
-                    })).join('+');
-                    if (prefix) {
-                        parts.push(prefix);
-                    }
                     const button = (event.button === 0 ?
                         ''
                         : event.button === 1 ?
-                            'Middle'
-                            : 'Right'
+                            "Middle"
+                            : "Right"
                     );
-                    parts.push('<'+button+'Click>');
-                    return parts.join(' ');
+                    return (prefix ? prefix+' ' : '')+'<'+button+'Click>';
                 }
             }
 

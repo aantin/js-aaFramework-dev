@@ -1061,7 +1061,17 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaCollectionError",
+                    value: "aaCollectionError",
+                    configurable: false,
+                });
+            }
+        }
+        class aaCollectionTypeError extends TypeError {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaCollectionTypeError",
+                    configurable: false,
                 });
             }
         }
@@ -1170,7 +1180,7 @@
                 },
                 execute: {
                     first:  () => get(this, "data")[0],
-                    last:   () => get(this, "data")[get(this, "data").length - 1],
+                    last:   () => get(this, "data").last,
                     length: () => get(this, "data").length,
                 }
             }, { cutter: cut, getter: get, setter: set });
@@ -1181,26 +1191,11 @@
         // Publics:
         function methodFactory (methodName) {
             const func = function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-
+                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.");
+                const thisArg = arguments[1] ?? void 0;
                 const that = _(this);
-                return that.data[methodName]((item, i, list) => {
-                    const isVerified = callback.call(thisArg, item, i, this);
-                    if (aa.inEnum(
-                        'every',
-                        'filter',
-                        'find',
-                        'findIndex',
-                        'findLastIndex',
-                        'findReverse',
-                        'includes',
-                        'some',
-                    )(methodName) && !aa.isBool(isVerified)) {
-                        throw new TypeError(`Callback Function must return a Boolean.`);
-                    }
-                    return isVerified;
-                }, thisArg);
+
+                return that.data[methodName]((item, i, list) => callback.call(thisArg, item, i, this), thisArg);
             };
             Object.defineProperty(func, 'name', {
                 get: () => methodName
@@ -1222,23 +1217,19 @@
         aa.deploy(Collection.prototype, {
             every:              methodFactory('every'),
             filter:             function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.")
+                const thisArg = arguments[1] ?? void 0;
 
                 const that = _(this);
+                const copy = Object(this);
+                const data = that.data;
                 const spec = {};
-                if (this.authenticate) {
-                    spec.authenticate = this.authenticate;
-                }
+                if (copy.authenticate) spec.authenticate = copy.authenticate;
                 const collection = new aa.Collection(spec);
-                that.data.forEach((item, i) => {
-                    const isVerified = callback.call(thisArg, item, i, this);
-                    aa.throwErrorIf(!aa.isBool(isVerified), `Callback function must return a boolean.`);
-                    if (isVerified) {
-                        collection.push(item);
-                    }
-                });
-                set(collection, `listeners`, get(this, `listeners`));
+                for (let i = 0; i < data.length; i++) {
+                    if (callback.call(thisArg, data[i], i, copy)) collection.push(data[i]);
+                }
+                set(collection, "listeners", get(this, "listeners"));
                 return collection;
             },
             find:               methodFactory('find'),
@@ -3009,7 +3000,7 @@
                     });
 
                     // Execute current app events:
-                    app = this.apps[this.appNames.getLast()];
+                    app = this.apps[this.appNames.last];
                     if (app instanceof aa.EventApp) {
                         evts = app.getEvents(evtName);
                         if (evts) {
@@ -3117,7 +3108,8 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaFileError",
+                    value: "aaFileError",
+                    configurable: false,
                 });
             }
         }
@@ -3672,7 +3664,8 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaAnimationError",
+                    value: "aaAnimationError",
+                    configurable: false,
                 });
             }
         }
@@ -6579,7 +6572,8 @@
                 constructor (message, filename, lineNumber) {
                     super(message, filename, lineNumber);
                     Object.defineProperty(this, "name", {
-                        get: () => "aaGUIProgressError",
+                        value: "aaGUIProgressError",
+                        configurable: false,
                     });
                 }
             }
@@ -12742,7 +12736,7 @@
                                     get: (function (key) {
                                         return function () {
                                             if (aa.ClassFactory.continueIfEmpty(getNS('__abstract'))) {
-                                                return getNS('__methods',key).getLast();
+                                                return getNS('__methods',key).last;
                                             }
                                         };
                                     })(key)
@@ -12756,12 +12750,11 @@
             // Retrieve 'static':
             if (typeof aaClass.prototype['__static'] !== 'undefined' && aa.isObject(aaClass.prototype['__static'])) {
                 aaClass.prototype['__static'].forEach(function (list,methodName) {
-                    if (aa.isArray(list) && list.length && aa.isFunction(list.getLast())) {
+                    if (aa.isArray(list) && list.length && aa.isFunction(list.last)) {
                         Object.defineProperty(aaClass,methodName,{
                             get: (function (methodName) {
                                 return function () {
-                                    let args = arguments
-                                    return list.getLast(args);
+                                    return list.last.apply(this, arguments);
                                 };
                             })(methodName)
                         });

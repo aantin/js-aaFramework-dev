@@ -1089,7 +1089,17 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaCollectionError",
+                    value: "aaCollectionError",
+                    configurable: false,
+                });
+            }
+        }
+        class aaCollectionTypeError extends TypeError {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaCollectionTypeError",
+                    configurable: false,
                 });
             }
         }
@@ -1110,9 +1120,10 @@
             },
             
             // Methods:
-            construct:          function (spec={}, length=null) {
+            construct:          function (spec={}, arg=null) {
+                let data = aa.isArrayLike(arg) ? arg : null;
+                const length = aa.isPositiveInt(arg) ? arg : null;
                 aa.arg.test(spec, aa.isObject, "'spec'", aaCollectionError);
-                aa.arg.test(length, aa.isNullOr(aa.isPositiveInt), "'length'");
                 spec.sprinkle({ authenticate: aa.any });
 
                 const that = _(this);
@@ -1121,16 +1132,17 @@
                     privates.incrementLength.call(this, length);
                 }
 
-                let data = null;
-                if (spec.hasOwnProperty('data')) {
+                if (!data && spec.hasOwnProperty('data')) {
                     data = spec.data;
                     delete spec.data;
                 }
-
                 this.hydrate(spec);
+                
+                if (data?.some(item => !this.authenticate(item))) throw new aaCollectionError("Every item must be verify authentication.");
+                if (data) that.data = data;
 
                 if (data) {
-                    this.push(...data);
+                    // this.push(...data);
                 }
             },
             emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
@@ -1196,7 +1208,7 @@
                 },
                 execute: {
                     first:  () => get(this, "data")[0],
-                    last:   () => get(this, "data")[get(this, "data").length - 1],
+                    last:   () => get(this, "data").last,
                     length: () => get(this, "data").length,
                 }
             }, { cutter: cut, getter: get, setter: set });
@@ -1207,26 +1219,11 @@
         // Publics:
         function methodFactory (methodName) {
             const func = function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
-
+                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.");
+                const thisArg = arguments[1] ?? void 0;
                 const that = _(this);
-                return that.data[methodName]((item, i, list) => {
-                    const isVerified = callback.call(thisArg, item, i, this);
-                    if (aa.inEnum(
-                        'every',
-                        'filter',
-                        'find',
-                        'findIndex',
-                        'findLastIndex',
-                        'findReverse',
-                        'includes',
-                        'some',
-                    )(methodName) && !aa.isBool(isVerified)) {
-                        throw new TypeError(`Callback Function must return a Boolean.`);
-                    }
-                    return isVerified;
-                }, thisArg);
+
+                return that.data[methodName]((item, i, list) => callback.call(thisArg, item, i, this), thisArg);
             };
             Object.defineProperty(func, 'name', {
                 get: () => methodName
@@ -1248,23 +1245,19 @@
         aa.deploy(Collection.prototype, {
             every:              methodFactory('every'),
             filter:             function (callback /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
-                const thisArg = arguments.length > 1 ? arguments[1] : undefined;
+                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.")
+                const thisArg = arguments[1] ?? void 0;
 
                 const that = _(this);
+                const copy = Object(this);
+                const data = that.data;
                 const spec = {};
-                if (this.authenticate) {
-                    spec.authenticate = this.authenticate;
-                }
+                if (copy.authenticate) spec.authenticate = copy.authenticate;
                 const collection = new aa.Collection(spec);
-                that.data.forEach((item, i) => {
-                    const isVerified = callback.call(thisArg, item, i, this);
-                    aa.throwErrorIf(!aa.isBool(isVerified), `Callback function must return a boolean.`);
-                    if (isVerified) {
-                        collection.push(item);
-                    }
-                });
-                set(collection, `listeners`, get(this, `listeners`));
+                for (let i = 0; i < data.length; i++) {
+                    if (callback.call(thisArg, data[i], i, copy)) collection.push(data[i]);
+                }
+                set(collection, "listeners", get(this, "listeners"));
                 return collection;
             },
             find:               methodFactory('find'),
@@ -1530,6 +1523,7 @@
             }
         }, {force: true});
 
+        return Collection;
         return Collection;
     })();
     aa.Event = (() => {
@@ -3034,7 +3028,7 @@
                     });
 
                     // Execute current app events:
-                    app = this.apps[this.appNames.getLast()];
+                    app = this.apps[this.appNames.last];
                     if (app instanceof aa.EventApp) {
                         evts = app.getEvents(evtName);
                         if (evts) {
@@ -3142,7 +3136,8 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaFileError",
+                    value: "aaFileError",
+                    configurable: false,
                 });
             }
         }
@@ -3706,7 +3701,8 @@
             constructor (message, filename, lineNumber) {
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaAnimationError",
+                    value: "aaAnimationError",
+                    configurable: false,
                 });
             }
         }
@@ -3721,115 +3717,140 @@
         function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
         const emit = aa.event.getEmitter({cut, get, set});
         function Animation () { get(Animation, "construct").apply(this, arguments); }
-        const getNowTime = () => ((window?.performance ?? Date)?.now());
         const blueprint = {
             accessors: {
-                publics: {},
-                privates: {
-                    callback:   null,
-                    delay:      null,
-                    fps:        null,
+                publics: {
                     id:         null,
-                    playingAt:  null,
+                    fps:        null,
+                },
+                privates: {
+                    // callback:   null,
+                    delay:      null,
+                    fromStart:  0,
                     iterations: 0,
+                    strokes:    null,
+                    timer:      null,
                 },
                 read: {
                     isPlaying: false
                 },
                 execute: {}
             },
-            verifiers: {
-                callback:   aa.isFunction,
-                delay:      aa.isNullOr(aa.isStrictlyPositiveInt),
-                id:         aa.isStrictlyPositiveInt,
-                options:    aa.verifyObject({
-                    fps: aa.isStrictlyPositiveNumber,
-                }),
-            },
+            /**
+             * @param <integer|object>  delay|options:  If an Integer is provided, it will be used as 'delay' attribute; else, if an Object is provided, it will be used as 'options' attribute.
+             *      @param <number>     options.fps:    The 'frames per second' framerate at which the animation will be played.
+             */
             construct: function (delay /*, callback, options={}*/) {
+                const options = [...arguments].find(aa.isObject) ?? {};
                 const args = [...arguments].slice(1);
                 const callback = args.find(aa.isFunction);
-                const options = args.find(aa.isObject) ?? {};
-
-                aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
-                aa.arg.test(callback, blueprint.verifiers.callback, `'callback'`, aaAnimationError);
                 aa.arg.test(options, blueprint.verifiers.options, "'options'", aaAnimationError);
                 const that = _(this);
 
-                that.callback = callback;
-                if (aa.isNumber(delay)) that.delay = delay;
-                else that.fps = options.fps ?? null;
+                if (aa.isNumber(delay)) {
+                    aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
+                    that.delay = delay;
+                } else {
+                    that.fps = options.fps ?? null;
+                    this.id = options.id ?? aa.uid();
+                }
+
+                if (!that.delay && !that.fps)   throw new aaAnimationError("'delay' or 'fps' must be provided.");
+
                 that.isPlaying = false;
                 
-                if (!that.delay && !that.fps)   throw new aaAnimationError("'delay' or 'fps' must be provided.");
-                if (!that.callback)             throw new aaAnimationError("A callback Function must be provided.");
+                if (callback) {
+                    this.on("draw", callback);
+                }
             },
             methods: {
                 privates: {
                     emit,
+                    play:   function () {
+                        const that = _(this);
+                        if (that.isPlaying) return;
+
+                        const playingAt = aa.now();
+                        that.isPlaying = true;
+                        that.iterations = 0;
+                        
+                        const draw = () => {
+                            if (that.isPlaying) {
+                                const delay = that.delay ?? (1000 / that.fps);
+                                if (aa.now() >= playingAt + (that.iterations * delay)) {
+                                    that.emit("draw", that.fromStart);
+                                    that.fromStart++;
+                                    that.iterations++;
+                                    that.emit('drawn');
+                                }
+                                that.timer = requestAnimationFrame(draw);
+                            }
+                        }
+                        that.timer = requestAnimationFrame(draw);
+                    },
                 },
                 publics: {
                     draw:   function () {
                         const that = _(this);
-                        if (that.id) {
-                            that.callback.call(this);
+                        if (that.timer) {
+                            that.emit("draw", that.fromStart);
+                            that.fromStart++;
+                            that.iterations++;
                             that.emit('drawn');
                         }
                     },
                     start:  function () {
                         const that = _(this);
-                        if (that.id) {
-                            this.resume();
-                            return;
-                        }
-                        that.isPlaying = true;
-                        that.iterations = 0;
-                        that.playingAt = getNowTime();
-                        
-                        const delay = that.delay;
-                        
+                        that.fromStart = 0;
+                        that.play();
                         that.emit('start');
-                        const draw = () => {
-                            const isPlaying = that.isPlaying;
-                            if (isPlaying) {
-                                if (getNowTime() >= that.playingAt + (that.iterations * (that.delay ?
-                                    that.delay
-                                    : (1000 / that.fps))
-                                )) {
-                                    that.iterations++;
-                                    that.callback.call(this);
-                                    that.emit('drawn');
-                                }
-                            }
-                            that.id = requestAnimationFrame(draw);
-                        }
-                        that.id = requestAnimationFrame(draw);
                     },
                     pause:  function () {
                         const that = _(this);
-                        if (that.id) {
+                        if (that.timer) {
+                            cancelAnimationFrame(that.timer);
+                            that.timer = null;
                             that.isPlaying = false;
                             that.emit('pause');
                         }
                     },
                     resume: function () {
                         const that = _(this);
-                        if (that.id) {
-                            that.isPlaying = true;
-                            that.iterations = 0;
-                            that.playingAt = getNowTime();
+                        if (!that.isPlaying) {
+                            if (that.fromStart === 0) {
+                                this.start();
+                                return;
+                            }
+                            that.play();
                             that.emit('resume');
                         }
                     },
                     stop:   function () {
+                        this.pause();
                         const that = _(this);
-                        cancelAnimationFrame(that.id);
-                        that.id = null;
-                        that.isPlaying = false;
+                        that.fromStart = 0;
                         that.emit('stop');
+                    },
+                },
+                setters: {
+                    id: function (id) {
+                        const that = _(this);
+                        id = id.trim();
+                        that.id = id;
                     },
                 }
             },
+            verifiers: {
+                callback:   aa.isFunction,
+                delay:      aa.isNullOr(aa.isStrictlyPositiveInt),
+                id:         aa.nonEmptyString,
+                fps:        aa.isStrictlyPositiveNumber,
+                timer:      aa.isStrictlyPositiveInt,
+                options:    aa.verifyObject({
+                    id:     aa.nonEmptyString,
+                    fps:    aa.isStrictlyPositiveNumber,
+                }),
+            }
         };
         aa.manufacture(Animation, blueprint, {cut, get, set});
         return Animation;
@@ -6588,7 +6609,8 @@
                 constructor (message, filename, lineNumber) {
                     super(message, filename, lineNumber);
                     Object.defineProperty(this, "name", {
-                        get: () => "aaGUIProgressError",
+                        value: "aaGUIProgressError",
+                        configurable: false,
                     });
                 }
             }
@@ -6721,7 +6743,7 @@
                             sections.get(this.app)?.remove(this.section);
                             const temp = {
                                 opacity: 1,
-                                anim: new aa.Animation(null, {fps: 24}, () => {
+                                anim: new aa.Animation({fps: 24, id: "progress.hideSection"}, () => {
                                     temp.opacity = (temp.opacity - .1).bound(0);
                                     if (that.nodes.section) that.nodes.section.style.opacity = `${temp.opacity}`;
                                     if (temp.opacity === 0) {
@@ -6771,12 +6793,10 @@
                                 dialog.classList.remove(previous);
                                 dialog.classList.add(theme);
                             });
-                            const anim = anims.get(this.app) ?? new aa.Animation(null, () => {
+                            const anim = anims.get(this.app) ?? new aa.Animation({fps: 2, id: "progress.showApp"}, () => {
                                 collection.forEach((progress, id) => {
                                     progress.draw();
                                 });
-                            }, {
-                                fps: 2
                             });
                             if (!anims.has(this.app)) anims.add(that.app, anim);
                             anim.start();
@@ -6833,7 +6853,7 @@
                                 nodes[index].range.value = 100;
                                 nodes[index].range.classList.add('complete');
                                 let opacity = 1;
-                                const anim = new aa.Animation(null, {fps: 24}, () => {
+                                const anim = new aa.Animation({fps: 24, id: "progress.complete"}, () => {
                                     opacity = (opacity - .1).bound(0);
                                     if (nodes[index]) nodes[index].container.style.opacity = `${opacity}`;
                                     if (opacity === 0) {
@@ -9833,11 +9853,9 @@
 
             // Verify arguments integrity:
             verify("shortcut", str);
-            if (arguments && arguments.length>1) {
-                if (!aa.isArray(arguments[1])) { throw new TypeError("Second argument must be an Array."); }
-                if (arguments[1].verify((v) => { return allowedOptions.has(v); })) { throw new TypeError("Invalid items found in second argument."); }
-            }
-            const options = (arguments && arguments.length>1 ? arguments[1] : []);
+            if (arguments.length > 1 && !aa.isArray(arguments[1])) throw new TypeError("The second argument must be an Array.");
+            const options = arguments[1] ?? [];
+            if (options.some(option => allowedOptions.indexOf(option) < 0)) { throw new TypeError("Invalid items found in second argument."); }
 
             // Main:
             str = aa.shortcut.cmdOrCtrl(str);
@@ -9943,14 +9961,13 @@
 
         // Getters:
         this.get = function (event) {
-            if (event.constructor && event.constructor.name) {
+            if (event.constructor?.name) {
+                const prefix = specialKeys
+                            .filter(modifier => event[(modifier === "cmd" ? "meta" : modifier)+"Key"])
+                            .join('+');
                 if (event.constructor.name === "KeyboardEvent") {
-                    if (!["Alt", "Meta", "Shift", "Control"].has(event.key)) {
+                    if (["Alt", "Meta", "Shift", "Control"].indexOf(event.key) < 0) {
                         let key = null;
-                        const prefix = (specialKeys.filter((specialKey) => {
-                            const special = (specialKey === "cmd" ? "meta" : specialKey);
-                            return event[special+"Key"];
-                        })).join('+');
                         
                         if (aa.inbetween(event.keyCode, 65, 90)) {
                             key = String.fromCharCode(event.keyCode).toUpperCase();
@@ -9964,30 +9981,20 @@
                         } else {
                             key = event.key;
                         }
-                        const str = (prefix ? prefix+' ' : '')+'<'+key+'>';
-                        return str;
+                        return (prefix ? prefix+' ' : '')+'<'+key+'>';
                     }
                 } else if (
                     event.constructor.name === "MouseEvent"
                     || event.constructor.name === "PointerEvent"
                     || event.constructor.name === "Event"
                 ) {
-                    const parts = [];
-                    const prefix = (specialKeys.filter((specialKey) => {
-                        const special = (specialKey === "cmd" ? "meta" : specialKey);
-                        return event[special+"Key"];
-                    })).join('+');
-                    if (prefix) {
-                        parts.push(prefix);
-                    }
                     const button = (event.button === 0 ?
                         ''
                         : event.button === 1 ?
-                            'Middle'
-                            : 'Right'
+                            "Middle"
+                            : "Right"
                     );
-                    parts.push('<'+button+'Click>');
-                    return parts.join(' ');
+                    return (prefix ? prefix+' ' : '')+'<'+button+'Click>';
                 }
             }
 
@@ -13254,7 +13261,7 @@
                                     get: (function (key) {
                                         return function () {
                                             if (aa.ClassFactory.continueIfEmpty(getNS('__abstract'))) {
-                                                return getNS('__methods',key).getLast();
+                                                return getNS('__methods',key).last;
                                             }
                                         };
                                     })(key)
@@ -13268,12 +13275,11 @@
             // Retrieve 'static':
             if (typeof aaClass.prototype['__static'] !== 'undefined' && aa.isObject(aaClass.prototype['__static'])) {
                 aaClass.prototype['__static'].forEach(function (list,methodName) {
-                    if (aa.isArray(list) && list.length && aa.isFunction(list.getLast())) {
+                    if (aa.isArray(list) && list.length && aa.isFunction(list.last)) {
                         Object.defineProperty(aaClass,methodName,{
                             get: (function (methodName) {
                                 return function () {
-                                    let args = arguments
-                                    return list.getLast(args);
+                                    return list.last.apply(this, arguments);
                                 };
                             })(methodName)
                         });

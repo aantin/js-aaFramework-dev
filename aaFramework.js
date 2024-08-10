@@ -2212,47 +2212,40 @@
         this.init.apply(this,arguments);
     })();
 
-    const Builder               = Object.freeze(function () {
-
-        // Attributes:
-        const collection = {};
+    aa.build = (() => {
         
-        // Magic:
+        // Privates:
+        const collection = {};
         const construct   = function () {
             if (arguments && arguments.length) {
                 this.hydrate(arguments[0]);
             }
         };
-        Builder.prototype.hydrate     = aa.prototypes.hydrate;
-
-        // Methods:
-        if (Builder.prototype.set === undefined) {
-
+        const Builder               = function () {
+            // Instanciate:
+            construct.apply(this, arguments);
+        };
+        aa.deploy(Builder.prototype, {
+            hydrate: aa.prototypes.hydrate,
+            
             // General:
-            Builder.prototype.set         = function (name, myClass) {
+            set: function (name, myClass) {
                 if (!aa.nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isFunction(myClass)) { throw new TypeError("Second argument must be a Class."); }
+
+                if (name === "set") throw new TypeError("Invalid 'Builder' key name");
 
                 name = name.trim();
                 collection[name] = myClass;
                 Object.defineProperty(this, name,{
-                    get: () => {
-                        return function () {
-                            if (arguments && arguments.length) {
-                                return new (collection[name])(arguments[0]);
-                            } else {
-                                return new (collection[name])();
-                            }
-                        };
+                    get: () => function (...args) {
+                        return new (collection[name])(...args);
                     }
                 })
-            };
-        }
-
-        // Instanciate:
-        construct.apply(this, arguments);
-    });
-    aa.build                    = new Builder();
+            },
+        }, {force: true});
+        return new Builder();
+    })();
 
     // Modules:
     aa.actions = Object.freeze({
@@ -9328,32 +9321,33 @@
         Object.defineProperties(mouse, {
             x: {
                 get: () => privates.x,
-                set: value => {},
             },
             y: {
                 get: () => privates.y,
-                set: value => {},
             },
             absoluteX: {
                 get: () => privates.absoluteX,
-                set: value => {},
             },
             absoluteY: {
                 get: () => privates.absoluteY,
-                set: value => {},
             },
             getX: {
-                get: () => function () {
-                    return privates.x;
-                },
+                configurable:   false,
+                enumerable:     false,
+                writable:       false,
+                value: () => privates.x,
             },
             getY: {
-                get: () => function () {
-                    return privates.y;
-                },
+                configurable:   false,
+                enumerable:     false,
+                writable:       false,
+                value: () => privates.y,
             },
             onMove: {
-                get: () => function (e) {
+                configurable:   false,
+                enumerable:     false,
+                writable:       false,
+                value: function (e) {
                     if (arguments.length) {
                         let evt = self.window?.event || arguments[0];
                         
@@ -9363,14 +9357,14 @@
                             privates.absoluteX = evt.pageX;
                             privates.absoluteY = evt.pageY;
                         } else {
-                            privates.x = event.clientX;
-                            privates.y = event.clientY;
-                            privates.absoluteX = event.clientX + document.body.scrollLeft;
-                            privates.absoluteY = event.clientY + document.body.scrollTop;
+                            privates.x = evt.clientX;
+                            privates.y = evt.clientY;
+                            privates.absoluteX = evt.clientX + document.body.scrollLeft;
+                            privates.absoluteY = evt.clientY + document.body.scrollTop;
                         }
                         
-                        aa.events.execute("mousemove", e);
-                        
+                        // aa.events.execute("mousemove", e);
+
                         return {
                             x: privates.x,
                             y: privates.y,
@@ -13956,19 +13950,19 @@
     (function () { /* Events */
         if (!self.window || !self.document) return;
 
-        self.window.on("resize", function () { aa.events.execute("windowresize"); });
-        self.window.onbeforeunload   = function () { return aa.events.execute("beforeunload"); }; // return value has to be a String
-        self.window.onunload         = function () { return aa.events.execute("windowunload"); }; // return value has to be a String
-        self.window.on("shortcutchange", (e) => { return aa.events.execute("shortcutchange", e); });
+        self.window.on("resize", e => aa.events.execute("windowresize", e));
+        self.window.onbeforeunload   = e => aa.events.execute("beforeunload", e); // return value has to be a String
+        self.window.onunload         = e => aa.events.execute("windowunload", e); // return value has to be a String
+        self.window.on("shortcutchange", e => aa.events.execute("shortcutchange", e));
 
         self.document.on((aa.browser.is("firefox") ? "DOMMouseScroll" : "mousewheel"), aa.events.custom.mousewheel);
-        self.document.on("keydown", (e) => { return aa.events.custom.keyboard(e); });
+        self.document.on("keydown", aa.events.custom.keyboard);
         // self.document.on("keyup", aa.events.custom.keyboard);
         // self.document.on("click", aa.events.custom.click);
-        self.document.on("contextmenu", (e) => { return aa.events.custom.click(e); });
-        self.document.on("mousemove", (e) => { return aa.mouse.onMove(e); });
-        self.document.on("mousedown", (e) => { return aa.events.execute("mousedown", e); });
-        self.document.on("mouseup", (e) => { return aa.events.execute("mouseup", e); });
+        self.document.on("contextmenu", aa.events.custom.click);
+        self.document.on("mousemove", aa.throttle(aa.mouse.onMove, 50));
+        self.document.on("mousedown", e => aa.events.execute("mousedown", e));
+        self.document.on("mouseup", e => aa.events.execute("mouseup", e));
 
         // bodyload:
         (function () {

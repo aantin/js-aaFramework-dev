@@ -3300,6 +3300,9 @@ div#aaNotifs div.message code {
     background: #446;
     color: var(--form-placeholder-color);
 }
+div#aaNotifs div.message ul {
+    padding-left: 12px;
+}
 div#aaNotifs div.buttons button,
 div#aaNotifs div.buttons input[type="submit"],
 div#aaNotifs div.buttons input[type="button"] {

@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.25.0",
+        version: "4.x.x",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -129,6 +129,10 @@
     const framework = {
         isDOMContentLoaded: false,
     };
+    const write = aa.writer({
+        namespace:  "framework",
+        style:      "color: #6c8;",
+    });
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
@@ -2796,7 +2800,7 @@
 
                 if (combinaison) {
                     this.logKeyCode();
-                    ((show) => {
+                    (show => {
                         if (show && !aa.settings.production) {
                             clearTimeout(timerShow);
                             clearInterval(timerFade);
@@ -3630,7 +3634,7 @@
                         }
 
                         // Emit onchanged event:
-                        if (isDifferent) { blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value); }
+                        if (isDifferent) blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value);
                     }
 
                     // setter(this, methodName, method);
@@ -4482,8 +4486,10 @@
             const emit = aa.prototypes.events.getEmitter({cut, get, set});
             const construct = function () {
                 this.setTheme(aa.settings.theme);
-                aa.events.on('themechange', (theme) => {
-                    this.setTheme(theme);
+                aa.settings.on({
+                    themechanged: e => {
+                        this.setTheme(e.data.theme);
+                    },
                 });
                 if (arguments && arguments.length) {
                     this.hydrate(arguments[0]);
@@ -4601,7 +4607,8 @@
                     
                     // Theme:
                     menu.classList.add(get(this, "theme"));
-                    aa.events.on('themechange', (theme, previous) => {
+                    aa.settings.on("themechanged", e => {
+                        const {previous, theme} = e.data;
                         menu.classList.remove(previous);
                         menu.classList.add(theme);
                     });
@@ -4647,8 +4654,8 @@
                     const that = _(this);
 
                     set(this, "theme", aa.settings.theme);
-                    aa.events.on('themechange', (theme) => {
-                        set(this, "theme", theme);
+                    aa.settings.on("themechanged", e => {
+                        set(this, "theme", e.data.theme);
                     });
                     if (aa.isObject(spec)) {
                         if (spec.hasOwnProperty("on")) {
@@ -4748,7 +4755,8 @@
                         // Theme:
                         const theme = get(this, 'theme');
                         that.node.classList.add(theme);
-                        aa.events.on('themechange', (theme, previous) => {
+                        aa.settings.on("themechanged", e => {
+                            const {theme, previous} = e.data;
                             that.node.classList.remove(previous);
                             that.node.classList.add(theme);
                         });
@@ -5611,8 +5619,10 @@
                 // Default type:
                 this.setType(dialogTypes[0]);
                 this.setTheme(aa.settings.theme);
-                aa.events.on('themechange', (theme, previous) => {
-                    this.setTheme(theme);
+                aa.settings.on({
+                    themechanged: e => {
+                        if (e.data.theme) this.setTheme(e.data.theme);
+                    },
                 });
                 
                 if (arguments && arguments.length) {
@@ -6099,7 +6109,8 @@
                 addThemeTo:         function (node) {
                     if (this.theme) {
                         node.classList.add(this.theme);
-                        aa.events.on('themechange', (theme, previous) => {
+                        aa.settings.on("themechanged", e => {
+                            const {theme, previous} = e.data;
                             node.classList.remove(previous);
                             node.classList.add(theme);
                         });
@@ -6533,7 +6544,8 @@
                     }, () => {
                         const node = $$("div#aaNotifs.aa"+aa.settings.theme);
                         document.body.appendChild(node);
-                        aa.events.on('themechange', (theme, previous) => {
+                        aa.settings.on("themechanged", e => {
+                            const {theme, previous} = e.data;
                             node.classList.remove(previous);
                             node.classList.add(theme);
                         });
@@ -6898,7 +6910,8 @@
                             document.body.classList.add("freeze-progress");
                             document.body.appendChild(node);
                             node.style.zIndex = aa.getMaxZIndex()+1;
-                            aa.events.on('themechange', (theme, previous) => {
+                            aa.settings.on("themechanged", e => {
+                                const {theme, previous} = e.data;
                                 dialog.classList.remove(previous);
                                 dialog.classList.add(theme);
                             });
@@ -13419,58 +13432,100 @@
         };
     })();
     aa.settings                 = (() => {
-
-        // Class:
-        function Settings () {
-            aa.defineAccessors.call(this, {
+        class aaSettingsError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaSettingsError",
+                    configurable: false,
+                });
+            }
+        }
+        class aaSettingsTypeError extends TypeError {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaSettingsTypeError",
+                    configurable: false,
+                });
+            }
+        }
+        const {cut, get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
+        function aaSettings () { get(aaSettings, "construct").apply(this, arguments); }
+        const blueprint = {
+            accessors: {
                 publics: {
                     production: ENV.PRODUCTION,
+                    script:     null,
+                    scripts:    null,
                     theme:      ENV.DEFAULT_THEME
                 },
                 write: {
-                    script:     null,
-                    scripts:    [],
                 },
+            },
+            construct: function () {
+                const that = _(this);
+                that.scripts = [];
+            },
+            methods: {
                 privates: {
-                }
-            }, {cutter: cut, getter: get, setter: set});
-        };
+                },
+                publics: {
+                },
+                setters: {
+                    production:  function (isProd) {
+                        aa.arg.test(isProd, blueprint.verifiers.production, "'isProd'", aaSettingsTypeError);
+                        const that = _(this);
 
-        // Public methods:
-        aa.deploy(Settings.prototype, {
-            setProduction:  function (isProd) {
-                if (!aa.isBool(isProd)) { throw new TypeError("Argument must be a Boolean."); }
-                set(this, 'production', isProd);
-            },
-            setScript:      function (path) {
-                if (!aa.nonEmptyString(path)) { throw new TypeError("Argument must be a non-empty String."); }
-                path = path.trim();
-                if (!get(this, 'scripts').has(path)) {
-                    get(this, 'scripts').push(path);
-                    aa.addScriptToDOM(path);
-                }
-            },
-            setScripts:     function (scripts) {
-                if (!aa.isArray(scripts) || scripts.find(path => !aa.nonEmptyString(path))) { throw new TypeError("Argument must be an Array of non-empty Strings."); }
-                scripts.forEach((path) => {
-                    this.setScript(path);
-                });
-            },
-            setTheme:       function (theme) {
-                if (theme !== undefined && !aa.nonEmptyString(theme)) { throw new TypeError("'theme' spec must be a non-empty String."); }
-                if (ENV.THEMES.has(theme)) {
-                    const previous = get(this, 'theme');
-                    set(this, 'theme', theme);
-                    if (theme !== previous) {
-                        aa.events.fire('themechange', theme, previous);
+                        const isDifferent = that.production !== isProd;
+                        that.production = isProd;
+                        if (isDifferent) that.emit("productionchanged", isProd);
+                    },
+                    script:      function (path) {
+                        aa.arg.test(path, blueprint.verifiers.script, "'path'", aaSettingsTypeError);
+                        const that = _(this);
+
+                        path = path.trim();
+                        if (that.scripts.indexOf(path) < 0) {
+                            that.scripts.push(path);
+                            aa.addScriptToDOM(path);
+                        }
+                    },
+                    scripts:     function (scripts) {
+                        aa.arg.test(scripts, blueprint.verifiers.scripts, "'scripts'", aaSettingsTypeError);
+                        const that = _(this);
+
+                        scripts.forEach((path) => {
+                            this.setScript(path);
+                        });
+                    },
+                    theme:       function (theme) {
+                        aa.arg.test(theme, blueprint.verifiers.theme, "'theme'", aaSettingsTypeError);
+                        const that = _(this);
+
+                        const previous = that.theme;
+                        that.theme = theme;
+                        if (theme !== previous) {
+                            that.emit("themechanged", {
+                                previous,
+                                theme,
+                            }, theme, previous);
+                            // aa.events.fire('themechange', theme, previous);
+                        }
                     }
-                } else {
-                    console.warn("Theme '"+theme+"' not valid.");
-                }
-            }
-        });
+                },
+            },
+            verifiers: {
+                production: aa.isBool,
+                script:     aa.nonEmptyString,
+                scripts:    aa.isArrayOfNonEmptyStrings,
+                theme:      aa.inArray(ENV.THEMES),
+            },
+        };
+        aa.manufacture(aaSettings, blueprint, {cut, get, set});
 
-        return Object.freeze(new Settings());
+        return Object.freeze(new aaSettings());
     })();
     aa.todoList                 = (() => {
         const style = "color: #4a7; color: #ba8e4d; font-style: italic; font-weight: normal;";

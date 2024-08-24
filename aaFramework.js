@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.24.0",
+        version: "3.25.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -105,7 +105,8 @@
                     publics:        aa.isObjectOf(value => !aa.isFunction(value)),
                     privates:       aa.isObjectOf(value => !aa.isFunction(value)),
                     read:           aa.isObject,
-                    execute:        aa.isObject
+                    write:          aa.isObject,
+                    execute:        aa.isObject,
                 }
             },
         };
@@ -118,6 +119,7 @@
                         listeners: {}
                     },
                     read: {},
+                    write: {},
                     execute: {},
                 }),
             }
@@ -1145,7 +1147,8 @@
                     // this.push(...data);
                 }
             },
-            emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
+            // emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
+            emit:               aa.event.getEmitter({cut, get, set}, "listeners"),
             incrementLength:    function (index=null) {
                 const that = _(this);
                 index ??= that.data.length - 1;
@@ -1377,13 +1380,13 @@
                     privates.incrementLength.call(this, index);
                 }
                 items.forEach(item => {
-                    privates.emit.call(this, `added`, item);
+                    privates.emit.call(this, "added", item);
                 });
-                privates.emit.call(this, `datamodified`, this);
+                privates.emit.call(this, "datamodified", this);
             },
             join:               function () {
                 return (
-                    get(this, `data`).join.apply(this, arguments)
+                    get(this, "data").join.apply(this, arguments)
                 );
             },
             on:                 aa.prototypes.events.getListener(get, "listeners"),
@@ -1415,8 +1418,8 @@
                         }
                     });
                     privates.incrementLength.call(this);
-                    privates.emit.call(this, `added`, item);
-                    privates.emit.call(this, `datamodified`, this);
+                    privates.emit.call(this, "added", item);
+                    privates.emit.call(this, "datamodified", this);
                 });
             },
             pushUnique:         function (...items) {
@@ -3479,14 +3482,40 @@
                 });
             }
         }
+        class aaManufactureTypeError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaManufactureTypeError",
+                });
+            }
+        }
         const closure = aa.mapFactory();
-        return function (Instancer, blueprint /*, accessors */) {
+        function verifyBlueprint (blueprint) {
+            return aa.verifyObject({
+                accessors:          aa.verifyObject(commons.accessors.verifiers),
+                construct:          aa.isFunction,
+                startHydratingWith: aa.isArrayOf(key => blueprint.accessors?.publics?.hasOwnProperty(key)),
+                methods:            aa.verifyObject({
+                    privates:       aa.isObjectOfFunctions,
+                    publics:        aa.isObjectOfFunctions,
+                    setters:        aa.isObjectOfFunctions
+                }),
+                on:                 aa.verifyObject({
+                    hydrated:       aa.isFunction,
+                    instanciated:   aa.isFunction,
+                }),
+                statics:            aa.isObject,
+                verifiers:          aa.isObject,
+            });
+        }
+        function manufacture (Instancer, blueprint /*, accessors */) {
             /**
              * Build a constructor with publics, privates, static, etc properties.
              * 
              * Calling the 'construct' private method will call the following sequence:
              *      - define accessors
-             *      - construct
+             *      - construct (from blueprint)
              *      - hydrate
              *      : emit event 'hydrated'
              *      : callback 'instanciated'
@@ -3536,22 +3565,7 @@
             const setter = accessors.set ?? set;
             const cutter = accessors.cut ?? cut;
 
-            aa.arg.test(blueprint, aa.verifyObject({
-                accessors:          aa.verifyObject(commons.accessors.verifiers),
-                construct:          aa.isFunction,
-                startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
-                methods:            aa.verifyObject({
-                    privates:       aa.isObjectOfFunctions,
-                    publics:        aa.isObjectOfFunctions,
-                    setters:        aa.isObjectOfFunctions
-                }),
-                on:                 aa.verifyObject({
-                    hydrated:       aa.isFunction,
-                    instanciated:   aa.isFunction,
-                }),
-                statics:            aa.isObject,
-                verifiers:          aa.isObject,
-            }), `'blueprint'`);
+            aa.arg.test(blueprint, verifyBlueprint(blueprint), `'blueprint'`, aaManufactureTypeError);
 
             blueprint.sprinkle({
                 accessors: commons.accessors.defaultValue,
@@ -3602,7 +3616,7 @@
                                 || !(blueprint.verifiers.hasOwnProperty(key))
                                 || blueprint.verifiers[key].call(this, value),
                             `'${key}' setter`
-                        );
+                        , aaManufactureTypeError);
 
                         // Emit onchange event:
                         const isDifferent = (value !== getter(this, key));
@@ -3657,7 +3671,7 @@
                     const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
                     const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
                     try {
-                        aa.arg.test(spec, arg => Object.keys(arg).every(key => Object.keys(blueprint.accessors.publics).includes(key)), "'spec'");
+                        aa.arg.test(spec, arg => Object.keys(arg).every(key => Object.keys(blueprint.accessors.publics).includes(key)), "'spec'", aaManufactureTypeError);
                     } catch (err) {
                         const undefinedKeys = Object.keys(spec)
                                             .filter(key => !Object.keys(blueprint.accessors.publics).includes(key));
@@ -3667,15 +3681,15 @@
 
                     // First assign with starting keys:
                     order
-                    .forEach((key) => { hydrator.call(this, key, spec[key]); });
+                    .forEach(key => { hydrator.call(this, key, spec[key]); });
 
                     // Then assign remaining keys:
                     Object.keys(spec)
-                    .filter(key => !order.has(key))
+                    .filter(key => order.indexOf(key) < 0)
                     .forEach(key => { hydrator.call(this, key, spec[key]); });
 
                     // Emit event 'hydrated':
-                    blueprint.methods.privates.emit.call(this, 'hydrated');
+                    blueprint.methods.privates.emit.call(this, "hydrated");
                 },
                 on:         aa.event.getListener({cut: cutter, get: getter, set: setter})
             }, blueprint.methods.publics);
@@ -3688,6 +3702,50 @@
                 // emitter: emit
             });
         };
+
+        // Overwrite blueprints with new values:
+        function overwriteDepth0 (original, additional, type) {
+            if (additional[type]) {
+                original[type] = additional[type];
+            }
+        };
+        function overwriteDepth1 (original, additional, type) {
+            if (additional.hasOwnProperty(type)) {
+                original[type] ??= {};
+                additional[type].forEach((value, key) => {
+                    original[type][key] = value;
+                });
+            }
+        };
+        function overwriteDepth2 (original, additional, type) {
+            if (additional[type]) {
+                original[type] ??= {};
+                additional[type].forEach((defaultValues, visibility) => {
+                    original[type][visibility] ??= {};
+                    defaultValues.forEach((value, key) => {
+                        original[type][visibility][key] = value;
+                    });
+                });
+            }
+        };
+        manufacture.overwrite = function (blueprint, additional={}) {
+            aa.arg.test(blueprint, verifyBlueprint(blueprint), "'blueprint'", aaManufactureTypeError);
+            aa.arg.test(additional, verifyBlueprint(additional), "'additional'", aaManufactureTypeError);
+
+            overwriteDepth2(blueprint, additional, "accessors");
+            overwriteDepth2(blueprint, additional, "methods");
+
+            overwriteDepth1(blueprint, additional, "on");
+            overwriteDepth1(blueprint, additional, "statics");
+            
+            overwriteDepth0(blueprint, additional, "construct");
+
+            if (additional.startHydratingWith) {
+                blueprint.startHydratingWith ??= [];
+                blueprint.startHydratingWith.push(...additional.startHydratingWith);
+            }
+        };
+        return manufacture;
     })());
     aa.Animation                = (() => {
         class aaAnimationError extends Error {
@@ -3695,6 +3753,15 @@
                 super(message, filename, lineNumber);
                 Object.defineProperty(this, "name", {
                     value: "aaAnimationError",
+                    configurable: false,
+                });
+            }
+        }
+        class aaAnimationTypeError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaAnimationTypeError",
                     configurable: false,
                 });
             }
@@ -3737,11 +3804,11 @@
                 const options = [...arguments].find(aa.isObject) ?? {};
                 const args = [...arguments].slice(1);
                 const callback = args.find(aa.isFunction);
-                aa.arg.test(options, blueprint.verifiers.options, "'options'", aaAnimationError);
+                aa.arg.test(options, blueprint.verifiers.options, "'options'", aaAnimationTypeError);
                 const that = _(this);
 
                 if (aa.isNumber(delay)) {
-                    aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationError);
+                    aa.arg.test(delay, blueprint.verifiers.delay, `'delay'`, aaAnimationTypeError);
                     that.delay = delay;
                 } else {
                     that.fps = options.fps ?? null;
@@ -3848,7 +3915,56 @@
         aa.manufacture(Animation, blueprint, {cut, get, set});
         return Animation;
     })();
+    aa.CustomEvent              = (() => {
+        const {cut, get, set} = aa.mapFactory();
+        function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
+        function aaCustomEvent () { get(aaCustomEvent, "construct").apply(this, arguments); }
+        const blueprint = {
+            accessors: {
+                publics: {
+                    cancelable: false,
+                    data:       null,
+                    target:     null,
+                    type:       null,
+                },
+            },
+            construct: function () {
+            },
+            methods: {
+                privates: {
+                },
+                publics: {
+                },
+                setters: {
+                },
+            },
+            verifiers: {
+                cancelable: aa.any,
+                data:       aa.any,
+                target:     aa.any,
+                type:       aa.nonEmptyString,
+            },
+        };
+        aa.manufacture(aaCustomEvent, blueprint, {cut, get, set});
+        return aaCustomEvent;
+    })();
     aa.Dictionary               = (() => {
+        class aaDictionaryError extends Error {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaDictionaryError",
+                });
+            }
+        }
+        class aaDictionaryTypeError extends TypeError {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    get: () => "aaDictionaryTypeError",
+                });
+            }
+        }
         const {cut, get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         function aaDictionary () { get(aaDictionary, "construct").apply(this, arguments); }
@@ -3872,7 +3988,7 @@
                 const pairs = [...arguments].find(aa.isArray) ?? [];
                 const spec = [...arguments].find(aa.isObject) ?? {};
 
-                aa.arg.test(pairs, blueprint.verifiers.pairs, "'pairs'");
+                aa.arg.test(pairs, blueprint.verifiers.pairs, "'pairs'", aaDictionaryTypeError);
                 const that = _(this);
 
                 that.authenticate = {
@@ -3966,12 +4082,12 @@
                     },
                     get:            function (key) {
                         const that = _(this);
-                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         return that.data.get(key);
                     },
                     has:            function (key) {
                         const that = _(this);
-                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         return that.data.has(key);
                     },
                     keys:           function () {
@@ -3997,9 +4113,9 @@
                     // Setters:
                     add:            function (key, value, shiftKeyToEndIfAlreadyExists=false) {
                         const that = _(this);
-                        aa.arg.test(key, that.authenticate.keys, "'key'");
-                        aa.arg.test(value, that.authenticate.values, "'value'");
-                        aa.arg.test(shiftKeyToEndIfAlreadyExists, aa.isBool, "'shiftKeyToEndIfAlreadyExists'");
+                        aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
+                        aa.arg.test(value, that.authenticate.values, "'value'", aaDictionaryTypeError);
+                        aa.arg.test(shiftKeyToEndIfAlreadyExists, aa.isBool, "'shiftKeyToEndIfAlreadyExists'", aaDictionaryTypeError);
 
                         if (aa.isString(key))
                             key = key.trim();
@@ -4017,7 +4133,7 @@
                     },
                     delete:         function (key) {
                         const that = _(this);
-                        aa.arg.test(key, that.authenticate.keys, "'key'");
+                        aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         that.data.delete(key);
                         that.keys.remove(key);
                         // if (aa.isString(key)) {
@@ -13356,40 +13472,50 @@
 
         return Object.freeze(new Settings());
     })();
-    aa.todoList                 = (list, label=null) => {
-        // If an Object is provided, re-call on each property:
-        if (aa.isObject(list)) {
-            list.forEach((list, label) => {
-                aa.todoList(list, label);
-            });
-            return;
-        }
-
-        aa.arg.test(list, aa.isArrayLike, "'list'");
-        aa.arg.test(label, aa.isNullOrNonEmptyString, "'label'");
-
-        label = label?.trim() ?? null;
-
-        const display = () => {
-            if (list.length && !aa.settings.production) {
-                const title = `todo${label ? ` (${label})` : ''}:`;
-                console.group(title);
-                list
-                .forEach(message => {
-                    console.warn(`todo: ${message}`);
-                    aa.gui.notif(message, {
-                        title,
-                        type: "warning",
-                    });
+    aa.todoList                 = (() => {
+        const style = "color: #4a7; color: #ba8e4d; font-style: italic; font-weight: normal;";
+        const write = aa.writer({style});
+        return (list, label=null) => {
+            // If an Object is provided, re-call on each property:
+            if (aa.isObject(list)) {
+                list.forEach((list, label) => {
+                    aa.todoList(list, label);
                 });
-                console.groupEnd();
-                console.log("");
+                return;
             }
-        };
 
-        if (framework.isDOMContentLoaded) display();
-        else document.on("DOMContentLoaded", display);
-    };
+            aa.arg.test(list, aa.isArrayLike, "'list'");
+            aa.arg.test(label, aa.isNullOrNonEmptyString, "'label'");
+
+            label = label?.trim() ?? null;
+
+            const display = () => {
+                if (list.length && !aa.settings.production) {
+                    const title = `todo${label ? `%c(%c${label}%c)` : '%c%c%c'}:`;
+                    console.groupCollapsed(
+                        `%c${title}%c ${list.length} tasks`,
+
+                        "color: #ba8e4d;",
+                        "color: #aaa;",
+                        "color: black;",
+                        "color: #aaa;",
+                        "color: #aaa; font-style: italic; font-weight: normal;"
+                    );
+                    list.forEach(message => {
+                        write(null, `${message}`);
+                        aa.gui.notif(message, {
+                            title: title.replace(/\%c/g, ''),
+                            type: "warning",
+                        });
+                    });
+                    console.groupEnd();
+                }
+            };
+
+            if (framework.isDOMContentLoaded) display();
+            else document.on("DOMContentLoaded", display);
+        };
+    })();
     aa.xhr                      = function (method='GET', src, options={}) {
         aa.arg.test(method, aa.nonEmptyString, `'method'`);
         aa.arg.test(src, aa.nonEmptyString, `'src'`);

@@ -1147,12 +1147,13 @@ body.aaContextMenuFreeze {
 }
 #aaContextMenu > ul li button,
 #aaContextMenu > ul li input[type=button] {
+    font-weight: normal;
     margin: 0;
     padding: 4px 8px;
     width: 100%;
     background: transparent;
     text-align: left;
-    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-family: var(--font-family);
     line-height: 1.5;
     white-space: nowrap;
     border-radius: 0;
@@ -1207,7 +1208,7 @@ body.aaContextMenuFreeze {
 #aaContextMenu li input[type=button]:disabled,
 #aaContextMenu li button:disabled:hover,
 #aaContextMenu li input[type=button]:disabled:hover{
-    font-family: 'Fira EL', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    font-family: var(--font-family);
     background: #fff;
     color: var(--menu-disabled-color);
 }

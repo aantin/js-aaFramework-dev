@@ -2637,14 +2637,8 @@ Tooltip:
 .aa button > .tooltip-container {
     display: none;
 }
-.aa button:hover > .tooltip-container,
-.aa button:hover > .tooltip-container,
-.aa button:focus > .tooltip-container,
-.aa button:focus > .tooltip-container {
+.aa button:hover > .tooltip-container:not(.hidden) {
     display: block;
-}
-.aa button:focus > .tooltip-container.hidden {
-    display: none;
 }
 .aa button:disabled > .tooltip-container > div.tooltip-anchor > div.tooltip {
     --tooltip-bg: var(--color-grey-darker);

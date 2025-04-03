@@ -23,7 +23,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.25.2",
+        version: "3.26.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -595,11 +595,43 @@
 
                 // General:
                 hydrate:         aa.prototypes.hydrate,
-                addToManager:    function () {
+                addToManager () {
                     const that = _(this);
                     if (that.addToManager) {
                         aa.actionManager.update(this);
                     }
+                },
+                cancel (evtName, callback) {
+                    if (aa.isObject(evtName)) {
+                        if (callback !== undefined) {
+                            console.warn("In case an object is provided as first argument, any other argument will be ignored.");
+                        }
+
+                        const listeners = evtName;
+                        let res = true;
+                        listeners.forEach((callback, evtName) => {
+                            if (!this.cancel(evtName, callback)) res = false;
+                        });
+                        return res;
+                    }
+
+                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
+                    aa.arg.test(callback, aa.isFunction, "'callback'");
+
+                    const that = _(this);
+                    let res = false;
+                    
+                    evtName = "on"+evtName.trim();
+                    const listeners = get(this, "listeners");
+                    if (!listeners.hasOwnProperty(evtName)) {
+                        console.warn("Action's event listener '"+evtName+"' not implemented.");
+                        return false;
+                    }
+                    if (!res && listeners[evtName].includes(callback)) {
+                        listeners[evtName].remove(callback);
+                        res = true;
+                    }
+                    return res;
                 },
                 /**
                  * @param {string} evtName="execute" (optional)
@@ -607,7 +639,7 @@
                  *
                  * @return {void}
                  */
-                fire:            function (evtName="execute" /*, param */) {
+                fire (evtName="execute" /*, param */) {
                     aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
                     const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
                     aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
@@ -626,11 +658,11 @@
                         dispatch.call(this, evtName.replace(/^on/, ''), param);
                     }
                 },
-                hasCallback:        function (callback) {
+                hasCallback (callback) {
                     const that = _(this);
                     return that.listeners.onexecute.has(callback);
                 },
-                isValid:         function () {
+                isValid () {
                     const that = _(this);
                     return (that.name !== null);
                 },
@@ -641,7 +673,7 @@
                  *
                  * @return {void}
                  */
-                listenNode:      function (node, evtName, callback) {
+                listenNode (node, evtName, callback) {
                     aa.arg.test(node, aa.isElement, "'node'");
                     aa.arg.test(evtName, aa.inArray(allowedEvents), "'evtName'");
                     aa.arg.test(callback, aa.isFunction, "'callback'");
@@ -665,7 +697,7 @@
                  *
                  * return {boolean} true if callback could be added, false if already existed
                  */
-                on:              function (evtName, callback) {
+                on (evtName, callback) {
                     if (aa.isObject(evtName)) {
                         if (callback !== undefined)
                             console.warn("In case an object is provided as first argument, any other argument will be ignored.");
@@ -699,27 +731,27 @@
                 // Setters:
                 get:             aa.prototypes.get,
                 set:             aa.prototypes.set,
-                setAccessible:   function (accessible=true) {
+                setAccessible (accessible=true) {
                     aa.arg.test(accessible, aa.isBool, "'accessible'");
                     const that = _(this);
                     that.accessible = accessible;
                     return accessible;
                 },
-                setAddToManager: function (addToManager) {
+                setAddToManager (addToManager) {
                     aa.arg.test(addToManager, verifiers.addToManager, "'addToManager'");
                     const that = _(this);
                     
                     that.addToManager = addToManager;
                     return addToManager;
                 },
-                setApp:          function (appName) {
+                setApp (appName) {
                     aa.arg.test(appName, verifiers.app, "'appName'");
                     const that = _(this);
 
                     that.app = appName.trim();
                     return true;
                 },
-                setCheckable:    function (checkable) {
+                setCheckable (checkable) {
                     aa.arg.test(checkable, aa.isBool, "'checkable'");
                     const that = _(this);
                     
@@ -730,7 +762,7 @@
                     }
                     return checkable;
                 },
-                setChecked:      function (checked) {
+                setChecked (checked) {
                     aa.arg.test(checked, aa.isBool, "'checked'");
                     const that = _(this);
 
@@ -743,7 +775,7 @@
                     }
                     return checked;
                 },
-                setDescription:  function (description) {
+                setDescription (description) {
                     aa.arg.test(description, verifiers.description, "'description'");
                     const that = _(this);
 
@@ -759,7 +791,7 @@
                  *
                  * @return {void}
                  */
-                setDisabled:     function (disabled) {
+                setDisabled (disabled) {
                     aa.arg.test(disabled, verifiers.disabled, "'disabled'");
                     const that = _(this);
 
@@ -771,7 +803,7 @@
                     }
                     return that.disabled;
                 },
-                setCallback:     function (callback) {
+                setCallback (callback) {
                     aa.deprecated("aa.Action.callbacks");
                     aa.arg.test(callback, verifiers.callback, "'callback'");
                     const that = _(this);
@@ -779,13 +811,13 @@
                     that.listeners["onexecute"].push(callback); // now in 'onexecute' instead of in 'callbacks'
                     return true;
                 },
-                setCallbacks:    function (callbacks) {
+                setCallbacks (callbacks) {
                     aa.arg.test(callbacks, verifiers.callbacks, "'callbacks'");
                     return callbacks.forEach((callback) => {
                         this.setCallback(callback);
                     });
                 },
-                setIcon:         function (icon) {
+                setIcon (icon) {
                     aa.arg.test(icon, verifiers.icon, "'icon'");
                     const that = _(this);
 
@@ -800,14 +832,14 @@
                     }
                     return true;
                 },
-                setName:         function (name) {
+                setName (name) {
                     aa.arg.test(name, verifiers.name, "'name'");
                     const that = _(this);
 
                     that.name = name.trim();
                     return true;
                 },
-                setOn:           function (listeners) {
+                setOn (listeners) {
                     aa.arg.test(listeners, verifiers.on, "'listeners'");
 
                     const verifier = {};
@@ -821,7 +853,7 @@
                         this.on(evtName, callback);
                     });
                 },
-                setPriority:     function (priority) {
+                setPriority (priority) {
                     aa.arg.test(priority, verifiers.priority, "'priority'");
                     const that = _(this);
 
@@ -835,7 +867,7 @@
                         return true;
                     }
                 },
-                setText:         function (text) {
+                setText (text) {
                     aa.arg.test(text, verifiers.text, "'text'");
                     const that = _(this);
 
@@ -846,14 +878,14 @@
                     }
                     return true;
                 },
-                setTooltip:      function (tooltip) {
+                setTooltip (tooltip) {
                     aa.arg.test(tooltip, verifiers.tooltip, "'tooltip'");
                     const that = _(this);
 
                     that.tooltip = tooltip.trim();
                     return true;
                 },
-                setType:         function (type) {
+                setType (type) {
                     aa.arg.test(type, verifiers.type, "'type'");
                     const that = _(this);
 
@@ -877,7 +909,7 @@
                 },
 
                 // Getters:
-                getDomLi:        function () {
+                getDomLi () {
                     const that = _(this);
 
                     let li = aa.html('li');
@@ -892,19 +924,19 @@
                     }
                     return li;
                 },
-                getDescription:  function () {
+                getDescription () {
                     const that = _(this);
                     return that.description ?? that.name ?? "Action";
                 },
-                getText:         function () {
+                getText () {
                     const that = _(this);
                     return that.text ?? that.name ?? "Action";
                 },
-                getTitle:        function () {
+                getTitle () {
                     const that = _(this);
                     return that.title ?? that.name ?? "Action";
                 },
-                getCallbacks:    function () {
+                getCallbacks () {
                     const that = _(this);
                     return that.listeners.onexecute;
                 },

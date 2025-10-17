@@ -1114,6 +1114,12 @@ body.aaContextMenuFreeze {
 #aaContextMenu ul li button > span.fa.icon.information {
     color: var(--confirm-color);
 }
+#aaContextMenu ul li button:focus > span.fa.icon:where(.confirm, .information),
+#aaContextMenu ul li:hover button > span.fa.icon:where(.confirm, .information) {
+    color: var(--submit-color);
+    color: var(--color-blue-darker);
+    color: var(--menu-shortcut-color);
+}
 #aaContextMenu ul li button > span.fa.icon.reset {
     color: var(--reset-color);
 }

@@ -138,10 +138,15 @@
     aa.prototypes = Object.freeze({
         events:         aa.event,
         hydrate:        (function () {
-            const set = function (k, v) {
-                const method = "set"+k.firstToUpper();
+            const set = function (key, value) {
+                const method = "set"+key.firstToUpper();
                 if (aa.isFunction(this[method])) {
-                    this[method].call(this, v);
+                    try {
+                        this[method].call(this, value);
+                    } catch (err) {
+                        error("Non-compliant value:", {key, value});
+                        throw err;
+                    }
                 } else {
                     warn(`Method '${method}' not found`);
                 }
@@ -156,18 +161,18 @@
                 spec = arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : {};
                 const startWith = arguments && arguments.length > 1 && aa.isArray(arguments[1]) ? arguments[1] : [];
 
-
                 // Do first:
                 startWith.forEach((key) => {
                     if (spec.hasOwnProperty(key)) {
                         set.call(this, key, spec[key]);
-                        delete spec[key];
                     }
                 });
 
                 // Then:
-                spec.forEach((v, k) => {
-                    set.call(this, k, v);
+                Object.keys(spec)
+                .filter(key => startWith.indexOf(key) < 0)
+                .forEach(key => {
+                    set.call(this, key, spec[key]);
                 });
             };
         })(),
@@ -462,7 +467,7 @@
                 icon:           aa.nonEmptyString,
                 name:           aa.nonEmptyString,
                 on:             aa.isObject,
-                priority:       aa.nonEmptyString,
+                priority:       aa.inArray(priorities),
                 shortcut:       aa.nonEmptyString,
                 text:           aa.nonEmptyString,
                 tooltip:        aa.nonEmptyString,
@@ -493,6 +498,7 @@
                 // Hydrate:
                 const spec = (arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : undefined);
                 this.hydrate(spec, ["checkable"]);
+                setDefaultValues.call(this);
 
                 initAnonymous.call(this);
                 that.constructing = false;
@@ -589,6 +595,15 @@
                 const app = aa.events.app(appName);
                 return (app?.getShortcutsOf(this) ?? []);
             };
+            const setDefaultValues  = function () {
+                const that = _(this);
+
+                this.priority ??= "normal";
+                if (that.text) {
+                    this.description ??= that.text;
+                }
+                this.checkable ??= false;
+            }
 
             // Methods:
             aa.deploy(aa.Action.prototype, {
@@ -857,15 +872,12 @@
                     aa.arg.test(priority, verifiers.priority, "'priority'");
                     const that = _(this);
 
-                    priority = priority.trim().toLowerCase();
-                    if (priorities.has(priority)) {
-                        const change = (that.priority !== priority);
-                        that.priority = priority;
-                        if (!that.constructing && change) {
-                            this.fire("prioritychange", priority);
-                        }
-                        return true;
+                    const change = (that.priority !== priority);
+                    that.priority = priority;
+                    if (!that.constructing && change) {
+                        this.fire("prioritychange", priority);
                     }
+                    return true;
                 },
                 setText (text) {
                     aa.arg.test(text, verifiers.text, "'text'");
@@ -2446,11 +2458,12 @@
         this.getFrom = function (spec) {
             verify('spec', spec);
 
-            return actions.filter((action) => {
-                return spec.reduce((ok, v, k) => {
-                    return (action[k] === undefined || action[k] !== v ? false : ok);
-                }, true);
-            });
+            // return actions.filter((action) => {
+            //     return spec.reduce((ok, v, k) => {
+            //         return (action[k] === undefined || action[k] !== v ? false : ok);
+            //     }, true);
+            // });
+            return actions.filter(action => !(Object.keys(spec).some(key => action[key] === undefined)));
         };
         Object.defineProperty(this, 'actions', {
             get: () => { return ({}).sprinkle(actions); }

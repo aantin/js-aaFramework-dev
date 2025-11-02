@@ -1517,48 +1517,52 @@ div.aaDialog div.message h2,
 div.aaDialog div.message h3,
 div.aaDialog div.message h4,
 div.aaDialog div.message h5,
-div.aaDialog div.message h6{
+div.aaDialog div.message h6 {
     margin: 4px 0px;
     color: var(--color-black);
 }
-div.aaDialog code{
+div.aaDialog code {
     padding: 2px 4px;
     background: #444;
     border-radius: 2px;
     color: var(--submit-bg-color);
     color: #8f8;
 }
-div.aaDialog code span.operator{
+div.aaDialog code span.operator {
     color: #aaa;
 }
-div.aaDialog div.message .grey{
+div.aaDialog code.light {
+    background: rgba(0,0,0,.05);
+    color: var(--color-gold);
+}
+div.aaDialog div.message .grey {
     color: #ccc;
 }
-div.aaDialog div.message .blue{
+div.aaDialog div.message .blue {
     color: var(--submit-bg-color);
 }
-div.aaDialog div.message .pad{
+div.aaDialog div.message .pad {
     padding-left: 16px;
 }
-div.aaDialog div.message label.align{
+div.aaDialog div.message label.align {
     display: table-row;
     margin: 0px;
 }
-div.aaDialog div.message label.align > span{
+div.aaDialog div.message label.align > span {
     display: table-cell;
     text-align: right;
 }
-div.aaDialog div.message label.align > span + span{
+div.aaDialog div.message label.align > span + span {
     text-align: left;
 }
-div.aaDialog div.message label.align > input{
+div.aaDialog div.message label.align > input {
     /*margin-bottom: 4px;*/
 }
-div.aaDialog div.message.with-details{
+div.aaDialog div.message.with-details {
     display: table-cell;
     width: 75%;
 }
-div.aaDialog div.details{
+div.aaDialog div.details {
     position: fixed;
     bottom: 0px;
     right: 0px;
@@ -1570,7 +1574,7 @@ div.aaDialog div.details{
     background: var(--bg-color);
 }
 div.aaDialog ol,
-div.aaDialog ul{
+div.aaDialog ul {
     margin: 0px;
 }
 div.aaDialog .message fieldset {

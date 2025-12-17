@@ -20972,11 +20972,11 @@
                     || event.constructor.name === "PointerEvent"
                     || event.constructor.name === "Event"
                 ) {
-                    const button = (event.button === 0 ?
-                        ''
-                        : event.button === 1 ?
-                            "Middle"
-                            : "Right"
+                    const button = (
+                        event.button === -1 ? "No"
+                        : event.button === 0 ? ''
+                        : event.button === 1 ? "Middle"
+                        : "Right"
                     );
                     return (prefix ? prefix+' ' : '')+'<'+button+'Click>';
                 }

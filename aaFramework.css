@@ -26,10 +26,6 @@
     --bg-color: #f8f8f8;
     --bg-color-darker: #eee;
 
-    --warning-color: #fb0;
-    --critical-color: #f66;
-    --confirm-color: #49f;
-
     --color-blue: #49f;
     --color-blue-darker: #248;
     --color-blue-fade: rgba(64,128,255,0.2);
@@ -54,6 +50,11 @@
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
+
+    --warning-color: #fb0;
+    --critical-color: #f66;
+    --confirm-color: #49f;
+    --success-color: var(--color-green);
 
     --notif-bg:  #fff;
     --notif-text: #444;
@@ -1122,6 +1123,9 @@ body.aaContextMenuFreeze {
 }
 #aaContextMenu ul li button > span.fa.icon.warning {
     color: var(--warning-color);
+}
+#aaContextMenu ul li button > span.fa.icon.success {
+    color: var(--success-color);
 }
 #aaContextMenu ul li button > span.fa.icon.confirm,
 #aaContextMenu ul li button > span.fa.icon.information {

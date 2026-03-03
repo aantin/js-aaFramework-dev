@@ -454,7 +454,7 @@
                 "ontextchange"
             ];
             const priorities = ["low", "normal", "high"];
-            const types = ["information", "warning", "critical", "confirm", "reset"];
+            const types = ["information", "warning", "critical", "confirm", "reset", "success"];
             const verifiers = {
                 accessible:     aa.isBool,
                 addToManager:   aa.isBool,
@@ -1084,18 +1084,18 @@
 
             // General:
             hydrate:        aa.prototypes.hydrate,
-            isValid:        function () {
+            isValid () {
                 return (
                     !!get(this, "label")
                 );
             },
 
             // Setters:
-            addAction:      function (action) {
+            addAction (action) {
                 if (!(action instanceof aa.Action)) { throw new TypeError("Argument must be an Action."); }
                 get(this, "collection").push(action);
             },
-            setCollection:  function (collection) {
+            setCollection (collection) {
                 const errors = [];
                 const parse = (collection) => {
                     aa.arg.test(collection, aa.isArray, "'collection'");
@@ -1124,7 +1124,7 @@
                     set(this, "collection", group);
                 }
             },
-            setLabel:       function (str) {
+            setLabel (str) {
                 if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
                 set(this, "label", str.trim());
             },
@@ -3669,7 +3669,11 @@
                         , aaManufactureTypeError);
 
                         // Emit onchange event:
-                        const isDifferent = (value !== getter(this, key));
+                        const values = {
+                            old: getter(this, key),
+                            new: null,
+                        };
+                        const isDifferent = (value !== values.old);
                         if (isDifferent) { blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}change`, value); }
 
                         // Set value:
@@ -3678,9 +3682,23 @@
                         } else {
                             setter(this, key, value);
                         }
+                        values.new = getter(this, key);
 
                         // Emit onchanged event:
-                        if (isDifferent) blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value);
+                        // if (isDifferent) blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value);
+                        if (values.old !== values.new) {
+                            blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, values.new);
+                            blueprint.methods.privates.emit.call(this, `updated`, {
+                                key,
+                                argument: value,
+                                value: {
+                                    old: values.old,
+                                    new: values.new,
+                                }
+                            });
+                        }
+                        delete values.new;
+                        delete values.old;
                     }
 
                     // setter(this, methodName, method);
@@ -3714,7 +3732,7 @@
 
             // Public:
             const methods = Object.assign({
-                hydrate:    function (/* spec={}, order=[] */) {
+                hydrate (/* spec={}, order=[] */) {
                     blueprint.verifiers.forEach((func, attr) => {
                         blueprint.verifiers[attr] = func.bind(this);
                     });
@@ -3741,7 +3759,7 @@
                     // Emit event 'hydrated':
                     blueprint.methods.privates.emit.call(this, "hydrated");
                 },
-                on:         aa.event.getListener({cut: cutter, get: getter, set: setter})
+                on: aa.event.getListener({cut: cutter, get: getter, set: setter})
             }, blueprint.methods.publics);
             aa.deploy(Instancer.prototype, methods, {force: true});
 
@@ -4564,14 +4582,14 @@
                 on:         aa.prototypes.events.getListener({cut, get, set}),
 
                 // Setters:
-                addActions: function (list) {
+                addActions (list) {
                     if (!aa.isArray(list)) { throw new TypeError("Argument must be a collection of actions."); }
 
                     return list.forEach(function (a) {
                         return this.addAction(a);
                     }, this);
                 },
-                addAction:  function (p) {
+                addAction (p) {
                     if (aa.nonEmptyString(p)) {
                         p = p.trim();
                         if (p.match(/^[a-zA-Z0-9\_\.\s\-\(\)]+$/)) {
@@ -4587,25 +4605,25 @@
                         throw new TypeError("Invalid Action argument.");
                     }
                 },
-                addSep:     function () {
+                addSep () {
                     get(this, "items").push(null);
                 },
-                reset:      function () {
+                reset () {
                     set(this, "items", []);
                 },
-                setAction:  function (a) {
+                setAction (a) {
                     this.reset();
                     this.addAction(a);
                 },
-                setActions: function (list) {
+                setActions (list) {
                     this.reset();
                     this.addActions(list);
                 },
-                setAppName: function (str) {
+                setAppName (str) {
                     verify("appName", str);
                     set(this, "appName", str.trim());
                 },
-                setOn:      function (eventName, callback) {
+                setOn (eventName, callback) {
                     /**
                      * Usage:
                      * (new ContextMenu()).on(<string> eventName, <function callback>);
@@ -4636,7 +4654,7 @@
                     // Call on single entry:
                     this.on.apply(this, arguments);
                 },
-                setTheme:   function (p) {
+                setTheme (p) {
                     if (!aa.nonEmptyString(p)) { throw new TypeError("Argument must be a non-empty String."); }
 
                     p = p.trim();
@@ -4646,7 +4664,7 @@
                 },
 
                 // Getters:
-                getNode:    function () {
+                getNode () {
                     const shortcut = shortcutMaker(get(this, "appName"));
 
                     const menu = $$("div.aaMenu", parse(get(this, "items"), shortcut, this.hide));
@@ -4659,10 +4677,10 @@
                         menu.classList.add(theme);
                     });
 
-                    menu.children.forEach((ul) => {
-                        ul.children.forEach((li) => {
-                            li.children.forEach((btn) => {
-                                btn.children.forEach((span) => {
+                    menu.children.forEach(ul => {
+                        ul.children.forEach(li => {
+                            li.children.forEach(btn => {
+                                btn.children.forEach(span => {
                                     if (span.classList.contains("icon")) {
                                         // span.classList.remove("fa");
                                         // span.classList.remove("fa-fw");
@@ -4674,7 +4692,7 @@
                     });
                     return menu;
                 },
-                toObject:   function () {
+                toObject () {
                     const o = ["appName", "theme", "items"].reduce((o, key) => {
                         o[key] = get(this, key);
                         return o;
@@ -4694,7 +4712,7 @@
             const view = {
             };
             const privates = {
-                construct: function (/* spec */) {
+                construct (/* spec */) {
                     const spec = aa.arg.optional(arguments, 0, {});
 
                     const that = _(this);
@@ -4759,7 +4777,7 @@
             aa.deploy(ContextMenu.prototype, {
                 on:     aa.prototypes.events.getListener({cut, get, set}),
 
-                hide:   function () {
+                hide () {
                     const that = _(this);
                     if (that.node) {
                         aa.events.removeApp("aaContextMenu");
@@ -4773,7 +4791,7 @@
                         privates.emit.call(this, `hide`);
                     }
                 },
-                show:   function () {
+                show () {
                     const that = _(this);
 
                     privates.currentContextMenu?.hide();
@@ -4902,7 +4920,7 @@
                 },
 
                 // Setters:
-                setOn:      function (eventName, callback) {
+                setOn (eventName, callback) {
                     /**
                      * Usage:
                      * (new ContextMenu()).on(<string> eventName, <function callback>);
@@ -4933,13 +4951,13 @@
                     // Call on single entry:
                     this.on.apply(this, arguments);
                 },
-                setTop:     function (top) {
-                    aa.arg.test(top, aa.isPositiveInt, "'top'");
+                setTop (top) {
+                    aa.arg.test(top, aa.isPositiveNumber, "'top'");
                     const that = _(this);
                     that.top = top;
                 },
-                setLeft:    function (left) {
-                    aa.arg.test(left, aa.isPositiveInt, "'left'");
+                setLeft (left) {
+                    aa.arg.test(left, aa.isPositiveNumber, "'left'");
                     const that = _(this);
                     that.left = left;
                 },
@@ -5010,7 +5028,7 @@
             aa.deploy(Dialog.prototype, {
 
                 // Methods:
-                checkValidation:  function () {
+                checkValidation () {
                     const that = _(this);
                     let form = undefined;
                     let isValid = true;
@@ -5067,8 +5085,8 @@
                     if (btn) btn.disabled = !isValid;
                     return isValid;
                 },
-                hydrate:            aa.prototypes.hydrate,
-                hide:               function () {
+                hydrate: aa.prototypes.hydrate,
+                hide () {
                     const that = _(this);
 
                     el("aaDialogBG-"+this.id, (dom) => {
@@ -5094,7 +5112,7 @@
                         }
                     }, TRANSITION_DURATION*1000);
                 },
-                isValid:            function () {
+                isValid () {
                     const that = _(this);
                     return (
                         that.text !== null
@@ -5102,7 +5120,7 @@
                         || that.type === "shortcut"
                     );
                 },
-                on:                 function (spec) {
+                on (spec) {
                     const that = _(this);
                     const verify = aa.prototypes.verify({
                         spec: aa.isObject,
@@ -5132,7 +5150,7 @@
                         this.setOn(spec);
                     }
                 },
-                resize:             function () {
+                resize () {
                     if (!self.window) throw new Error("window not defined.");
                     switch (this.type) {
                         case "win":{
@@ -5172,7 +5190,7 @@
                         }
                     }
                 },
-                show:               function () {
+                show () {
                     if (this.isValid()) {
                         // Directly do stuff if no need to confirm:
                         if (doNotConfirm.call(this)) {
@@ -5271,7 +5289,7 @@
                 },
                 
                 // Setters:
-                addYes:             function (p) {
+                addYes (p) {
                     aa.deprecated("aa.gui.Dialog::yes");
                     const that = _(this);
 
@@ -5319,7 +5337,7 @@
                     }
                     return false;
                 },
-                addNo:              function (p) {
+                addNo (p) {
                     aa.deprecated("aa.gui.Dialog::no");
                     const that = _(this);
 
@@ -5352,7 +5370,7 @@
                     }
                     return false;
                 },
-                setApp:             function (app) {
+                setApp (app) {
                     aa.arg.test(app, aa.any, "'app'");
                     // aa.deprecated("aa.gui.Dialog::app");
                     verify("appName", app);
@@ -5360,22 +5378,22 @@
 
                     that.appName = app.trim();
                 },
-                setButtons:         function (b) {
+                setButtons (b) {
                     if (!aa.isBool(b)) { throw new TypeError("Argument must be a Boolean."); }
                     const that = _(this);
                     that.buttons = b;
                 },
-                setCallback:        function (f) {
+                setCallback (f) {
 
                     aa.deprecated("aa.gui.Dialog::callback");
                 },
-                setDefaultValue:    function (txt) {
+                setDefaultValue (txt) {
                     aa.arg.test(txt, aa.nonEmptyString, "'txt'");
                     const that = _(this);
                     that.defaultValue = txt.trim();
                     return (!!this.defaultValue);
                 },
-                setDetails:         function (p) {
+                setDetails (p) {
                     aa.deprecated("gui.dialog.details");
                     const that = _(this);
 
@@ -5389,27 +5407,27 @@
                     that.details = p.trim();
                     return (!!that.details);
                 },
-                setEscape:          function (escape) {
+                setEscape (escape) {
                     aa.arg.test(escape, aa.isBool, `'escape'`);
                     const that = getAccessor(this);
                     that.escape = escape;
                 },
-                setFullscreen:      function (b) {
+                setFullscreen (b) {
                     const that = _(this);
                     that.fullscreen = (b === true);
                 },
-                setIcon:            function (icon) {
+                setIcon (icon) {
                     aa.arg.test(icon, aa.nonEmptyString, "'icon'");
                     const that = _(this);
                     that.icon = icon.trim();
                 },
-                setId:              function (id) {
+                setId (id) {
                     const that = _(this);
                     if (aa.isString(id) && id.trim()) {
                         that.id = id;
                     }
                 },
-                setMaxWidth:        function (n) {
+                setMaxWidth (n) {
                     const that = _(this);
                     if (aa.isInt(n) && n > 0) {
                         n += '';
@@ -5423,7 +5441,7 @@
                         }
                     }
                 },
-                setMaxHeight:       function (n) {
+                setMaxHeight (n) {
                     const that = _(this);
                     if (aa.isInt(n) && n > 0) {
                         n += '';
@@ -5437,10 +5455,10 @@
                         }
                     }
                 },
-                setMessage:         function (s) {
+                setMessage (s) {
                     return this.setText(s);
                 },
-                setNo:              function (p) {
+                setNo (p) {
                     if (aa.isArray(p) && p.length) {
                         p.forEach(function (n) {
                             this.addNo(n);
@@ -5449,11 +5467,11 @@
                         this.addNo(p);
                     }
                 },
-                setOn:              function (spec) {
+                setOn (spec) {
 
                     this.on(spec);
                 },
-                setPlaceholder:     function (s) {
+                setPlaceholder (s) {
                     if (!aa.nonEmptyString(s)) {
                         throw new TypeError("Dialog text must be a non-empty String.");
                         return false;
@@ -5463,13 +5481,13 @@
                     that.placeholder = s.trim();
                     return (!!this.placeholder);
                 },
-                setReminder:        function (reminder) {
+                setReminder (reminder) {
                     if (aa.nonEmptyString(reminder)) {
                         const that = _(this);
                         that.reminder = reminder.trim();
                     }
                 },
-                setSuspend:         function (s) {
+                setSuspend (s) {
                     aa.deprecated("aa.gui.Dialog::suspend");
 
                     if (!aa.nonEmptyString(s)) { throw new TypeError("Argument must be a non-empty String."); }
@@ -5481,7 +5499,7 @@
                     //     return this.suspendedModules.push(s);
                     // }
                 },
-                setText:            function (p) {
+                setText (p) {
                     const that = _(this);
                     if (aa.isElement(p) || p instanceof DocumentFragment) {
                         that.text = p;
@@ -5500,7 +5518,7 @@
                     }
                     return (!!this.text);
                 },
-                setTheme:           function (theme) {
+                setTheme (theme) {
                     aa.arg.test(theme, aa.nonEmptyString, "'theme'");
                     const that = _(this);
 
@@ -5511,21 +5529,21 @@
                     }
                     return false;
                 },
-                setTitle:           function (title) {
+                setTitle (title) {
                     aa.arg.test(title, arg => aa.nonEmptyString(arg) || aa.isNode(arg), "'title'");
                     const that = _(this);
 
                     that.title = aa.isString(title) ? title.trim() : title;
                     return !!that.title;
                 },
-                setType:            function (type) {
+                setType (type) {
                     verify("dialogType", type);
                     const that = _(this);
 
                     that.type = type.trim().toLowerCase();
                     return !!that.type;
                 },
-                setToolbar:         function (item) {
+                setToolbar (item) {
                     const that = _(this);
 
                     if (aa.isArray(item)) {
@@ -5538,13 +5556,13 @@
                         }
                     }
                 },
-                setValidate:        function (callback) {
+                setValidate (callback) {
                     aa.arg.test(callback, aa.isFunction, "'callback'");
                     const that = _(this);
                     that.validation = callback;
                     return !!that.validation;
                 },
-                setWidth:           function (n) {
+                setWidth (n) {
                     const that = _(this);
                     if (aa.isInt(n) && n>0) {
                         n += '';
@@ -5558,7 +5576,7 @@
                         }
                     }
                 },
-                setYes:             function (p) {
+                setYes (p) {
                     if (aa.isArray(p) && p.length) {
                         p.forEach(function (a) {
                             this.addYes(a);
@@ -5569,14 +5587,14 @@
                 },
 
                 // Getters:
-                getID:              function () {
+                getID () {
                     const that = _(this);
                     if (!this.id) {
                         that.id = aa.newID();
                     }
                     return this.id;
                 },
-                getNode:            function (/* resolve, reject */) {
+                getNode (/* resolve, reject */) {
                     /**
                      * @param {function} resolve (optional)
                      * @param {function} reject (optional)
@@ -5600,7 +5618,7 @@
                         : undefined
                     );
                 },
-                getAppName:         function () {
+                getAppName () {
                     const that = _(this);
                     if (!this.id) {
                         that.id = aa.newID();
@@ -5885,7 +5903,7 @@
                     disabled: (!this.defaultValue),
                     value: "Remove shortcut",
                     on: {
-                        click: function () {
+                        click () {
                             el("aaHotkey", (node) => {
                                 node.innerHTML = "···";
                                 get(that, "listeners").submit.forEach((callback) => {
@@ -5992,65 +6010,67 @@
                         });
                     } else {
                         post = {};
-                        form = el("aaDialog-"+this.id).diveTheDOM(function (dom) {
-                            name = dom.getAttribute("name");
-                            if (name && !dom.disabled) {
-                                switch (dom.nodeName.toLowerCase()) {
-                                    case "select":
-                                        if (dom.multiple) {
-                                            post[name] = [];
-                                            dom.diveTheDOM(function (elt) {
-                                                if (elt.nodeName.toLowerCase() === "option" && elt.selected) {
-                                                    post[name].push(elt.value);
-                                                }
-                                            });
-                                        } else {
-                                            post[name] = dom.value;
-                                        }
-                                        break;
-                                    case "input":
-                                        switch (dom.type) {
-                                            case "number":
-                                                if (dom.value) {
-                                                    dom.value = dom.value.replace(/\,/g,'.');
-                                                    post[name] = parseFloat(dom.value);
-                                                } else {
-                                                    post[name] = null;
-                                                }
-                                                // post[name] = dom.value ? parseFloat(dom.value) : null;
-                                                break;
-                                            case "checkbox":
-                                                const regex = /\[\]$/;
-                                                if (name.match(regex)) {
-                                                    name = name.replace(regex, '');
-                                                    if (!post.hasOwnProperty(name)) {
-                                                        post[name] = [];
-                                                    }
-                                                    if (dom.checked) {
-                                                        post[name].push(dom.value);
-                                                    }
-                                                } else {
-                                                    if (dom.checked) {
-                                                        post[name] = dom.value;
-                                                    }
-                                                }
-                                                break;
-                                            case "file":
-                                                post[name] = (typeof dom.files !== 'undefined' ? dom.files : undefined);
-                                                break;
-                                            case "radio":
-                                                if (dom.checked) {
-                                                    post[name] = dom.value;
-                                                }
-                                                break;
-                                            default:
-                                                post[name] = dom.value ? dom.value : null;
-                                                break;
-                                        }
-                                        break;
-                                    default:
-                                        post[name] = dom.value ? dom.value : null;
-                                        break;
+                        const retrieveData = (node, name, multiple=false) => {
+                            const result = {
+                                nil: false,
+                                value: null,
+                            };
+                            switch (node.nodeName.toLowerCase()) {
+                                case "select":
+                                    if (node.multiple) {
+                                        result.value = [];
+                                        node.diveTheDOM(function (elt) {
+                                            if (elt.nodeName.toLowerCase() === "option" && elt.selected) {
+                                                result.value.push(elt.value);
+                                            }
+                                        });
+                                    } else {
+                                        result.value = node.value;
+                                    }
+                                    break;
+                                case "input":
+                                    switch (node.type) {
+                                        case "number":
+                                            if (node.value) {
+                                                node.value = node.value.replace(/\,/g,'.');
+                                                result.value = parseFloat(node.value);
+                                            }
+                                            // result.value = node.value ? parseFloat(node.value) : null;
+                                            break;
+                                        case "checkbox":
+                                            if (node.checked)   result.value = node.value;
+                                            else                result.nil = true;
+                                            break;
+                                        case "file":
+                                            result.value = (typeof node.files !== 'undefined' ? node.files : undefined);
+                                            break;
+                                        case "radio":
+                                            if (node.checked)   result.value = node.value;
+                                            else                result.nil = true;
+                                            break;
+                                        default:
+                                            result.value = node.value ? node.value : null;
+                                            break;
+                                    }
+                                    break;
+                                default:
+                                    result.value = node.value ? node.value : null;
+                                    break;
+                            }
+                            return result;
+                        };
+                        form = el("aaDialog-"+this.id).diveTheDOM(function (node) {
+                            name = node.getAttribute("name");
+                            if (name && !node.disabled) {
+                                const regex = /\[\]$/;
+                                if (name.match(regex)) {
+                                    name = name.replace(regex, '');
+                                    if (!post.hasOwnProperty(name)) post[name] = [];
+                                    const {value, nil} = retrieveData(node, name);
+                                    if (!nil) post[name].push(value);
+                                } else {
+                                    const {value, nil} = retrieveData(node, name);
+                                    if (!nil) post[name] = value;
                                 }
                             }
                         });
@@ -6059,7 +6079,7 @@
                 return post;
             };
             const View = {
-                addIconTo:          function (node) {
+                addIconTo (node) {
                     const that = _(this);
                     switch (this.type) {
                         case "information":
@@ -6086,7 +6106,7 @@
                             break;
                     }
                 },
-                addCancelButtonTo:  function (node) {
+                addCancelButtonTo (node) {
                     const that = _(this);
 
                     const button = $$("input#aaDialog-"+this.getID()+"-cancelButton.reset", {
@@ -6104,7 +6124,7 @@
                     that["btn-cancel"] = button;
                     node.appendChild(button);
                 },
-                addInputTo:         function (node) {
+                addInputTo (node) {
                     const input = $$("input#aaDialog-"+this.getID()+"DialogInput", {
                         type: "text"
                     });
@@ -6120,7 +6140,7 @@
                     });
                     node.appendChild(input);
                 },
-                addReminderTo:      function (node) {
+                addReminderTo (node) {
                     const that = _(this);
                     const reminder = that.reminder;
                     if (reminder) {
@@ -6132,7 +6152,7 @@
                         }));
                     }
                 },
-                addSubmitButtonTo:  function (node) {
+                addSubmitButtonTo (node) {
                     const that = _(this);
 
                     const button = $$("input#aaDialog-"+this.getID()+"-submitButton", {
@@ -6152,7 +6172,7 @@
                     node.appendChild(button);
                     button.focus();
                 },
-                addThemeTo:         function (node) {
+                addThemeTo (node) {
                     if (this.theme) {
                         node.classList.add(this.theme);
                         aa.settings.on("themechanged", e => {
@@ -6162,7 +6182,7 @@
                         });
                     }
                 },
-                addTextTo:           function (node) {
+                addTextTo (node) {
                     if (aa.isArray(this.text)) {
                         this.text.forEach((txt) => {
                             if (aa.isString(txt)) {
@@ -6177,12 +6197,12 @@
                         node.appendChild(this.text);
                     }
                 },
-                addTitleTo:         function (node) {
+                addTitleTo (node) {
                     if (this.title) {
                         node.appendChild($$("h2.title", this.title));
                     }
                 },
-                addToolbarTo:       function (node) {
+                addToolbarTo (node) {
                     const that = _(this);
                     if (that.toolbar.length) {
                         that.toolbar.forEach((item) => {
@@ -6209,18 +6229,18 @@
                         });
                     }
                 },
-                blur:               function () {
+                blur () {
                     // return true;
                     aa.walkChildrenElements(document.body, function (node) {
                         node.classList.add("aaBlur");
                     }, {except: ["script", "style"]});
                     return true;
                 },
-                freezeBody:         function () {
+                freezeBody () {
 
                     document.body.classList.add("aaFrameworkFreeze");
                 },
-                focus:              function () {
+                focus () {
                     const that = _(this);
                     aa.wait(100, () => {
                         if (this.type.toLowerCase() === "prompt") {
@@ -6235,7 +6255,7 @@
                         }
                     });
                 },
-                followFocus:        function (form) {
+                followFocus (form) {
                     const that = _(this);
                     form.elements.forEach((elt) => {
                         elt.on("focus", () => {
@@ -6243,7 +6263,7 @@
                         });
                     });
                 },
-                invalidCSS:         function (form) {
+                invalidCSS (form) {
                     form.elements.forEach((elt) => {
                         if (elt.nodeName) {
                             switch (elt.nodeName.toLowerCase()) {
@@ -6268,13 +6288,13 @@
                         }
                     });
                 },
-                getButtons:         function () {
+                getButtons () {
                     return $$("div.buttons");
                 },
-                getCell:            function () {
+                getCell () {
                     return $$("div.td");
                 },
-                getDom:             function () {
+                getDom () {
                     const that = _(this);
 
                     const dom = $$("div#aaDialogBG-"+this.getID()+".aa.bg.shade.fade");
@@ -6310,10 +6330,10 @@
                     that.node = dom;
                     return dom;
                 },
-                getGrid:            function () {
+                getGrid () {
                     return $$("div.aaTable.fullscreen");
                 },
-                getFromLayout:      function () {
+                getFromLayout () {
                     const dom = View.getDom.call(this);
                     document.body.appendChild(dom);
 
@@ -6366,7 +6386,7 @@
                         buttons: buttons,
                     };
                 },
-                getForm:            function () {
+                getForm () {
                     const that = _(this);
                     const form = $$("form", {
                         method: "POST",
@@ -6381,27 +6401,27 @@
                     });
                     return form;
                 },
-                getMenu:            function () {
+                getMenu () {
                     return $$("div.menu");
                 },
-                getModal:           function () {
+                getModal () {
                     const modal = $$("div#aaDialog-"+this.getID()+".aaDialog");
                     View.addThemeTo.call(this, modal);
                     return modal;
                 },
-                getMenuIcon:        function () {
+                getMenuIcon () {
                 },
-                getMessage:         function () {
+                getMessage () {
                     return $$("div.message");
                 },
-                onresize:           function () {
+                onresize () {
                     const that = _(this);
                     aa.events.app("aaDialog-"+this.getID()).on("windowresize", (e) => {
                         this.resize();
                         that.listeners.resize.forEach((callback) => { callback(e); });
                     }, ["preventDefault", "always"]);
                 },
-                setShortcuts:       function () {
+                setShortcuts () {
                     const that = _(this);
                     ({
                         "<Esc>": () => {
@@ -6455,12 +6475,12 @@
                         ])
                     ;
                 },
-                setWidthTo:         function (node) {
+                setWidthTo (node) {
                     if (this.width && !this.fullscreen) {
                         node.style.width = this.width;
                     }
                 },
-                showDetails:        function (form, message, buttons) {
+                showDetails (form, message, buttons) {
                     if (this.details) {
                         form.appendChild($$("div.details", this.details));
                         form.classList.add("with-details");
@@ -6468,7 +6488,7 @@
                         buttons.classList.add("with-details");
                     }
                 },
-                unblur:             function () {
+                unblur () {
                     if (dialogs.length) {
                         View.blur.call(this);
                         const dialog = dialogCollection[dialogs.last.id];
@@ -6484,7 +6504,7 @@
                     }
                     return true;
                 },
-                listenValidation:   function (form) {
+                listenValidation (form) {
                     const verify = () => {
                         this.checkValidation();
                     };
@@ -6543,7 +6563,7 @@
                 notif.addAction({
                     text: 'Ok',
                     // name: 'action_name',
-                    callback: function () {},
+                    callback () {},
                     callbacks: [
                         function () {},
                         function () {}
@@ -6568,7 +6588,7 @@
                         type:       null,
                     }
                 },
-                construct: function (text, options={}) {
+                construct (text, options={}) {
                     aa.arg.test(text, blueprint.verifiers.text, "'text'");
                     aa.arg.test(options, aa.verifyObject(blueprint.verifiers), "'options'");
 
@@ -6599,7 +6619,7 @@
                 },
                 methods: {
                     privates: {
-                        getHTML:    function () {
+                        getHTML () {
                             const that = _(this);
 
                             const node = aa.html("div.notif."+that.type+"#aaNotif_"+that.id);
@@ -6669,10 +6689,10 @@
                     publics: {
 
                         // Methods:
-                        isValid:    function () {
+                        isValid () {
                             return (this.text !== null);
                         },
-                        push:       function () {
+                        push () {
                             const that = _(this);
                             els('#aaNotifs', container => {
                                 container.style.zIndex = 1+aa.getMaxZIndex();
@@ -6682,7 +6702,7 @@
                                 }
                             });
                         },
-                        remove:     function (id) {
+                        remove (id) {
                             let dom = document.getElementById('aaNotif_'+id);
                             if (dom) {
                                 dom.classList.add('fadeOut');
@@ -6694,7 +6714,7 @@
                         },
 
                         // Setters:
-                        addAction:  function (action) {
+                        addAction (action) {
                             if (!(action instanceof aa.Action) && aa.isObject(action)) {
                                 action = new aa.Action(action);
                             }
@@ -6709,44 +6729,44 @@
                         },
                     },
                     setters: {
-                        action:    function (action) {
+                        action (action) {
                             aa.arg.test([action], blueprint.verifiers.actions, "'action'");
                             const that = _(this);
                             this.addAction(action);
                         },
-                        actions:    function (actions) {
+                        actions (actions) {
                             aa.arg.test(actions, blueprint.verifiers.actions, "'actions'");
                             const that = _(this);
                             actions.forEach(action => {
                                 this.addAction(action);
                             });
                         },
-                        id:         function (id) {
+                        id (id) {
                             aa.arg.test(id, blueprint.verifiers.id, "'id'");
                             const that = _(this);
                             that.id = id;
                         },
-                        message:    function (message) {
+                        message (message) {
                             aa.deprecated('<Notification.message>');
                             const that = _(this);
                             that.text = message;
                         },
-                        persistent: function (persistent) {
+                        persistent (persistent) {
                             aa.arg.test(persistent, blueprint.verifiers.persistent, "'persistent'");
                             const that = _(this);
                             that.persistent = persistent;
                         },
-                        text:       function (text) {
+                        text (text) {
                             aa.arg.test(text, blueprint.verifiers.text, "'text'");
                             const that = _(this);
                             that.text = text;
                         },
-                        title:      function (title) {
+                        title (title) {
                             aa.arg.test(title, blueprint.verifiers.title, "'title'");
                             const that = _(this);
                             that.title = title;
                         },
-                        type:       function (type) {
+                        type (type) {
                             aa.arg.test(type, blueprint.verifiers.type, "'type'");
                             const that = _(this);
                             that.type = type;
@@ -6847,7 +6867,7 @@
                 return id;
             };
             const view = {
-                percent: function (index, value) {
+                percent (index, value) {
                     if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
                     const that = aa.getAccessor.call(this, {cut, get, set});
 
@@ -6873,7 +6893,7 @@
                         nodes:      null,
                     },
                 },
-                construct: function (spec={}) {
+                construct (spec={}) {
                     if (spec.token !== token) throw new aaGUIProgressError("Constructor must not be called directly. Use <Progress.getBy> method instead.");
 
                     const that = _(this);
@@ -6890,7 +6910,7 @@
                 },
                 methods: {
                     privates: {
-                        hideApp:        function () {
+                        hideApp () {
                             const that = _(this);
                             collection.delete(this.id);
                             
@@ -6903,7 +6923,7 @@
                             anims.get(this.app)?.stop();
                             anims.delete(this.app);
                         },
-                        hideSection:    function () {
+                        hideSection () {
                             const that = _(this);
                             that.nodes.section?.classList?.add("complete");
                             apps.get(this.app)?.delete(this.section);
@@ -6927,7 +6947,7 @@
                             };
                             temp.anim.start();
                         },
-                        showApp:        function () {
+                        showApp () {
                             const that = _(this);
                             const hash = aa.hash.md5(that.app);
 
@@ -6969,7 +6989,7 @@
                             if (!anims.has(this.app)) anims.add(that.app, anim);
                             anim.start();
                         },
-                        showSection:    function () {
+                        showSection () {
                             const that = _(this);
                             let section = that.nodes.section;
                             if (!that.nodes.section) {
@@ -6987,7 +7007,7 @@
                     publics: {
                         
                         // Methods:
-                        add:        function (index) {
+                        add (index) {
                             if (!aa.nonEmptyString(index)) { throw new TypeError("Argument must be a non-empty String."); }
                             const that = _(this);
 
@@ -6999,7 +7019,7 @@
                             sections.get(this.app).pushUnique(this.section);
                             moveRange.call(this, index, 0);
                         },
-                        complete:   function (index=null) {
+                        complete (index=null) {
                             aa.arg.test(index, aa.isNullOrNonEmptyString, "'index'");
                             const that = _(this);
                             
@@ -7036,13 +7056,13 @@
                                 that.hideSection();
                             }
                         },
-                        draw:       function () {
+                        draw () {
                             const that = _(this);
                             that.indexes.forEach((value, index) => {
                                 moveRange.call(this, index, value);
                             });
                         },
-                        move:       function (index, value) {
+                        move (index, value) {
                             aa.arg.test(index, aa.nonEmptyString, "'index'");
                             if (!aa.isNumber(value) || !value.between(0, 1)) { throw new TypeError("Second argument must be a Number between 0 and 1."); }
                             const that = _(this);
@@ -7055,12 +7075,12 @@
                         },
                     },
                     setters: {
-                        title:   function (title) {
+                        title (title) {
                             const that = _(this);
 
                             that.title = title.trim();
                         },
-                        visible: function (visible) {
+                        visible (visible) {
                             const that = _(this);
 
                             that.visible = visible;
@@ -7071,7 +7091,7 @@
                     },
                 },
                 statics: {
-                    getBy:      function (spec={}) {
+                    getBy (spec={}) {
                         aa.arg.test(spec, aa.verifyObject({
                             app:        blueprint.verifiers.app,
                             id:         blueprint.verifiers.id,
@@ -7191,7 +7211,7 @@
                     action: { // action builder...
                         text:   'Oui',
                         name:   'action1_name',
-                        // callback: function(){}, // aa.deprecated
+                        // callback () {}, // aa.deprecated
                         on: {
                             execute: () => {}
                         }
@@ -7201,7 +7221,7 @@
                             text:   'Non',
                             name:   'action2_name',
                             type:   'reset', // optional
-                            // callback: function(){}, // aa.deprecated
+                            // callback () {}, // aa.deprecated
                             on: {
                                 execute: () => {}
                             }
@@ -7210,7 +7230,7 @@
                             text:   'Annuler',
                             name:   'action3_name',
                             type:   'reset', // optional
-                            // callback: function(){}, // aa.deprecated
+                            // callback () {}, // aa.deprecated
                             on: {
                                 execute: () => {}
                             }
@@ -20046,7 +20066,7 @@
         };
         aa.Selectable.prototype = Object.create(Array.prototype);
         aa.deploy(aa.Selectable.prototype, {
-            select: function (...index) {
+            select (...index) {
                 log('Selectable:', index);
             }
         }, { force: true });

@@ -235,6 +235,7 @@ body.aa.freeze-progress {
 
     -webkit-touch-callout: none;
 }
+.aa.selection-disabled,
 .aa .selection-disabled {
       -webkit-user-select: none;
        -khtml-user-select: none;

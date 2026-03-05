@@ -23756,38 +23756,28 @@
                                                     break;
                                                 
                                                 case "on":
+                                                    const listen = (...args) => {
+                                                        elt.on(...args);
+                                                    };
                                                     if (aa.isArray(option)) {
                                                         if (option.length > 1 && !aa.isArray(option[0])) {
-                                                            let evt =       option[0];
-                                                            let callback =  option[1];
-
-                                                            if (option.length > 2) {
-                                                                let bubble = option[2];
-                                                                return elt.on(evt,callback,bubble);
-                                                            } else {
-                                                                 return elt.on(evt,callback);
-                                                            }
+                                                            const [evtName] = option;
+                                                            listen(...option);
                                                         } else {
-                                                            option.forEach(function (listener) {
+                                                            option.forEach(listener => {
                                                                 if (aa.isArray(listener) && listener.length > 1) {
-                                                                    let evt = listener[0];
-                                                                    let callback = listener[1];
-
-                                                                    if (listener.length > 2) {
-                                                                        let bubble = listener[2];
-                                                                        return elt.on(evt,callback,bubble);
-                                                                    }
-                                                                    return elt.on(evt,callback);
+                                                                    const [evtName] = listener;
+                                                                    return listen(...listener);
                                                                 }
                                                             });
                                                         }
                                                     } else if (aa.isObject(option)) {
-                                                        option.forEach(function (callback,evt) {
+                                                        option.forEach((callback, evt) => {
                                                             if (typeof callback === 'function') {
-                                                                return elt.on(evt,callback);
+                                                                return listen(evt, callback);
                                                             } else if(aa.isArray(callback)) {
-                                                                callback.forEach(function (func) {
-                                                                    return elt.on(evt,func);
+                                                                callback.forEach(func => {
+                                                                    return listen(evt, func);
                                                                 });
                                                             }
                                                         });

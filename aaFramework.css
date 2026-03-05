@@ -243,6 +243,13 @@ body.aa.freeze-progress {
           -ms-user-select: none;
               user-select: none;
 }
+.aa pre {
+      -webkit-user-select: text;
+       -khtml-user-select: text;
+         -moz-user-select: text;
+          -ms-user-select: text;
+              user-select: text;
+}
 .aa a {
     color: var(--color-blue);
 }
@@ -1319,12 +1326,15 @@ div.aaDialog.fullscreen{
     height: 100%;
 }
 div.aaDialog div.menu{
+    position: sticky;
+    top: 0;
+    z-index: 2;
     vertical-align: middle;
     padding: 0px 8px;
     width: 100%;
     height: auto;
     background: var(--bg-color);
-    background: transparent;
+    border-bottom: 1px solid var(--color-grey-lighter);
 }
 div.aaDialog div.menu.fullscreen{
     position: fixed;
@@ -1352,6 +1362,7 @@ div.aaDialog div.menu input[type="button"]{
 }
 div.aaDialog div.menu button.icon,
 div.aaDialog div.menu input.icon[type="button"]{
+    cursor: pointer;
     min-width: 28px;
     width: 28px;
     height: 28px;

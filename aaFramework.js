@@ -24,7 +24,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.27.2",
+        version: "3.27.3",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1295,8 +1295,8 @@
             return obj;
         }
         aa.deploy(Collection.prototype, {
-            every:              methodFactory('every'),
-            filter:             function (callback /*, thisArg */) {
+            every:          methodFactory('every'),
+            filter (callback /*, thisArg */) {
                 if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.")
                 const thisArg = arguments[1] ?? void 0;
 
@@ -1312,12 +1312,12 @@
                 set(collection, "listeners", get(this, "listeners"));
                 return collection;
             },
-            find:               methodFactory('find'),
-            findLast:           methodFactory('findLast'),
-            findIndex:          methodFactory('findIndex'),
-            findLastIndex:      methodFactory('findLastIndex'),
-            forEach:            methodFactory('forEach'),
-            forEachAsync:       function (callback, resolve=null, options={}) {
+            find:           methodFactory('find'),
+            findLast:       methodFactory('findLast'),
+            findIndex:      methodFactory('findIndex'),
+            findLastIndex:  methodFactory('findLastIndex'),
+            forEach:        methodFactory('forEach'),
+            forEachAsync (callback, resolve=null, options={}) {
                 aa.arg.test(callback, aa.isFunction, "'callback'");
                 aa.arg.test(resolve, aa.isNullOr(aa.isFunction), "'resolve'");
                 aa.arg.test(options, aa.verifyObject({
@@ -1343,8 +1343,8 @@
                 };
                 if (that.data.length > 0) iteration();
             },
-            includes:           methodFactory('includes'),
-            loopThrough:        function (callback /*, spec */) {
+            includes:       methodFactory('includes'),
+            loopThrough (callback /*, spec */) {
                 aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
                 
@@ -1355,9 +1355,9 @@
                     return callback.call(spec.context, item, i, this);
                 }, spec);
             },
-            map:                methodFactory('map'),
+            map:            methodFactory('map'),
             ...fromArrayPrototype('pop'),
-            reduce:             function (callback, accumulator /*, thisArg */) {
+            reduce (callback, accumulator /*, thisArg */) {
                 aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
                 const thisArg = aa.arg.optional(arguments, 2, undefined);
 
@@ -1366,13 +1366,13 @@
                     return callback.call(thisArg, accumulator, item, i, this);
                 }, accumulator, thisArg);
             },
-            some:               methodFactory('some'),
+            some:           methodFactory('some'),
             ...fromArrayPrototype('shift'),
             ...fromArrayPrototype('splice'),
             ...fromArrayPrototype('unshift'),
 
             // General:
-            clear:              function () {
+            clear () {
                 // get(this, `data`).clear();
                 const data = get(this, `data`);
                 const items = this.toArray();
@@ -1387,21 +1387,21 @@
                 privates.emit.call(this, `datamodified`, this);
                 return items;
             },
-            copy:               function () {
+            copy () {
                 const that = _(this);
                 return aa.Collection.fromArray(that.data, {
                     authenticate: that.authenticate
                 });
             },
-            has:                function (value) {
+            has (value) {
                 const that = _(this);
                 return (that.data.indexOf(value) > -1);
             },
-            hydrate:            function (spec) {
+            hydrate (spec) {
                 aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`, aaCollectionError);
                 aa.prototypes.hydrate.call(this, spec);
             },
-            indexOf:            function (/* item, from */) {
+            indexOf (/* item, from */) {
                 /**
                  * @param <any> item: The item to look for
                  * @param <int> from (optional): If given, zero-based index at which to start searching
@@ -1411,7 +1411,7 @@
                 const that = _(this);
                 return Array.prototype.indexOf.apply(that.data, arguments);
             },
-            insertAt:           function (position, ...items) {
+            insertAt (position, ...items) {
                 /**
                  * @param <int> position
                  * @param <any> ...items: The items to add to the collection from 'position' parameter.
@@ -1433,13 +1433,13 @@
                 });
                 privates.emit.call(this, "datamodified", this);
             },
-            join:               function () {
+            join () {
                 return (
                     get(this, "data").join.apply(this, arguments)
                 );
             },
             on:                 aa.prototypes.events.getListener(get, "listeners"),
-            push:               function (...items) {
+            push (...items) {
                 const that = _(this);
 
                 items.forEach(item => {
@@ -1471,7 +1471,7 @@
                     privates.emit.call(this, "datamodified", this);
                 });
             },
-            pushUnique:         function (...items) {
+            pushUnique (...items) {
                 const data = get(this, "data");
                 items.forEach(item => {
                     if (data.indexOf(item) < 0) {
@@ -1479,7 +1479,7 @@
                     }
                 });
             },
-            remove:             function (...items) {
+            remove (...items) {
                 const removedItems = [];
                 const data = get(this, "data");
                 items.forEach(item => {
@@ -1505,7 +1505,7 @@
                 }
                 return removedItems;
             },
-            reverse:            function () {
+            reverse () {
                 const that = _(this);
                 
                 const spec = {};
@@ -1518,19 +1518,19 @@
                 
                 return newCollection;
             },
-            sort:               function (func) {
+            sort (func) {
                 const that = _(this);
                 that.data.sort(func);
             },
 
             // Getters:
-            toArray:            function () {
+            toArray () {
                 const that = _(this);
                 return [...that.data];
             },
 
             // Setters:
-            setAuthenticate:    function (verifier) {
+            setAuthenticate (verifier) {
                 aa.arg.test(verifier, aa.isFunction, aaCollectionError);
                 const that = _(this);
                 that.authenticate = value => {
@@ -1539,14 +1539,14 @@
                     return isVerified;
                 };
             },
-            setOn:              function (listeners) {
+            setOn (listeners) {
                 aa.arg.test(listeners, privates.verifiers.on, `'listeners'`, aaCollectionError);
 
                 listeners.forEach((callback, eventName) => {
                     this.on(eventName, callback);
                 });
             },
-            setParent:          function (parent) {
+            setParent (parent) {
 
                 set(this, "parent", parent);
             }

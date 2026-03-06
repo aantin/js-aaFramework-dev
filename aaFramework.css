@@ -1333,6 +1333,10 @@ div.aaDialog div.menu{
     padding: 0px 8px;
     width: 100%;
     height: auto;
+    background: transparent;
+    border-bottom: 0px solid; transparent;
+}
+div.aaDialog div.menu:has(button) {
     background: var(--bg-color);
     border-bottom: 1px solid var(--color-grey-lighter);
 }

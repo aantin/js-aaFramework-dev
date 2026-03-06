@@ -24,7 +24,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.27.3",
+        version: "3.27.4",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -5200,6 +5200,7 @@
 
                         const that = _(this);
                         that.active = document.activeElement;
+                        that.active.blur();
 
                         View.onresize.call(this);
                         View.freezeBody.call(this);

@@ -4,12 +4,14 @@
 
     --font-family: 'Fira', 'Roboto', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     --font-nerd: 'NerdMono Light', 'FontAwesome', 'Courier New', 'Courier', monospace;
+
+    --bg: #fff;
     --color: #666;
+    --line-hover-bg: #f4f4f4;
     --submit-bg-color: #49f;
     --submit-color: #fff;
     --reset-color: #aaa;
     --reset-bg-color: #e8e8e8;
-    --button-bg-color: #ddd;
     --button-disabled-color: #ddd;
     --button-disabled-bg-color: #eee;
     --button-red-bg-color: #f66;
@@ -17,10 +19,8 @@
     --error-bg-color: #fcc;
     --error-color: #c00;
     --menu-shortcut-color: #acf;
+    --menu-disabled-bg: #fff;
     --menu-disabled-color: #ccc;
-    --form-placeholder-color: #8bf;
-    --form-focus-color: #36e;
-    --color-placeholder: #248;
 
     --bg-color-lighter: #fff;
     --bg-color: #f8f8f8;
@@ -31,16 +31,23 @@
     --color-blue-fade: rgba(64,128,255,0.2);
     --color-blue-lighter: #acf;
     --color-orange: #fa0;
+    
     --color-gold: #ba8e4d;
+    --color-gold-lighter: rgba(186,142,77,.9);
+    --color-gold-darker: #7c6c52;
+    
     --color-green: #6c8;
     --color-green-darker: #4a7;
     --color-green-lighter: #aea;
+    
     --color-purple: #a0f;
     --color-magenta: #f0f;
     --color-magenta-lighter: #f8f;
+    
     --color-grey: #ccc;
     --color-grey-darker: #888;
     --color-grey-lighter: #ddd;
+    
     --color-red: #f88;
     --color-red-darker: #c00;
     --color-white: #fff;
@@ -50,6 +57,20 @@
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
+
+    --form-button-bg: #ddd;
+    --form-button-bg-hover: #ccc;
+    --form-focus-color: #36e;
+    --form-input-bg: var(--color-light-blue);
+    --form-input-border: #eee;
+    --form-input-color: #000;
+    --form-input-shadow: var(--color-blue-fade);
+    --form-placeholder-color: #8bf;
+
+    --header-color: #000;
+
+    --code-bg: #eee;
+    --code-color: #444;
 
     --warning-color: #fb0;
     --critical-color: #f66;
@@ -61,7 +82,9 @@
     
     --tooltip-bg: #223;
     --tooltip-text: #eef;
+    --tooltip-text: #fff;
     --tooltip-grey: #99f;
+    --tooltip-grey: #dcc7a8;
 
     --inset: inset 1px 1px 1px var(--color-blue-fade);
 
@@ -69,19 +92,17 @@
     Dark
     -------------------------------- */
 
-    --dark-color: #aaa;
+    --dark-color: #ccc;
     --dark-color-darker: #888;
 
-    --dark-button-bg: #444;
     --dark-button-border-hover: #888;
-    --dark-button-color: #aaa;
-    --dark-button-disabled-bg-color: #444;
-    --dark-button-disabled-color: #bbb;
+    --dark-button-color: #ddd;
+    --dark-button-disabled-color: #888;
     --dark-submit-bg-color: #49f;
     
-    --dark-color-bg-lighter: #333;
-    --dark-color-bg: #222;
-    --dark-color-bg-darker: #111;
+    --dark-color-bg-lighter: #444;
+    --dark-color-bg: #333;
+    --dark-color-bg-darker: #222;
     
     --dark-color-grey: #444;
     --dark-color-blue: #248;
@@ -89,6 +110,12 @@
     --dark-color-orange: #c40;
     --dark-color-red: #c00;
     --dark-color-cyan: #1ed;
+}
+.aa .dark,
+.aa.dark {
+    --reset-bg-color: #444;
+    --form-button-bg: #555;
+    --form-button-bg-hover: #444;
 }
 body.aaFrameworkFreeze {
     overflow: hidden;
@@ -202,7 +229,6 @@ body.aa.freeze-progress {
     src: url('./vendors/fonts/katyou/katyou-p.ttf');
 }
 /* -------------------------------- */
-/**/
 * {
     box-sizing: border-box;
     outline: 0;
@@ -340,6 +366,10 @@ body.aa.freeze-progress {
     padding: 1px;
     min-width: 16px;
 }
+
+.aa fieldset > legend {
+    color: var(--header-color);
+}
 .aa *.with-pastille,
 .aa *.with-tooltip {
     position: relative;
@@ -446,9 +476,21 @@ div.aaTable.fullscreen div.td{
     vertical-align: middle;
     text-align: center;
 }
-/****************/
+#aaFramework_eventLog {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 2px;
+    padding: 4px 8px;
+    background: #222;
+    color: #0f8;
+    border-radius: 4px;
+}
+
+/*--------------*/
 /*   Boutons    */
-/****************/
+/*--------------*/
+
 .aa select{
     padding: 4px 12px;
     min-width: 120px;
@@ -497,8 +539,8 @@ div.aaTable.fullscreen div.td{
               user-select: text;
 }
 .aa textarea::placeholder,
-.aa input[type=text]::placeholder,
-.aa input[type=password]::placeholder{
+.aa input::placeholder{
+    font-family: var(--font-family);
     font-style: italic;
     color: #aaa;
 }
@@ -818,10 +860,10 @@ div.aaTable.fullscreen div.td{
     background-color: var(--bg-color);
 }
 
-
-/****************/
+/*------*/
 /* Menu */
-/****************/
+/*------*/
+
 .aaMenu > ul{
     margin: 0;
     padding: 0;
@@ -1058,9 +1100,11 @@ div.aaTable.fullscreen div.td{
 .aaMenu > ul > li ul li.disabled.shortcut::before{
     color: #e8e8e8;
 }
-/****************/
+
+/*--------------*/
 /* Context menu */
-/****************/
+/*--------------*/
+
 body.aaContextMenuFreeze {
     overflow: hidden;
 }
@@ -1073,20 +1117,19 @@ body.aaContextMenuFreeze {
     left: 1px;
 }
 #aaContextMenu ul{
-    cursor: default;
-    margin: 0px;
-    padding: 4px 0px;
-    min-width: 160px;
-    color: #666;
-
     z-index: 2;
+    cursor: default;
     display: none;
     position: absolute;
     top: -4px;
     left: 100%;
-    padding: 4px 0px;
-    background: #fff;
-    border-radius: 2px;
+    margin: 0px;
+    background: var(--bg);
+    min-width: 160px;
+    color: var(--color);
+
+    padding: .4em;
+    border-radius: .6em;
     box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
     box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
 }
@@ -1094,7 +1137,7 @@ body.aaContextMenuFreeze {
     margin: 4px 0px;
     padding: 0px;
     border: 0px solid transparent;
-    border-top: 1px solid rgba(128,128,128,0.1);
+    border-top: 1px solid var(--form-input-border);
 }
 #aaContextMenu ul li{
     cursor: default;
@@ -1102,6 +1145,7 @@ body.aaContextMenuFreeze {
     display: block;
     position: relative;
     width: 100%;
+    border-radius: .4em;
 }
 #aaContextMenu ul li div.disabled{
     padding: 4px 8px;
@@ -1187,12 +1231,11 @@ body.aaContextMenuFreeze {
     font-family: var(--font-family);
     line-height: 1.5;
     white-space: nowrap;
-    border-radius: 0;
+    border-radius: .4em;
     border: 0px;
     box-sizing: border-box;
     box-shadow: 0px 0px 0px transparent;
 
-    /*padding: 8px 24px;*/
     padding-right: 64px;
     min-width: 180px;
     width: 100%;
@@ -1240,7 +1283,7 @@ body.aaContextMenuFreeze {
 #aaContextMenu li button:disabled:hover,
 #aaContextMenu li input[type=button]:disabled:hover{
     font-family: var(--font-family);
-    background: #fff;
+    background: var(--menu-disabled-bg);
     color: var(--menu-disabled-color);
 }
 #aaContextMenu li.disabled button,
@@ -1262,30 +1305,11 @@ body.aaContextMenuFreeze {
     color: var(--menu-disabled-color);
 }
 
-/* Theme 'Dark' */
-#aaContextMenu.dark ul{
-    background: rgba(0,0,0,0.8);
-    box-shadow: 0px 1px 4px rgba(0,0,0,0.8);
-}
-#aaContextMenu.dark ul hr{
-    border-top: 1px solid rgba(0,0,0,0.4);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-#aaContextMenu.dark ul li div.disabled{
-    color: #666;
-}
-#aaContextMenu.dark ul li button,
-#aaContextMenu.dark ul li input[type="button"]{
-    color: #ddd;
-}
-#aaContextMenu.dark ul li:hover > button,
-#aaContextMenu.dark ul li:hover > input[type="button"]{
-    color: #fff;
-}
 
 /***********/
 /* Dialogs */
 /***********/
+
 div.aaDialog * {
     box-sizing: border-box;
 }
@@ -1337,8 +1361,8 @@ div.aaDialog div.menu{
     border-bottom: 0px solid; transparent;
 }
 div.aaDialog div.menu:has(button) {
-    background: var(--bg-color);
-    border-bottom: 1px solid var(--color-grey-lighter);
+    background: var(--bg);
+    border-bottom: 1px solid var(--form-input-border);
 }
 div.aaDialog div.menu.fullscreen{
     position: fixed;
@@ -1393,7 +1417,7 @@ div.aaDialog div.menu button.green:focus,
 div.aaDialog div.menu input[type="button"].green:focus{
     border-color: #384;
 }
-div.aaDialog div.menu label input+span{
+div.aaDialog div.menu label input + span{
     position: relative;
     display: table-cell;
     vertical-align: middle;
@@ -1405,23 +1429,23 @@ div.aaDialog div.menu label input+span{
     font-size: 24px;
     border-radius: 3px;
 }
-div.aaDialog div.menu label input+span.dark{
+div.aaDialog div.menu label input + span.dark{
     background: #888;
 }
-div.aaDialog div.menu label input+span.green{
+div.aaDialog div.menu label input + span.green{
     background: var(--color-green);
 }
-div.aaDialog div.menu label input+span.red{
+div.aaDialog div.menu label input + span.red{
     background: #f88;
 }
-div.aaDialog div.menu label input:disabled+span{
+div.aaDialog div.menu label input:disabled + span{
     background: #e8e8e8;
     color: var(--bg-color);
 }
 div.aaDialog div.menu label input.icon{
     color: transparent;
 }
-div.aaDialog div.menu label input+span+div.tooltip{
+div.aaDialog div.menu label input + span + div.tooltip{
     display: none;
     position: absolute;
     top: 32px;
@@ -1432,10 +1456,10 @@ div.aaDialog div.menu label input+span+div.tooltip{
     white-space: nowrap;
     box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
 }
-div.aaDialog div.menu label input+span:hover+div.tooltip{
+div.aaDialog div.menu label input + span:hover + div.tooltip{
     display: block;
 }
-div.aaDialog div.menu label input+span+div.tooltip div.fleche{
+div.aaDialog div.menu label input + span + div.tooltip div.fleche{
     position: absolute;
     top: -6px;
     left: 20px;
@@ -1457,7 +1481,7 @@ div.aaDialog div.menu span.icon{
 div.aaDialog div.menu span.icon.prompt,
 div.aaDialog div.menu span.icon.confirm,
 div.aaDialog div.menu span.icon.information{
-    color: var(--button-bg-color);
+    color: var(--form-button-bg);
 }
 div.aaDialog div.menu span.icon.warning{
     margin-top: 4px;
@@ -1528,7 +1552,7 @@ div.aaDialog h2.title{
     z-index: 1;
     position: sticky;
     top: 0;
-    background: #fff;
+    background: var(--bg);
     padding: 16px 0 8px 0;
 }
 div.aaDialog div.message{
@@ -1536,9 +1560,7 @@ div.aaDialog div.message{
     padding: 32px 16px;
     padding: 16px;
     width: auto;
-    background: #fff;
     line-height: 1.5;
-    /*text-align: justify;*/
 }
 div.aaDialog div.message hr{
     border: 0px solid transparent;
@@ -1551,14 +1573,18 @@ div.aaDialog div.message h4,
 div.aaDialog div.message h5,
 div.aaDialog div.message h6 {
     margin: 4px 0px;
-    color: var(--color-black);
+    color: var(--header-color);
 }
 div.aaDialog code {
-    padding: 2px 4px;
-    background: #444;
-    border-radius: 2px;
-    color: var(--submit-bg-color);
-    color: #8f8;
+    padding: .2em .4em;
+    background: #eee;
+    color: #444;
+    border-radius: .3em;
+}
+.dark code,
+div.aaDialog.dark code {
+    background: #446;
+    color: #ddf;
 }
 div.aaDialog code span.operator {
     color: #aaa;
@@ -1612,7 +1638,7 @@ div.aaDialog ul {
 div.aaDialog .message fieldset {
     margin: 0px;
     padding: 16px;
-    border-radius: 3px;
+    border-radius: .4em;
     border: 1px solid var(--button-disabled-bg-color);
 }
 div.aaDialog .message fieldset.no-border {
@@ -1826,6 +1852,23 @@ div.aaDialog .message fieldset.scrollable button.ico:focus {
     color: var(--color-blue-darker);
 }
 
+div.aaDialog .message .form-grid {
+    display: grid;
+    align-items: baseline;
+    gap: .4em;
+    
+    margin: 0 2em;
+}
+div.aaDialog .message .form-grid[data-columns="3"] {
+    grid-template-columns: auto 1fr auto;
+}
+div.aaDialog .message .form-grid[data-columns="3"] > :nth-child(3n+1) {
+    text-align: right;
+}
+div.aaDialog .message .form-grid select {
+    width: auto;
+}
+
 div.aaDialog span.w{
     display: inline-block;
     text-align: right;
@@ -1868,16 +1911,16 @@ div.aaDialog span.w3{
     box-sizing: border-box;
     width: 100%;
     min-width: auto;
-    background: var(--color-light-blue);
-    color: #000;
-    font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
+    background: var(--form-input-bg);
+    color: var(--form-input-color);
+    font-family: var(--font-family), Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     font-weight: normal;
     font-style: normal;
     font-size: 13px;
-    line-height: 1.5;
-    border-radius: 3px;
-    border: 1px solid #fff;
-    box-shadow: inset 1px 1px 1px var(--color-blue-fade);
+    line-height: 1.6;
+    border-radius: .4em;
+    border: 1px solid var(--bg);
+    box-shadow: inset 1px 1px 1px var(--form-input-shadow);
 }
 .aa input[type="date"]::placeholder,
 .aa input[type="email"]::placeholder,
@@ -2008,15 +2051,20 @@ div.aaDialog span.w3{
     color: var(--dark-color-blue);
 }
 /* Green */
+.aa button.icon.green,
 .aa button.round.green{
     background-color: var(--color-green);
     border-color: var(--color-green);
 }
+.aa button.icon.green:focus,
 .aa button.round.green:focus{
     border-color: var(--dark-color-green);
 }
 .aa button.round.green span.icon{
     color: var(--dark-color-green);
+}
+.aa button.icon.green span.fa {
+    color: var(--color-white);
 }
 /* Orange */
 .aa button.round.orange{
@@ -2296,8 +2344,8 @@ div.aaDialog div.buttons.with-details{
 .aa input[type="button"]:focus,
 .aa input[type="button"].reset:hover,
 .aa input[type="button"].reset:focus{
-    border-color: #ddd;
-    background: #ddd;
+    border-color: var(--form-button-bg-hover);
+    background: var(--form-button-bg-hover);
 }
 .aa button[type=submit]:hover,
 .aa button[type=submit]:focus{
@@ -2660,10 +2708,13 @@ Tooltip:
 }
 .aa button:disabled > .tooltip-container > div.tooltip-anchor > div.tooltip {
     --tooltip-bg: var(--color-grey-darker);
-    --tooltip-text: var(--color-grey);
+    --tooltip-text: var(--color-grey-lighter);
+    font-weight: normal;
 }
-/* Selection matrix */
 
+/*------------------*/
+/* Selection matrix */
+/*------------------*/
 
 section.SelectionMatrix {
     --item-top: #ecf2ff;
@@ -2937,53 +2988,57 @@ section.SelectionMatrix div.diamond.selected.last > span.diamond.bottom-right {
     opacity: 1;
 }
 
+.aa button.code,
+.aa textarea.code,
+.aa input.code {
+    font-family: var(--font-nerd);
+}
+
 /* --------------------------------
 Dark version:
 -------------------------------- */
 
+.aa.dark,
+.aa .dark {
+    --bg: #333;
+    --color: #ddd;
+    --line-hover-bg: #282828;
+
+    --color-grey: #888;
+    --color-grey-lighter: #666;
+
+    --form-input-bg: #000;
+    --form-input-color: #fff;
+    --form-input-border: #555;
+    --form-input-shadow: rgba(0,0,0,.2);
+
+    --header-color: #fff;
+
+    --menu-disabled-bg: transparent;
+    --menu-disabled-color: #666;
+}
 .aa.dark.bg.shade,
 .aa.dark .bg.shade{
     background-color: rgba(255,255,255,0.4);
 }
 div.aaDialog.dark{
-    background: var(--dark-color-bg);
+    background: var(--bg);
     color: var(--dark-color);
 }
 div.aaDialog.dark form div.buttons{
     background-color: var(--dark-color-bg);
 }
 div.aaDialog.dark h2{
-    color: #fff;
+    color: var(--header-color);
 }
 div.aaDialog.dark div.menu{
-    background: transparent;
 }
 div.aaDialog.dark div.message{
-    background: transparent;
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
 }
 div.aaDialog.dark div.message hr{
     border-top: 1px solid #333;
-}
-.aa.dark textarea,
-.aa.dark input[type="password"],
-.aa.dark input[type="number"],
-.aa.dark input[type="email"],
-.aa.dark input[type="text"]{
-    background: #111;
-    color: var(--submit-bg-color);
-    color: var(--color-white);
-    border: 1px solid #222;
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2), inset -1px -1px 0px #444;
-}
-.aa.dark textarea:focus,
-.aa.dark input[type="password"]:focus,
-.aa.dark input[type="number"]:focus,
-.aa.dark input[type="email"]:focus,
-.aa.dark input[type="text"]:focus{
-    border: 1px solid var(--submit-bg-color);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2);
 }
 .aa.dark div.buttons{
     background: transparent;
@@ -3035,15 +3090,13 @@ div.aaDialog.dark div.message hr{
     border-color: var(--color-green);
 }
 div.aaDialog.dark .message fieldset{
-    border-color: var(--dark-button-disabled-bg-color);
-}
-div.aaDialog.dark .message fieldset legend{
+    border-color: var(--form-input-border);
 }
 div.aaDialog.dark .message fieldset legend label{
     color: var(--dark-submit-bg-color);
 }
 div.aaDialog.dark .message fieldset legend label:first-child{
-    border-left-color: var(--dark-button-disabled-bg-color);
+    border-left-color: var(--form-input-border);
 }
 div.aaDialog.dark .message fieldset legend label:last-child{
 }
@@ -3052,7 +3105,7 @@ div.aaDialog.dark .message fieldset legend label input[type="radio"]{
 div.aaDialog.dark .message fieldset legend label input[type="radio"] + span{
     background: #333;
     color: #888;
-    border-color: var(--dark-button-disabled-bg-color);
+    border-color: var(--form-input-border);
     border-left-color: transparent;
 }
 div.aaDialog.dark .message fieldset legend label:last-child input[type="radio"] + span{
@@ -3162,7 +3215,7 @@ div.aaDialog.dark.progress div.item label > div > div{
     background: #111;
     border-color: #222;
     box-shadow: 
-        inset 1px 1px 1px rgba(0,0,0,0.2),
+        inset 1px 1px 1px var(--form-input-shadow),
         inset -1px -1px 0px #444
     ;
 }
@@ -3306,11 +3359,13 @@ div#aaNotifs div.message pre,
 div#aaNotifs div.message code {
     box-sizing: border-box;
     overflow: auto;
-    padding: 8px;
-    font-family: Courier New;
+    margin: .4em 0;
+    padding: .4em .6em;
+    font-family: var(--font-nerd);
     max-width: 200px;
-    background: #446;
-    color: var(--form-placeholder-color);
+    background: var(--code-bg);
+    color: var(--code-color);
+    border-radius: .4em;
 }
 div#aaNotifs div.message ul {
     padding-left: 12px;
@@ -3567,3 +3622,8 @@ div.dependencyError{
 
 /* -------------------------------- */
 
+@media print {
+    #aaFramework_eventLog {
+        display: none;
+    }
+}

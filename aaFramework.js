@@ -24,7 +24,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.27.4",
+        version: "3.28.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1171,7 +1171,7 @@
             },
             
             // Methods:
-            construct:          function (spec={}, arg=null) {
+            construct (spec={}, arg=null) {
                 let data = aa.isArrayLike(arg) ? arg : null;
                 const length = aa.isPositiveInt(arg) ? arg : null;
                 aa.arg.test(spec, aa.isObject, "'spec'", aaCollectionError);
@@ -1198,7 +1198,7 @@
             },
             // emit:               aa.prototypes.events.getEmitter({cut, get, set}, "listeners"),
             emit:               aa.event.getEmitter({cut, get, set}, "listeners"),
-            incrementLength:    function (index=null) {
+            incrementLength (index=null) {
                 const that = _(this);
                 index ??= that.data.length - 1;
                 aa.arg.test(index, aa.isPositiveInt, "'index'", aaCollectionError);
@@ -1217,7 +1217,7 @@
                     }
                 }
             },
-            set:                function (index, value) {
+            set (index, value) {
                 const that = _(this);
                 aa.arg.test(index, arg => aa.isPositiveInt(arg) && arg.between(0, that.data.length - 1), "'index'", aaCollectionError);
                 aa.arg.test(value, arg => this.authenticate ? this.authenticate(value) : true, "'value'", aaCollectionError);
@@ -1562,7 +1562,7 @@
 
         // Static:
         aa.deploy(Collection, {
-            fromArray: function (list /* spec */) {
+            fromArray (list /* spec */) {
                 aa.arg.test(list, aa.isArray, `'list'`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
 
@@ -1576,7 +1576,6 @@
         }, {force: true});
 
         return Collection;
-        return Collection;
     })();
     aa.Event = (() => {
         /**
@@ -1588,7 +1587,7 @@
          */
         
         const privates = {
-            construct: function (actionOrCallback /* , options, spec */) {
+            construct (actionOrCallback /* , options, spec */) {
                 const options = (arguments && arguments.length > 1 && privates.verifiers.options(arguments[1]) ? arguments[1] : undefined);
                 const spec = (arguments && arguments.length > 2 ? arguments[2] : {});
                 if (!aa.isObject(spec)) { throw new TypeError("Third argument must be an Object."); }
@@ -1630,20 +1629,20 @@
         aa.deploy(Event.prototype, {
 
             // Methods:
-            isValid:                function () {
+            isValid () {
                 return (typeof this.callback === "function" || this.action instanceof aa.Action);
             },
-            hasOption:              function (s) {
+            hasOption (s) {
                 if (!aa.nonEmptyString(s)) {
                     throw new TypeError("Argument must be a non-empty String.");
                 }
                 s = s.trim();
                 return (this.options.hasOwnProperty(s) && this.options[s]);
             },
-            run:                    function () {
+            run () {
                 // this.suspended = false;
             },
-            execute:                function () {
+            execute () {
                 if (this.isValid()) {
                     if (this.action) {
                         this.action.execute.apply(this.action, arguments);
@@ -1655,7 +1654,7 @@
                     warn("Event not valid:", this);
                 }
             },
-            isModule:               function (name) {
+            isModule (name) {
                 aa.arg.test(name, aa.isNullOrNonEmptyString, `'name'`);
                 if (aa.isString(name)) {
                     name = name.trim();
@@ -1664,11 +1663,11 @@
             },
             
             // Setters:
-            setApp:                 function (name) {
+            setApp (name) {
                 aa.arg.test(name, aa.nonEmptyString, `'name'`);
                 this.app = name.trim();
             },
-            setActionOrCallback:    function (param) {
+            setActionOrCallback (param) {
                 if (aa.isFunction(param)) {
                     aa.deprecated('aa.Event.callback');
                     this.setActionOrCallback(new aa.Action({ on: {execute: param}}));
@@ -1679,14 +1678,14 @@
                 }
                 return false;
             },
-            setModule:              function (name) {
+            setModule (name) {
                 aa.arg.test(name, aa.isNullOrNonEmptyString, `'name'`);
                 if (aa.isString(name)) {
                     name = name.trim();
                 }
                 this.module = name;
             },
-            setOptions:             function (options) {
+            setOptions (options) {
                 aa.arg.test(options, aa.isArrayOf(aa.nonEmptyString), `'options'`);
 
                 options.forEach((option) => {
@@ -1708,7 +1707,7 @@
         function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
         const privates = {
-            construct: function (app) {
+            construct (app) {
                 // aa.prototypes.initGetters.call(this, ['events']);
                 return this.setApp(app);
             },
@@ -1742,7 +1741,7 @@
         // Public:
         aa.deploy(EventApp.prototype, {
             // Methods:
-            associate:      function (evtName, param) {
+            associate (evtName, param) {
                 /**
                  * @param {String} evtName
                  * @param {aa.Action|Function|String} param
@@ -1770,7 +1769,7 @@
                     this.associate(evtName, aa.actionManager.get(evtName));
                 }
             },
-            cancel:         function (evtName, callback) {
+            cancel (evtName, callback) {
                 if (aa.isObject(evtName)) {
                     if (callback !== undefined) { console.warn("Second argument is ignored when first argument is an object."); }
                     
@@ -1797,7 +1796,7 @@
                     });
                 }
             },
-            dissociate:     function (evtName /*, param */) {
+            dissociate (evtName /*, param */) {
                 /**
                  * @param {String} evtName
                  * @param {aa.Action|Function|String} param
@@ -1844,7 +1843,7 @@
                     that.events[evtName] = list;
                 }
             },
-            listen:         function (spec) {
+            listen (spec) {
                 aa.arg.test(spec, aa.isObject, "'spec'");
                 const that = _(this);
 
@@ -1879,7 +1878,7 @@
                 });
                 return true;
             },
-            on:             function (evtName, callback, options=[]) {
+            on (evtName, callback, options=[]) {
                 /**
                  * Usage:
                  *      // aa.EventApp.prototype.on(eventName, callback);
@@ -1924,13 +1923,13 @@
                 this.listen(spec);
                 return this;
             },
-            forEachEvent:   function (callback) {
+            forEachEvent (callback) {
                 aa.arg.test(callback, privates.verifiers.callback, "'callback'");
                 const that = _(this);
 
                 that.events.forEach(callback);
             },
-            module:         function (mod) {
+            module (mod) {
                 aa.arg.test(mod, aa.isNullOrNonEmptyString, "'mod'");
                 const that = _(this);
 
@@ -1939,17 +1938,17 @@
                 }
                 return this;
             },
-            moveTop:        function () {
+            moveTop () {
                 aa.events.moveTop(this);
             },
-            pop:            function (evt) {
+            pop (evt) {
                 aa.arg.test(evt, privates.verifiers.evtName, "'evt'");
                 const that = _(this);
                 const events = that.events;
                 events[evt]?.pop();
             },
-            run:            function (evt) {},
-            suspend:        function (param) {
+            run (evt) {},
+            suspend (param) {
                 aa.arg.test(param, arg => aa.isArrayOfNonEmptyStrings(arg) || aa.nonEmptyString(arg), 'param');
 
                 const toSuspend = [];
@@ -1964,14 +1963,14 @@
                 toSuspend.forEach((evtName) => {
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let o = {};
-                    o[evtName] = new aa.Event(new aa.Action({on: {execute: function () {}}}),["preventDefault"]);
+                    o[evtName] = new aa.Event(new aa.Action({on: {execute () {}}}),["preventDefault"]);
                     this.listen(o);
                 });
                 return this;
             },
 
             // Setters:
-            setApp:         function (name) {
+            setApp (name) {
                 aa.arg.test(name, privates.verifiers.appName, "'name'");
                 const that = _(this);
                 that.app = name.trim();
@@ -1980,7 +1979,7 @@
             },
 
             // Getters:
-            getEvents:      function (evtName) {
+            getEvents (evtName) {
                 if (evtName !== undefined && !privates.verifiers.evtName(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
 
                 const that = _(this);
@@ -1993,10 +1992,10 @@
                     return events;
                 }
             },
-            getShortcutOf:  function (obj) {
+            getShortcutOf (obj) {
                 return this.getShortcutsOf(obj).first;
             },
-            getShortcutsOf: function (obj) {
+            getShortcutsOf (obj) {
                 const that = _(this);
                 const db = new aa.Storage("custom");
                 const shortcuts = [];
@@ -2041,7 +2040,7 @@
 
         // Statics:
         aa.deploy(EventApp, {
-            getCurrent: function () {
+            getCurrent () {
                 return aa.events.app(aa.events.appNames.last);
             },
         }, {force: true});
@@ -2053,7 +2052,7 @@
             privates.construct.apply(this, arguments);
         }
         const privates = {
-            construct: function (/* type */) {
+            construct (/* type */) {
                 const type = aa.arg.optional(arguments, 0, undefined, privates.verifiers.type);
 
                 aa.defineAccessors.call(this, {
@@ -2074,23 +2073,23 @@
         };
         aa.deploy(EventResponse.prototype, {
             // Methods:
-            preventDefault:     function (prevent=true) {
+            preventDefault (prevent=true) {
                 aa.arg.test(prevent, aa.isBool);
                 set(this, "isPreventDefault", prevent);
             },
-            isPreventDefault:   function () {
+            isPreventDefault () {
                 return get(this, "isPreventDefault");
             },
-            stopPropagation:    function (stop=true) {
+            stopPropagation (stop=true) {
                 aa.arg.test(stop, aa.isBool);
                 set(this, "isStopPropagation", true);
             },
-            isStopPropagation:   function () {
+            isStopPropagation () {
                 return get(this, "isStopPropagation");
             },
 
             // Setters:
-            setType:   function (type) {
+            setType (type) {
                 aa.arg.test(type, privates.verifiers.type, `'type'`);
                 set(this, "type", type ? type.trim() : null);
             },
@@ -2177,11 +2176,11 @@
         aa.deploy(aa.Storage.prototype, {
 
             // General:
-            clear:        function () {
+            clear () {
                 this.data = {};
                 register.call(this);
             },
-            destroy:      function () {
+            destroy () {
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 const name = "aa_DB_"+get(this, "table");
@@ -2190,7 +2189,7 @@
                     localStorage.removeItem(name);
                 }
             },
-            insert:       function (key, value) {
+            insert (key, value) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
                 
@@ -2198,11 +2197,11 @@
                 this.data[key] = value;
                 register.call(this);
             },
-            isValid:      function () {
+            isValid () {
 
                 return (get(this, "table") !== null);
             },
-            load:         function () {
+            load () {
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
                 const data = getStorage.apply(this);
@@ -2210,7 +2209,7 @@
                     this.data = data;
                 }
             },
-            remove:       function (key) {
+            remove (key) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
@@ -2220,7 +2219,7 @@
                     register.call(this);
                 }
             },
-            select:       function (key) {
+            select (key) {
                 if (!aa.nonEmptyString(key)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!this.isValid()) { throw new TypeError("Invalid DB."); }
 
@@ -2738,7 +2737,7 @@
 
         // Modules:
         this.custom = {
-            click:      function (e) {
+            click (e) {
                 let result = null;
                 let chaine = [];
                 e = self.window?.event || e;
@@ -2754,7 +2753,7 @@
                     e.preventDefault();
                 }
             },
-            keyboard:   function (e) {
+            keyboard (e) {
                 let combinaison         = null;
                 let touche              = '';
                 let touches             = [];
@@ -2853,13 +2852,11 @@
                             timerShow = null;
                             timerFade = null;
 
-                            let div = el("aaFramework_eventLog");
+                            let div = document.querySelector("#aaFramework_eventLog");
                             if (div) {
                                 div.removeNode();
                             }
-                            div = aa.html("div#aaFramework_eventLog",{
-                                style: "position: fixed; bottom: 0; right: 0; margin: 2px; padding: 4px 8px; background: #222; color: #0f8; border-radius: 4px;"
-                            });
+                            div = $$("div#aaFramework_eventLog");
                             document.body.appendChild(div);
                             div.innerHTML = aa.shortcut.format(combinaison, ["htmlEncode", "simple"])
                                 // .replace(/\</g,"&lt;")
@@ -2895,7 +2892,7 @@
                     e.preventDefault();
                 }
             },
-            mousewheel: function (e) {
+            mousewheel (e) {
                 let result = null;
                 let mouseWheel = e.wheelDelta || -e.detail;
                 e = self.window?.event || e;
@@ -3524,49 +3521,36 @@
         };
     })());
     aa.manufacture              = Object.freeze((() => {
-        class aaManufactureError extends Error {
-            constructor (message, filename, lineNumber) {
-                super(message, filename, lineNumber);
+        class ManufactureError extends Error {
+            constructor (...args) {
+                super(...args);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaManufactureError",
+                    get: () => "ManufactureError"
                 });
             }
         }
-        class aaManufactureTypeError extends Error {
-            constructor (message, filename, lineNumber) {
-                super(message, filename, lineNumber);
+        class ManufactureTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
                 Object.defineProperty(this, "name", {
-                    get: () => "aaManufactureTypeError",
+                    get: () => "ManufactureTypeError"
                 });
             }
         }
+        ManufactureTypeError.throwIfNot = aa.arg.testerBy(ManufactureTypeError);
         const closure = aa.mapFactory();
-        function verifyBlueprint (blueprint) {
-            return aa.verifyObject({
-                accessors:          aa.verifyObject(commons.accessors.verifiers),
-                construct:          aa.isFunction,
-                startHydratingWith: aa.isArrayOf(key => blueprint.accessors?.publics?.hasOwnProperty(key)),
-                methods:            aa.verifyObject({
-                    privates:       aa.isObjectOfFunctions,
-                    publics:        aa.isObjectOfFunctions,
-                    setters:        aa.isObjectOfFunctions
-                }),
-                on:                 aa.verifyObject({
-                    hydrated:       aa.isFunction,
-                    instanciated:   aa.isFunction,
-                }),
-                statics:            aa.isObject,
-                verifiers:          aa.isObject,
-            });
-        }
-        function manufacture (Instancer, blueprint /*, accessors */) {
+        return function (Instancer, blueprint, accessors={}, options={}) {
             /**
              * Build a constructor with publics, privates, static, etc properties.
              * 
              * Calling the 'construct' private method will call the following sequence:
              *      - define accessors
-             *      - construct (from blueprint)
+             *      - construct
+             *      : emit event 'before-hydration-start'
+             *      : emit event 'after-hydration-start'
              *      - hydrate
+             *      : emit event 'before-hydration-finish'
+             *      : emit event 'after-hydration-finish'
              *      : emit event 'hydrated'
              *      : callback 'instanciated'
              * 
@@ -3582,10 +3566,11 @@
                             privates: {
                             },
                         },
-                        construct: function () {
+                        construct () {
                             const that = _(this);
                         },
                         startHydratingWith: ["attr"],
+                        finishHydratingWith: ["attr"],
                         methods: {
                             publics: {
                             },
@@ -3593,33 +3578,66 @@
                             }
                         },
                         on: {
-                            hydrated:       function () {},
-                            instanciated:   function () {},
+                            hydrated () {},
+                            instanciated () {},
                         },
                         statics: {
                         },
                         verifiers: {
                         }
                     };
-                    aa.manufacture(XXX, blueprint, {cut, get, set});
+                    aa.manufacture(XXX, blueprint, {get, set}, {
+                        TypeError: MyTypeError,
+                        CLI,
+                    });
                     return XXX;
                 })();
              */
-            const accessors = aa.arg.optional(arguments, 2, {}, aa.verifyObject({
+            ManufactureTypeError.throwIfNot(options, aa.verifyObject({
+                CLI:        aa.isFunction,
+                hydrate:    aa.isBool,
+                TypeError:  arg => arg.isExtending(TypeError),
+            }), "'options'");
+            options.hydrate ??= true;
+            options.TypeError ??= ManufactureTypeError;
+            ManufactureTypeError.throwIfNot = aa.arg.testerBy(ManufactureTypeError, options.CLI);
+
+            ManufactureTypeError.throwIfNot(accessors, aa.verifyObject({
                 cut: aa.isFunction,
                 get: aa.isFunction,
                 set: aa.isFunction,
-            }));
+            }), "'accessors'", );
 
+            const cutter = accessors.cut ?? cut;
             const getter = accessors.get ?? get;
             const setter = accessors.set ?? set;
-            const cutter = accessors.cut ?? cut;
 
-            aa.arg.test(blueprint, verifyBlueprint(blueprint), `'blueprint'`, aaManufactureTypeError);
+            aa.arg.test(blueprint, aa.verifyObject({
+                accessors:          aa.verifyObject(commons.accessors.verifiers),
+                construct:          aa.isFunction,
+                startHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+                finishHydratingWith: aa.isArrayOf(key => blueprint.accessors && blueprint.accessors.publics.hasOwnProperty(key)),
+                methods:            aa.verifyObject({
+                    privates:       aa.isObjectOfFunctions,
+                    publics:        aa.isObjectOfFunctions,
+                    setters:        aa.isObjectOfFunctions
+                }),
+                on:                 aa.verifyObject({
+                    "before-hydration-start": aa.isFunction,
+                    "after-hydration-start":  aa.isFunction,
+                    hydrated:                   aa.isFunction,
+                    "before-hydration-finish": aa.isFunction,
+                    "after-hydration-finish": aa.isFunction,
+                    instanciated:               aa.isFunction,
+                }),
+                statics:            aa.isObject,
+                verifiers:          aa.isObject,
+            }), `'blueprint'`);
 
             blueprint.sprinkle({
                 accessors: commons.accessors.defaultValue,
                 startHydratingWith: [],
+                finishHydratingWith: [],
                 methods: {
                     privates: {
                         emit: aa.event.getEmitter({cut: cutter, get: getter, set: setter}),
@@ -3628,8 +3646,12 @@
                     setters: {}
                 },
                 on: {
-                    hydrated:       () => {},
-                    instanciated:   () => {},
+                    "before-hydration-start":     () => {},
+                    "after-hydration-start":      () => {},
+                    "before-hydration-finish":    () => {},
+                    "after-hydration-finish":     () => {},
+                    hydrated:                       () => {},
+                    instanciated:                   () => {},
                 },
                 statics: {},
                 verifiers: {}
@@ -3645,8 +3667,7 @@
                     ?.forEach(attributeVisibility => {
                         aa.throwErrorIf(
                             blueprint.accessors?.[attributeVisibility]?.hasOwnProperty(methodName),
-                            `Property '${methodName}' must not be declared in both attributes and methods.`,
-                            aaManufactureError
+                            `Property '${methodName}' must not be declared in both attributes and methods.`
                         );
                     });
                 });
@@ -3666,14 +3687,10 @@
                                 || !(blueprint.verifiers.hasOwnProperty(key))
                                 || blueprint.verifiers[key].call(this, value),
                             `'${key}' setter`
-                        , aaManufactureTypeError);
+                        );
 
                         // Emit onchange event:
-                        const values = {
-                            old: getter(this, key),
-                            new: null,
-                        };
-                        const isDifferent = (value !== values.old);
+                        const isDifferent = (value !== getter(this, key));
                         if (isDifferent) { blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}change`, value); }
 
                         // Set value:
@@ -3682,23 +3699,12 @@
                         } else {
                             setter(this, key, value);
                         }
-                        values.new = getter(this, key);
 
                         // Emit onchanged event:
-                        // if (isDifferent) blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value);
-                        if (values.old !== values.new) {
-                            blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, values.new);
-                            blueprint.methods.privates.emit.call(this, `updated`, {
-                                key,
-                                argument: value,
-                                value: {
-                                    old: values.old,
-                                    new: values.new,
-                                }
-                            });
+                        if (isDifferent) {
+                            blueprint.methods.privates.emit.call(this, `${key.toLowerCase()}changed`, value);
+                            blueprint.methods.privates.emit.call(this, `${key.toKebabCase()}-changed`, value);
                         }
-                        delete values.new;
-                        delete values.old;
                     }
 
                     // setter(this, methodName, method);
@@ -3717,9 +3723,12 @@
 
                 blueprint.construct?.apply(this, arguments);
                 
-                this.hydrate(spec, blueprint.startHydratingWith.filter(attr => spec.hasOwnProperty(attr)));
+                this.hydrate(spec,
+                    blueprint.startHydratingWith.filter(attr => spec.hasOwnProperty(attr)),
+                    blueprint.finishHydratingWith.filter(attr => spec.hasOwnProperty(attr)),
+                );
 
-                blueprint.on.instanciated.call(this);
+                emit.call(this, "instanciated");
             });
 
             function hydrator (key, value) {
@@ -3729,39 +3738,52 @@
                     method.call(this, value);
                 }
             };
+            function emit (name) {
+                blueprint.on[name]?.call(this, name);
+                blueprint.methods.privates.emit.call(this, name);
+            }
 
             // Public:
             const methods = Object.assign({
-                hydrate (/* spec={}, order=[] */) {
+                hydrate (spec={}, starter=[], finisher=[]) {
+                    ManufactureTypeError.throwIfNot(starter, aa.isArrayLikeOf(key => Object.keys(blueprint.verifiers).includes(key)), "'starter'");
+                    ManufactureTypeError.throwIfNot(finisher, aa.isArrayLikeOf(key => Object.keys(blueprint.verifiers).includes(key)), "'finisher'");
+                    if (starter.some(key => finisher.includes(key))) throw new ManufactureTypeError(`${starter.filter(key => finisher.includes(key)).joinNatural({tag: "'"})} can not be listed in both hydratation starter and finisher arguments.`);
+
                     blueprint.verifiers.forEach((func, attr) => {
                         blueprint.verifiers[attr] = func.bind(this);
                     });
-                    const spec = aa.arg.optional(arguments, 0, {}, aa.verifyObject(blueprint.verifiers));
-                    const order = aa.arg.optional(arguments, 1, [], list => aa.isArray(list) && list.every(key => Object.keys(blueprint.verifiers).has(key)));
                     try {
-                        aa.arg.test(spec, arg => Object.keys(arg).every(key => Object.keys(blueprint.accessors.publics).includes(key)), "'spec'", aaManufactureTypeError);
+                        ManufactureTypeError.throwIfNot(spec, arg => aa.isObject(arg) ? aa.verifyObject(blueprint.verifiers)(arg) : true, "'spec'");
                     } catch (err) {
                         const undefinedKeys = Object.keys(spec)
-                                            .filter(key => !Object.keys(blueprint.accessors.publics).includes(key));
-                        console.warn(`In order to hydrate properly, the '${undefinedKeys.joinNatural()}' key${undefinedKeys.length > 1 ? 's' : ''} must be defined in <${Instancer.name ?? ""}> public accessors.`);
+                            .filter(key => Object.keys(blueprint.accessors.publics).indexOf(key) < 0);
+                        if (undefinedKeys.length > 0) console.warn(`In order to hydrate properly, the ${undefinedKeys.joinNatural({tag: "'"})} key${undefinedKeys.length > 1 ? 's' : ''} must be defined in <${Instancer.name ?? ""}> public accessors.`);
                         throw err;
                     }
 
                     // First assign with starting keys:
-                    order
-                    .forEach(key => { hydrator.call(this, key, spec[key]); });
+                    emit.call(this, "before-hydration-start");
+                    starter.forEach((key) => { hydrator.call(this, key, spec[key]); });
+                    emit.call(this, "after-hydration-start");
 
                     // Then assign remaining keys:
                     Object.keys(spec)
-                    .filter(key => order.indexOf(key) < 0)
+                    .filter(key => !starter.includes(key) && !finisher.includes(key))
                     .forEach(key => { hydrator.call(this, key, spec[key]); });
 
+                    // Finally assign with finishing keys:
+                    emit.call(this, "before-hydration-finish");
+                    finisher.forEach((key) => { hydrator.call(this, key, spec[key]); });
+                    emit.call(this, "after-hydration-finish");
+
                     // Emit event 'hydrated':
-                    blueprint.methods.privates.emit.call(this, "hydrated");
+                    emit.call(this, "hydrated");
                 },
-                on: aa.event.getListener({cut: cutter, get: getter, set: setter})
+                on:     aa.event.getListener({cut: cutter, get: getter, set: setter}),
+                cancel: aa.event.getCanceller({cut: cutter, get: getter, set: setter}),
             }, blueprint.methods.publics);
-            aa.deploy(Instancer.prototype, methods, {force: true});
+            Object.assign(Instancer.prototype, methods);
 
             // Static:
             aa.deploy(Instancer, blueprint.statics, {force: true});
@@ -3770,50 +3792,6 @@
                 // emitter: emit
             });
         };
-
-        // Overwrite blueprints with new values:
-        function overwriteDepth0 (original, additional, type) {
-            if (additional[type]) {
-                original[type] = additional[type];
-            }
-        };
-        function overwriteDepth1 (original, additional, type) {
-            if (additional.hasOwnProperty(type)) {
-                original[type] ??= {};
-                additional[type].forEach((value, key) => {
-                    original[type][key] = value;
-                });
-            }
-        };
-        function overwriteDepth2 (original, additional, type) {
-            if (additional[type]) {
-                original[type] ??= {};
-                additional[type].forEach((defaultValues, visibility) => {
-                    original[type][visibility] ??= {};
-                    defaultValues.forEach((value, key) => {
-                        original[type][visibility][key] = value;
-                    });
-                });
-            }
-        };
-        manufacture.overwrite = function (blueprint, additional={}) {
-            aa.arg.test(blueprint, verifyBlueprint(blueprint), "'blueprint'", aaManufactureTypeError);
-            aa.arg.test(additional, verifyBlueprint(additional), "'additional'", aaManufactureTypeError);
-
-            overwriteDepth2(blueprint, additional, "accessors");
-            overwriteDepth2(blueprint, additional, "methods");
-
-            overwriteDepth1(blueprint, additional, "on");
-            overwriteDepth1(blueprint, additional, "statics");
-            
-            overwriteDepth0(blueprint, additional, "construct");
-
-            if (additional.startHydratingWith) {
-                blueprint.startHydratingWith ??= [];
-                blueprint.startHydratingWith.push(...additional.startHydratingWith);
-            }
-        };
-        return manufacture;
     })());
     aa.Animation                = (() => {
         class aaAnimationError extends Error {
@@ -4655,7 +4633,10 @@
                     this.on.apply(this, arguments);
                 },
                 setTheme (p) {
-                    if (!aa.nonEmptyString(p)) { throw new TypeError("Argument must be a non-empty String."); }
+                    if (!aa.nonEmptyString(p)) {
+                        warn("Provided:", p);
+                        throw new TypeError("Argument must be a non-empty String.");
+                    }
 
                     p = p.trim();
                     if (ENV.THEMES.has(p)) {
@@ -4821,8 +4802,8 @@
                         that.node.classList.add(theme);
                         aa.settings.on("themechanged", e => {
                             const {theme, previous} = e.data;
-                            that.node.classList.remove(previous);
-                            that.node.classList.add(theme);
+                            that.node?.classList.remove(previous);
+                            that.node?.classList.add(theme);
                         });
 
                         that.top ??= aa.mouse.y;
@@ -5012,7 +4993,8 @@
                             hide:   [],
                             resize: [],
                             show:   [],
-                            submit: []
+                            submit: [],
+                            titlechanged: [],
                         },
                         node:               null,
                         reminder:           null,
@@ -5093,7 +5075,7 @@
                         dom.classList.remove("fade");
                         dom.classList.add("fadeOut");
                     });
-                    fire.call(this, "hide");
+                    fire.call(this, "hide", this);
                     pop.call(this);
                     that.active?.focus();
                     setTimeout(() => {
@@ -5194,7 +5176,7 @@
                     if (this.isValid()) {
                         // Directly do stuff if no need to confirm:
                         if (doNotConfirm.call(this)) {
-                            fire.call(this, "submit");
+                            fire.call(this, "submit", this);
                             return;
                         }
 
@@ -5389,7 +5371,7 @@
                     aa.deprecated("aa.gui.Dialog::callback");
                 },
                 setDefaultValue (txt) {
-                    aa.arg.test(txt, aa.nonEmptyString, "'txt'");
+                    aa.arg.test(txt, aa.isNullOr(aa.isString), "'txt'");
                     const that = _(this);
                     that.defaultValue = txt.trim();
                     return (!!this.defaultValue);
@@ -5469,7 +5451,6 @@
                     }
                 },
                 setOn (spec) {
-
                     this.on(spec);
                 },
                 setPlaceholder (s) {
@@ -5534,7 +5515,9 @@
                     aa.arg.test(title, arg => aa.nonEmptyString(arg) || aa.isNode(arg), "'title'");
                     const that = _(this);
 
+                    const prev = that.title;
                     that.title = aa.isString(title) ? title.trim() : title;
+                    if (that.title !== prev) fire.call(this, "titlechanged", that.title);
                     return !!that.title;
                 },
                 setType (type) {
@@ -6113,7 +6096,7 @@
                     const button = $$("input#aaDialog-"+this.getID()+"-cancelButton.reset", {
                         type: "reset",
                         on: {click: (e) => {
-                                fire.call(this, "cancel");
+                                fire.call(this, "cancel", this);
                                 this.hide();
                         }}
                     });
@@ -6159,7 +6142,7 @@
                     const button = $$("input#aaDialog-"+this.getID()+"-submitButton", {
                         type: "submit",
                         on: {click: (e) => {
-                            fire.call(this, "submit");
+                            fire.call(this, "submit", this);
                             this.hide();
                         }}
                     });
@@ -6199,9 +6182,16 @@
                     }
                 },
                 addTitleTo (node) {
+                    const nodes = {
+                        title: $$(`h2.title${this.title ? '' : ".hidden"}`, this.title),
+                    };
                     if (this.title) {
-                        node.appendChild($$("h2.title", this.title));
+                        node.append(nodes.title);
                     }
+                    this.on({titlechanged: (e, title) => {
+                        nodes.title.classList.toggle("hidden", !title);
+                        nodes.title.replaceChildren(title);
+                    }});
                 },
                 addToolbarTo (node) {
                     const that = _(this);
@@ -6275,17 +6265,14 @@
                                     if (elt.dataset && elt.dataset.pattern) {
                                         try {
                                             const regex = new RegExp(elt.dataset.pattern);
-                                            elt.classList[(elt.value.match(regex) ?
-                                                "remove"
-                                                : "add"
-                                            )]("invalid");
+                                            elt.classList.toogle("invalid", !elt.value.match(regex));
                                         } catch (e) {
                                         }
                                     }
                                     break;
                             }
                         } else if (elt instanceof RadioNodeList) {
-                            aa.gui.todo("RadioNodeList...");
+                            console.warn("todo: RadioNodeList...");
                         }
                     });
                 },
@@ -6322,7 +6309,7 @@
                     });
                     dom.on("mouseup", (e) => {
                         if (outside && isOutside(e)) {
-                            fire.call(this, "cancel");
+                            fire.call(this, "cancel", this);
                             this.hide();
                             return false;
                         }
@@ -8098,9 +8085,7 @@
                 let suffix = '';
                 classes.forEach((className) => {
                     if (this.has(className)) {
-                        if (!nodeName) {
-                            nodeName = "span.fa";
-                        }
+                        nodeName ??= "span.fa";
                         suffix += '.'+this.format(className);
                     } else {
                         suffix += '.'+className;
@@ -9079,9 +9064,7 @@
                 const content = [];
                 classes.forEach((className) => {
                     if (this.has(className)) {
-                        if (!span) {
-                            span = "span.material-icons";
-                        }
+                        span ??= "span.material-icons";
                         content.push(className);
                     } else {
                         suffix += '.'+className;
@@ -19894,9 +19877,7 @@
                 let suffix = '';
                 classes.forEach((className) => {
                     if (this.has(className)) {
-                        if (!nodeName) {
-                            nodeName = "span.nf";
-                        }
+                        nodeName ??= "span.nf";
                         suffix += '.'+this.format(className);
                     } else {
                         suffix += '.'+className;
@@ -19928,7 +19909,11 @@
              * @return {DOMElement}
              */
 
-            const fonts = [FontAwesome4, GoogleIconfont, NerdFont /* */];
+            const Fonts = [
+                FontAwesome4,
+                GoogleIconfont,
+                NerdFont,
+            ];
 
             // Display GUI:
             if (which === "gui" && !aa.settings.production) {
@@ -19938,7 +19923,7 @@
                     onglets: []
                 };
                 aa.gui.loading(() => {
-                    fonts.forEach(Font => {
+                    Fonts.forEach(Font => {
                         const filter = (e) => {
                             const value = e.target.value;
                             searchValue = value;
@@ -19960,7 +19945,7 @@
                         const search = $$("input.search", {
                             placeholder: "Search for a class name...",
                             on: {
-                                input: aa.debounce(filter, 200),
+                                input: aa.debounce(filter, 250),
                                 click: filter
                             }
                         });
@@ -20035,7 +20020,7 @@
             const {id, tagName} = extracts;
             let {classes} = extracts;
             let node = undefined;
-            fonts.forEach(Font => {
+            Fonts.forEach(Font => {
                 const font = new Font();
                 const result = font.getNode(id, classes, args);
                 if (result && !node) {
@@ -21098,7 +21083,7 @@
             const indexesFromKey = key => key.split(",").map(index => parseInt(index));
             const isKey = arg => aa.isString(arg) && !!arg.match(/^[0-9]+(\,[0-9]+)*$/);
             const commands = {
-                deselect:   function (...indexes) {
+                deselect (...indexes) {
                     const that = _(this);
                     const key = keyFromIndexes(indexes);
                     
@@ -21106,19 +21091,19 @@
                     that.resetLastKey(key);
                     that.keysWithShift.clear();
                 },
-                expand:     function (...indexes) {
+                expand (...indexes) {
                     const that = _(this);
                     const key = keyFromIndexes(indexes);
                     that.deselectExpansion(key);
                     that.expandSelection(key);
                 },
-                next:       function () {
+                next () {
                     const that = _(this);
                 },
-                previous:   function () {
+                previous () {
                     const that = _(this);
                 },
-                select:     function (...indexes) {
+                select (...indexes) {
                     const that = _(this);
                     const key = keyFromIndexes(indexes);
                     
@@ -21128,7 +21113,7 @@
                     that.setLastKey(key);
                     that.keysWithShift.clear();
                 },
-                toggle:     function (...indexes) {
+                toggle (...indexes) {
                     const that = _(this);
                     const key = keyFromIndexes(indexes);
 
@@ -21161,9 +21146,9 @@
                         lengths:    null,
                     },
                     execute: {
-                        selection: function () {
+                        selection () {
                         },
-                        selectedPositions: function () {
+                        selectedPositions () {
                             const that = _(this);
                             return (
                                 that.keys()
@@ -21177,7 +21162,7 @@
                     }
                 },
                 startHydratingWith: ["dimension"],
-                construct: function () {
+                construct () {
                     const that = _(this);
 
                     that.data           = [];
@@ -21190,7 +21175,7 @@
                 },
                 methods: {
                     privates: {
-                        deselectExpansion:  function (key) {
+                        deselectExpansion (key) {
                             testArg(key, isKey, "'key'");
                             
                             const that = _(this);
@@ -21202,7 +21187,7 @@
                             });
                             that.keysWithShift.clear();
                         },
-                        expandSelection:    function (key) {
+                        expandSelection (key) {
                             testArg(key, isKey, "'key'");
 
                             const that = _(this);
@@ -21226,14 +21211,14 @@
                                 }
                             });
                         },
-                        keys:               function () {
+                        keys () {
                             const that = _(this);
                             return (
                                 Object.keys(that.dataByKey)
                                 .sortNatural()
                             );
                         },
-                        resetLastKey:       function (key) {
+                        resetLastKey (key) {
                             testArg(key, isKey, "'key'");
 
                             const that = _(this);
@@ -21254,7 +21239,7 @@
                             const found = after.first ?? before.reverse().first;
                             that.setLastKey(found ?? null);
                         },
-                        selectKey:          function (key, selected=true) {
+                        selectKey (key, selected=true) {
                             testArg(key, isKey, "'key'");
                             testArg(selected, aa.isBool, "'selected'");
                             const that = _(this);
@@ -21262,7 +21247,7 @@
                             // that.dataByKey[key].selected = selected;
                             itemMethods.setters.selected.call(that.dataByKey[key], selected);
                         },
-                        setLastKey:         function (key) {
+                        setLastKey (key) {
                             testArg(key, aa.isNullOr(isKey), "'key'");
                             const that = _(this);
                             // if (that.dataByKey[that.lastSelectedKey]) that.dataByKey[that.lastSelectedKey].last = false;
@@ -21273,7 +21258,7 @@
                         },
                     },
                     publics: {
-                        diagram:        function () {
+                        diagram () {
                             const that = _(this);
                             const diamonds = $$('div');
                             const node = $$('section.SelectionMatrix',
@@ -21285,7 +21270,7 @@
                             });
                             document.body.appendChild(node);
                         },
-                        deselectAll:    function (spec={}) {
+                        deselectAll (spec={}) {
                             aa.arg.test(spec, aa.verifyObject({
                                 ignoreDisabled: aa.isBool,
                             }), "'spec'");
@@ -21303,7 +21288,7 @@
                             });
                             that.lastSelectedKey = null;
                         },
-                        deselectBy:     function (spec={}) {
+                        deselectBy (spec={}) {
                             const that = _(this);
 
                             that.keys()
@@ -21313,12 +21298,12 @@
                                 commands.deselect.call(this, ...indexes);
                             });
                         },
-                        exec:           function (cmd) {
+                        exec (cmd) {
                             testArg(cmd, blueprint.verifiers.commands, "'cmd'");
                             commands[cmd].call(this);
                             return this;
                         },
-                        filter:         function (callback=null) {
+                        filter (callback=null) {
                             testArg(callback, aa.isFunction, "'callback'");
                             const that = _(this);
                             return (
@@ -21336,7 +21321,7 @@
                                 .map(key => that.dataByKey[key])
                             );
                         },
-                        find:           function (callback=null) {
+                        find (callback=null) {
                             testArg(callback, aa.isFunction, "'callback'");
                             const that = _(this);
                             const found = (
@@ -21354,7 +21339,7 @@
                             );
                             return found ? that.dataByKey[found] : undefined;
                         },
-                        getSelected:    function (spec={}) {
+                        getSelected (spec={}) {
                             const that = _(this);
                             testArg(spec, aa.verifyObject({
                                 ignoreDisabled: aa.isBool,
@@ -21372,7 +21357,7 @@
                                 .map(key => that.dataByKey[key])
                             );
                         },
-                        pos:            function (...indexes) {
+                        pos (...indexes) {
                             aa.arg.test(indexes, aa.isArrayOf(aa.isPositiveInt), "'indexes' must be an Array of positive integers", aaSelectionMatrixError);
 
                             const that = _(this);
@@ -21387,7 +21372,7 @@
                             );
 
                             const methods = {
-                                exec:   function (cmd) {
+                                exec (cmd) {
                                     const that = _(this);
                                     if (cmd.match(/<Click>$/)) {
                                         switch (cmd) {
@@ -21418,12 +21403,12 @@
                                     testArg(cmd, blueprint.verifiers.commands, "'command'");
                                     commands[cmd]?.call(this, indexes);
                                 },
-                                get:    function () {
+                                get () {
                                     const that = _(this);
 
                                     return that.dataByKey[key];
                                 },
-                                on:     function (evtName, callback) {
+                                on (evtName, callback) {
                                     if (aa.isString(evtName)) {
                                         testArg(evtName, aa.nonEmptyString, "'evtName'");
                                         testArg(callback, aa.isFunction, "'callback'");
@@ -21436,7 +21421,7 @@
                                     const listeners = evtName;
                                     that.dataByKey[key].on(evtName);
                                 },
-                                set:    function (value=none, spec) {
+                                set (value=none, spec) {
                                     testArg(spec, aa.verifyObject({
                                         last:       itemMethods.verifiers.last,
                                         on:         aa.any,
@@ -21477,7 +21462,7 @@
                             });
                             return Object.freeze(methods.bind(this));
                         },
-                        selectAll:      function (spec={}) {
+                        selectAll (spec={}) {
                             aa.arg.test(spec, aa.verifyObject({
                                 ignoreDisabled: aa.isBool,
                             }), "'spec'");
@@ -21495,7 +21480,7 @@
                         },
                     },
                     setters: {
-                        data: function (data) {
+                        data (data) {
                             const that = _(this);
 
                             const verifyCollectionInDepth = (depth, data) => {
@@ -21532,7 +21517,7 @@
             };
             aa.manufacture(SelectionMatrix, blueprint, {cut, get, set});
             aa.deploy(SelectionMatrix.prototype, {
-                forEach:    function (callback) {
+                forEach (callback) {
                     const that = _(this);
                     that.keys()
                     .forEach(key => {
@@ -21548,7 +21533,7 @@
             aa.arg.test(...args, aaSelectionMatrixItemError);
         };
         const itemMethods = {
-            emit:   function (evtName, value) {
+            emit (evtName, value) {
                 testArg(evtName, aa.nonEmptyString, "'evtName'");
                 const that = _(this);
                 that._listeners[evtName]?.forEach(callback => {
@@ -21556,7 +21541,7 @@
                 });
             },
             setters: {
-                last:       function (last) {
+                last (last) {
                     testArg(this, aa.instanceof(SelectionMatrixItem), "this");
                     testArg(last, itemMethods.verifiers.last, "'last'");
                     const that = _(this);
@@ -21565,7 +21550,7 @@
                     that.last = last;
                     if (isDifferent) itemMethods.emit.call(this, "lastchanged", last);
                 },
-                parent:     function (matrix) {
+                parent (matrix) {
                     testArg(this, aa.instanceof(SelectionMatrixItem), "this");
                     testArg(matrix, itemMethods.verifiers.parent, "'matrix'");
                     const that = _(this);
@@ -21576,14 +21561,14 @@
                     );
                     that.parent = matrix;
                 },
-                position:   function (position) {
+                position (position) {
                     aa.arg.test(this, aa.instanceof(SelectionMatrixItem), "this", aaSelectionMatrixItemError)
                     testArg(position, itemMethods.verifiers.position, "'position'");
                     const that = _(this);
 
                     that.position = position;
                 },
-                selected:   function (selected) {
+                selected (selected) {
                     testArg(this, aa.instanceof(SelectionMatrixItem), "this");
                     testArg(selected, itemMethods.verifiers.selected, "'selected'");
                     const that = _(this);
@@ -21592,7 +21577,7 @@
                     that.selected = selected;
                     if (isDifferent) itemMethods.emit.call(this, "selectedchanged", selected);
                 },
-                value:      function (value) {
+                value (value) {
                     testArg(value, itemMethods.verifiers.value, "'value'");
                     const that = _(this);
                     that.value = value;
@@ -21610,7 +21595,7 @@
         const SelectionMatrixItem = (() => {
             function SelectionMatrixItem () { get(SelectionMatrixItem, "construct").apply(this, arguments); }
             const view = {
-                getNode: function () {
+                getNode () {
                     const that = _(this);
 
                     if (that._node) return that._node;
@@ -21669,20 +21654,20 @@
                         parent:             null,
                     },
                     execute: {
-                        node:   function () { return view.getNode.call(this); },
+                        node () { return view.getNode.call(this); },
                     }
                 },
-                construct: function () {
+                construct () {
                     const that = _(this);
                     that._listeners = {};
                 },
                 methods: {
                     publics: {
-                        enable:     function (enabled=true) {
+                        enable (enabled=true) {
                             testArg(enabled, aa.isBool, "'enabled'");
                             this.disable(!enabled);
                         },
-                        disable:    function (disabled=true) {
+                        disable (disabled=true) {
                             testArg(disabled, aa.isBool, "'disabled'");
                             const that = _(this);
                             const isDifferent = that.disabled !== disabled;
@@ -21696,7 +21681,7 @@
             };
             aa.manufacture(SelectionMatrixItem, blueprint, {cut, get, set});
             aa.deploy(SelectionMatrixItem.prototype, {
-                on: function (evtName, callback=undefined) {
+                on (evtName, callback=undefined) {
                     if (aa.isString(evtName)) {
                         testArg(evtName, aa.nonEmptyString, "'evtName'");
                         testArg(callback, aa.isFunction, "'callback'");
@@ -22038,6 +22023,13 @@
                             Object.defineProperties(node, {
 
                                 // Attributes:
+                                label: {
+                                    get: () => txt.innertext,
+                                    set: value => {
+                                        aa.arg.test(value, arg => aa.isElement(arg) || aa.isNullOrNonEmptyString(arg), "'value'");
+                                        txt.replaceChildren(value);
+                                    },
+                                },
                                 checked: {
                                     get: () => input.checked,
                                     set: checked => {
@@ -23573,9 +23565,19 @@
 
                                                     const name = aa.uid();
                                                     const onglets = $$("legend.onglets");
-                                                    const container = $$("fieldset.onglets", onglets);
+                                                    const content = $$("main");
+                                                    const container = $$("fieldset.onglets",
+                                                        onglets,
+                                                        content,
+                                                    );
                                                     let checkedRadio = null;
                                                     elt.appendChild(container);
+                                                    Object.defineProperties(elt, {
+                                                        content: {
+                                                            get: () => content,
+                                                            set: value => content.replaceChildren(value),
+                                                        }
+                                                    });
 
                                                     option.forEach((spec, i) => {
                                                         spec.sprinkle({
@@ -25047,6 +25049,16 @@
                     
                     // flag this function so we don't do the same thing twice
                     loaded = true;
+
+                    // Link CSS with window focus:
+                    self.window.on({
+                        blur: e => {
+                            self.document.body.classList.add("out-of-focus");
+                        },
+                        focus: e => {
+                            self.document.body.classList.remove("out-of-focus");
+                        },
+                    });
                 }
             };
             

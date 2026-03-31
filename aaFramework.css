@@ -67,6 +67,12 @@
     --form-input-shadow: var(--color-blue-fade);
     --form-placeholder-color: #8bf;
 
+    --form-input-invalid-placeholder: #faa;
+    --form-input-invalid-bg: #fff0f0;
+    --form-input-invalid-color: #c00;
+    --form-input-invalid-shadow: 1px 1px 2px rgba(128,64,64,0.2) inset;
+    --form-input-invalid-border: 1px solid #c00;
+
     --header-color: #000;
 
     --code-bg: #eee;
@@ -1958,9 +1964,9 @@ div.aaDialog span.w3{
 .aa input[type="number"].invalid,
 .aa input[type="text"]:invalid,
 .aa input[type="text"].invalid{
-    background: #fff0f0;
-    color: #c00;
-    box-shadow: 1px 1px 2px rgba(128,64,64,0.2) inset;
+    background: var(--form-input-invalid-bg);
+    color: var(--form-input-invalid-color);
+    box-shadow: var(--form-input-invalid-shadow);
 }
 .aa textarea:invalid:focus,
 .aa textarea.invalid:focus,
@@ -1972,7 +1978,7 @@ div.aaDialog span.w3{
 .aa input[type="number"].invalid:focus,
 .aa input[type="text"]:invalid:focus,
 .aa input[type="text"].invalid:focus{
-    border: 1px solid #c00;
+    border: var(--form-input-invalid-border);
 }
 .aa textarea:invalid::placeholder,
 .aa textarea.invalid::placeholder,
@@ -1984,7 +1990,7 @@ div.aaDialog span.w3{
 .aa input[type="number"].invalid::placeholder,
 .aa input[type="text"]:invalid::placeholder,
 .aa input[type="text"].invalid::placeholder{
-    color: #faa;
+    color: var(--form-input-invalid-placeholder);
 }
 .aa textarea:invalid::placeholder,
 .aa textarea:invalid::-moz-placeholder,

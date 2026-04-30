@@ -1,0 +1,93 @@
+/* é */
+* {
+    box-sizing: border-box;
+}
+:host {
+    font-size: .9rem;
+    font-family: var(--font-family);
+}
+.hidden {
+    display: none !important;
+}
+svg {
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+svg line {
+    stroke: rgba(0,0,0,.1);
+}
+svg.information line {
+    stroke: var(--color-blue);
+}
+svg.warning line {
+    stroke: var(--color-orange);
+}
+svg.success line {
+    stroke: var(--color-green);
+}
+svg.critical line {
+    stroke: var(--color-red);
+}
+aside.message {
+    position: fixed;
+    top: 0;
+    height: 0;
+
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: .3em;
+
+    padding: .4em .4em;
+    min-width: 2em;
+    height: 2em;
+    background: #fff;
+    color: #000;
+    border-radius: .4em;
+    box-shadow: 0 .1em .4em rgba(0,0,0,.1);
+
+    translate: -1em .2em;
+}
+aside.message:not(.success, .warning, .information, .critical) {
+    color: var(--color-grey);
+}
+aside.message span.icon {
+    display: inline-block;
+    font-family: FontAwesome;
+    width: 1.28571429em;
+    text-align: center;
+    color: var(--color-grey);
+}
+aside.message span.icon::before {
+    content: attr(data-icon);
+    /*content: "\f05e";*/
+    /* ban */
+}
+aside.message.information span.icon {
+    color: var(--color-blue);
+}
+aside.message.information span.icon::before {
+    /*content: "\f129";*/
+    /* info */
+}
+aside.message.success span.icon {
+    color: var(--color-green);
+}
+aside.message.success span.icon::before {
+    /*content: "\f00c";*/
+    /* check */
+}
+aside.message.warning span.icon {
+    color: var(--color-orange);
+}
+aside.message.warning span.icon::before {
+    /*content: "\f071";*/
+    /* warning */
+}
+aside.message.critical span.icon {
+    color: var(--color-red);
+}
+aside.message.critical span.icon::before {
+}

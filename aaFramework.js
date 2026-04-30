@@ -6,25 +6,43 @@
     const ENV = {
         MODULE_NAME: "aaFramework",
         PRODUCTION: true,
-        THEMES: ["light", "dark"],
+        THEMES: ["light", "dark", "system"],
         DEFAULT_THEME: "light"
     };
 
     if (aa === undefined) { throw new Error("'"+ENV.MODULE_NAME+"' needs 'aaJS' to be called first."); }
     // ----------------------------------------------------------------
     // Style:
-    if (self.document) {
-        aa.addStyleToScript(ENV.MODULE_NAME+".js", ENV.MODULE_NAME+".css");
-        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css");
-        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont/material-icons.css");
-        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/fonts/nerd-font/webfont.min.css");
-        aa.addStyleToScript(ENV.MODULE_NAME+".js", "vendors/css/google-iconfont-aa.css");
+    add_scripts: {
+        if (!self.document) break add_scripts;
+
+        const cwd = aa.findPathOf(ENV.MODULE_NAME+".js");
+
+        [
+            // CSS:
+            ENV.MODULE_NAME+".css",
+            "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css",
+            "vendors/css/google-iconfont/material-icons.css",
+            "vendors/fonts/nerd-font/webfont.min.css",
+            "vendors/css/google-iconfont-aa.css",
+
+            // JS:
+            `components/void/void.component.js`,
+            `components/tooltip/tooltip.component.js`,
+        ]
+        .map(path => path.match(/^\//) === null ? `${cwd}/${path}` : path)
+        .forEach(path => {
+            aa[path.match(/\.css$/) !== null ?
+                "addStyleToDOM"     // .css
+                : "addScriptToDOM"  // .js
+            ](path);
+        });
     }
     // ----------------------------------------------------------------
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.28.0",
+        version: "3.30.0",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -134,6 +152,9 @@
         namespace:  "framework",
         style:      "color: #6c8;",
     });
+    const defaults = {
+        shortcuts: {}
+    };
     // ----------------------------------------------------------------
     // Prototypes:
     aa.prototypes = Object.freeze({
@@ -177,7 +198,7 @@
                 });
             };
         })(),
-        mapFactory:     function () {
+        mapFactory () {
             const privates = new WeakMap();
             return Object.freeze({
                 /**
@@ -186,7 +207,7 @@
                  *
                  * @return {any}
                  */
-                get: function (that, key) {
+                get (that, key) {
                     aa.prototypes.verify({ key: aa.nonEmptyString })("key", key);
                     const data = privates.get(that, "data");
                     if (!data) {
@@ -202,7 +223,7 @@
                  *
                  * @return {void}
                  */
-                set: function (that, key, value) {
+                set (that, key, value) {
                     aa.prototypes.verify({ key: aa.nonEmptyString })("key", key);
                     let data = privates.get(that, "data");
                     if (!data) {
@@ -213,7 +234,7 @@
                 }
             });
         },
-        getters:        function (param) {
+        getters (param) {
             /**
              * @param {Array|String} param
              */
@@ -229,7 +250,7 @@
                 });
             }
         },
-        initGetters:    function (list) {
+        initGetters (list) {
             /**
              * @param {Array} list
              */
@@ -238,7 +259,7 @@
                 Object.defineProperty(this, key, {get: () => { return get(this, key); }});
             });
         },
-        dispatcher:     function (listeners) {
+        dispatcher (listeners) {
             aa.arg.test(listeners, aa.isObject(listeners) && listeners.verify({
                 root: aa.nonEmptyString,
                 names: aa.isArrayOfStrings,
@@ -254,7 +275,7 @@
                 }
             };
         },
-        listener:       function (listeners) {
+        listener (listeners) {
             aa.arg.test(listeners, aa.isObject(listeners) && listeners.verify({
                 root: aa.nonEmptyString,
                 names: aa.isArrayOfStrings
@@ -269,9 +290,9 @@
                 }
             };
         },
-        initPrivates:   function (privates, thisPrivate) {
+        initPrivates (privates, thisPrivate) {
         },
-        initSetters:    function (list) {
+        initSetters (list) {
             /**
              * @param {Array} list
              */
@@ -286,7 +307,7 @@
                 this[key] = value;
             };
         },
-        setters:        function (param) {
+        setters (param) {
             /**
              * @param {Array|String} param
              */
@@ -303,7 +324,7 @@
                 });
             }
         },
-        toObjectMaker:  function (keys) {
+        toObjectMaker (keys) {
             if (!aa.isArray(keys)) { throw new TypeError("Argument must be an Object."); }
 
             return function () {
@@ -313,18 +334,17 @@
                 }, {}));
             };
         },
-        toObject:       function () {
+        toObject () {
             const o = {};
             this.__public.forEach((v,k) => {
                 o[k] = v;
             });
             return o;
         },
-        toString:       function () {
-            
+        toString () {
             return JSON.stringify(this.toObject());
         },
-        verify:         function (o) {
+        verify (o) {
             if (!aa.isObject(o)) { throw new TypeError("Argument must be an Object."); }
             return function (key, value) {
                 if (!aa.nonEmptyString(key) || !o.hasOwnProperty(key)) { throw new TypeError("First argument must be a non-empty String."); }
@@ -391,6 +411,23 @@
 
     // Classes:
     aa.Action                   = (() => {
+        class ActionError extends Error {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "ActionError"
+                });
+            }
+        }
+        class ActionTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "ActionTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(ActionTypeError);
         const {cut, get, set} = aa.mapFactory();
         function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
@@ -416,27 +453,34 @@
             // Attributes:
             const accessors = {
                 publics: {
-                    accessible:     false,
-                    app:            null,
-                    checkable:      false,
-                    checked:        false,
-                    description:    null,
-                    disabled:       false,
-                    icon:           null,
-                    name:           "anonymous-"+aa.uid(),
-                    priority:       null,
-                    text:           null,
-                    tooltip:        null,
-                    type:           null,
+                    accessible:         false,
+                    app:                null,
+                    checkable:          false,
+                    checked:            false,
+                    description:        null,
+                    disabled:           false,
+                    icon:               null,
+                    name:               "anonymous-"+aa.uid(),
+                    priority:           null,
+                    text:               null,
+                    tooltip:            null,
+                    type:               null,
 
                     // Lists:
                     callbacks: [], // aa.deprecated
                     listeners: {}
                 },
                 privates: {
-                    addToManager: true,
-                    constructing: true,
+                    addToManager:       true,
+                    _defaultShortcuts:  new aa.Collection({authenticate: item => item === null || aa.shortcut.isValid(item)}),
+                    constructing:       true,
                     nodesToListen: {}
+                },
+                execute: {
+                    defaultShortcuts () {
+                        const that = _(this);
+                        return Array.from(that._defaultShortcuts);
+                    },
                 }
             };
 
@@ -456,48 +500,49 @@
             const priorities = ["low", "normal", "high"];
             const types = ["information", "warning", "critical", "confirm", "reset", "success"];
             const verifiers = {
-                accessible:     aa.isBool,
-                addToManager:   aa.isBool,
-                app:            aa.nonEmptyString,
-                checked:        aa.isBool,
-                callback:       aa.isFunction,
-                callbacks:      aa.isArrayOfFunctions,
-                description:    aa.nonEmptyString,
-                evtName:        aa.nonEmptyString,
-                disabled:       aa.isBool,
-                icon:           aa.nonEmptyString,
-                name:           aa.nonEmptyString,
-                on:             aa.isObject,
-                priority:       aa.inArray(priorities),
-                shortcut:       aa.nonEmptyString,
-                text:           aa.nonEmptyString,
-                tooltip:        aa.nonEmptyString,
-                type:           aa.inArray(types)
+                accessible:         aa.isBool,
+                addToManager:       aa.isBool,
+                app:                aa.nonEmptyString,
+                checked:            aa.isBool,
+                callback:           aa.isFunction,
+                callbacks:          aa.isArrayOfFunctions,
+                defaultShortcuts:   aa.isArrayLikeOf(arg => aa.isNullOr(aa.shortcut.isValid.bind(aa.shortcut))(arg)),
+                description:        aa.nonEmptyString,
+                evtName:            aa.nonEmptyString,
+                disabled:           aa.isBool,
+                icon:               aa.nonEmptyString,
+                name:               aa.nonEmptyString,
+                on:                 aa.isObject,
+                priority:           aa.inArray(priorities),
+                shortcut:           aa.nonEmptyString,
+                text:               aa.nonEmptyString,
+                tooltip:            aa.nonEmptyString,
+                type:               aa.inArray(types)
             };
             let count = 0;
 
             // Private:
-            const construct         = function(){
+            function construct (spec={}){
                 /**
                  * @param {object} spec
                  * @param {bool} addToManager=true
                  *
                  * @return {void}
                  */
+                throwIfNot(spec, aa.isObject, "'spec'");
 
                 aa.defineAccessors.call(this, accessors, {cutter: cut, getter: get, setter: set});
                 const that = _(this);
 
                 that.constructing = true;
                 initGetters.call(this);
-                initListeners.call(this);
+                initShortcuts.call(this, that, spec);
 
                 // Add to manager:
                 const addToManager = (arguments && arguments.length > 1 && aa.isBool(arguments[1]) ? arguments[1] : get(this, "addToManager"));
                 this.setAddToManager(addToManager);
                 
                 // Hydrate:
-                const spec = (arguments && arguments.length > 0 && aa.isObject(arguments[0]) ? arguments[0] : undefined);
                 this.hydrate(spec, ["checkable"]);
                 setDefaultValues.call(this);
 
@@ -505,8 +550,8 @@
                 that.constructing = false;
                 this.addToManager();
                 count += 1;
-            };
-            const _execute          = function (/* param */) {
+            }
+            function _execute (/* param */) {
                 /**
                  * @param {any} param (optional)
                  *
@@ -516,7 +561,7 @@
                 const that = _(this);
 
                 if (!that.disabled) {
-                    this.fire("execute", param);
+                    emit.call(this, "execute", param);
                     that.callbacks.forEach(function (callback) {
                         if (!privates.get(aa.Action, "onceExecuteDeprecated")) {
                             const onceExecuteDeprecated = true;
@@ -526,77 +571,119 @@
                         callback(param);
                     });
                 }
-            };
-            const _enable           = function (enabled=true) {
+            }
+            function _enable (enabled=true) {
                 /**
                  * @param {boolean} enabled=true
                  * @param {boolean} fire=true
                  * return void
                  */
-                aa.arg.test(enabled, aa.isBool, "'enabled'");
+                throwIfNot(enabled, aa.isBool, "'enabled'");
                 const that = _(this);
 
                 this.setDisabled(!enabled);
                 return !that.disabled;
-            };
-            const _disable          = function (disabled=true) {
+            }
+            function _disable (disabled=true) {
                 /**
                  * @param {boolean} disabled=true
                  * return void
                  */
-                aa.arg.test(disabled, aa.isBool, "'disabled'");
+                throwIfNot(disabled, aa.isBool, "'disabled'");
                 const that = _(this);
                 this.setDisabled(disabled);
                 return that.disabled;
-            };
-            const dispatch          = function (evtName, param) {
+            }
+            function dispatch (evtName, ...args) {
                 const that = _(this);
                 
                 // Dispatch on listened nodes:
                 evtName = "on"+evtName;
                 const list = that.nodesToListen;
                 if (list.hasOwnProperty(evtName)) {
-                    list[evtName].forEach((listener) => {
-                        listener.callback(listener.node, param);
+                    list[evtName].forEach(listener => {
+                        listener.callback(listener.node, ...args);
                     });
                 }
-            };
-            const initAnonymous     = function () {
+            }
+            /**
+             * @param {string} evtName="execute" (optional)
+             * @param {any[]} args (optional)
+             *
+             * @return {void}
+             */
+            function emit (evtName="execute", ...args) {
+                throwIfNot(evtName, aa.nonEmptyString, "'evtName'");
+                throwIfNot(evtName, aa.nonEmptyString, `'evtName'`);
+                const that = _(this);
+
+                evtName = "on"+evtName.trim();
+                const listeners = that.listeners;
+                if (listeners.hasOwnProperty(evtName) && aa.isArray(listeners[evtName])) {
+                    if (!(evtName === "onexecute" && that.disabled)) {
+                        listeners[evtName]?.forEach(callback => {
+                            callback(...args);
+                        });
+                        if (evtName.match(/change$/)) {
+                            let event;
+                            listeners[`${evtName}d`]?.forEach(callback => {
+                                event = new aa.CustomEvent({
+                                    data: args[0] ?? undefined,
+                                    target: this,
+                                });
+                                callback(event, ...args);
+                            });
+                        }
+                    }
+                }
+                if (!(evtName === "onexecute" && that.disabled)) {
+                    dispatch.call(this, evtName.replace(/^on/, ''), ...args);
+                }
+            }
+            function initAnonymous () {
                 this.execute =  _execute.bind(this);
                 this.enable =   _enable.bind(this);
                 this.disable =  _disable.bind(this);
-            };
-            const initGetters       = function () {
+            }
+            function initGetters () {
                 Object.defineProperties(this, {
                     shortcut: {
-                        get: () => Object.freeze(getShortcut.call(this)),
+                        get: () => Object.freeze(aa.events.app(this.app)?.getShortcutOf(this) ?? undefined),
                         set: shortcut => {
-                            verify("shortcut", shortcut);
-                            set(this, "shortcut", shortcut.trim());
+                            throwIfNot(shortcut, aa.isNullOr(aa.shortcut.isValid.bind(aa.shortcut)), "'shortcut'");
+                            shortcut = shortcut?.trim() ?? null;
+                            set(this, "shortcut", shortcut);
+                            emit.call(this, "shortcutchange", shortcut, this);
                         }
                     },
                     shortcuts: {
                         get: () => Object.freeze(getShortcuts.call(this))
                     },
                 });
-            };
-            const initListeners     = function () {
-                const that = _(this);
-                allowedEvents.forEach(function (evtName) {
-                    that.listeners[evtName] ??= [];
-                },this);
-            };
-            const getShortcut       = function () {
-                const appName = this.app;
-                const app = aa.events.app(appName);
-                return (app?.getShortcutOf(this) ?? undefined);
-            };
-            const getShortcuts      = function () {
+            }
+            function initShortcuts (that, spec={}) {
+                if (spec.hasOwnProperty("name")) {
+                    this.setName(spec.name);
+                    delete spec.name;
+                }
+                if (spec.hasOwnProperty("app")) {
+                    this.setApp(spec.app);
+                    delete spec.app;
+                }
+                if (spec.hasOwnProperty("shortcut")) {
+                    let shortcut = spec.shortcut ??= null;
+                    delete spec.shortcut;
+                    if (shortcut) shortcut = aa.shortcut.cmdOrCtrl(shortcut);
+                    this.setDefaultShortcuts([shortcut]);
+                    aa.events.app(this.app).loadShortcutFromDB(this, shortcut);
+                }
+            }
+            function getShortcuts () {
                 const appName = this.app;
                 const app = aa.events.app(appName);
                 return (app?.getShortcutsOf(this) ?? []);
-            };
-            const setDefaultValues  = function () {
+            }
+            function setDefaultValues () {
                 const that = _(this);
 
                 this.priority ??= "normal";
@@ -610,7 +697,7 @@
             aa.deploy(aa.Action.prototype, {
 
                 // General:
-                hydrate:         aa.prototypes.hydrate,
+                hydrate: aa.prototypes.hydrate,
                 addToManager () {
                     const that = _(this);
                     if (that.addToManager) {
@@ -631,8 +718,8 @@
                         return res;
                     }
 
-                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                    aa.arg.test(callback, aa.isFunction, "'callback'");
+                    throwIfNot(evtName, aa.nonEmptyString, "'evtName'");
+                    throwIfNot(callback, aa.isFunction, "'callback'");
 
                     const that = _(this);
                     let res = false;
@@ -649,34 +736,9 @@
                     }
                     return res;
                 },
-                /**
-                 * @param {string} evtName="execute" (optional)
-                 * @param {any} param=undefined (optional)
-                 *
-                 * @return {void}
-                 */
-                fire (evtName="execute" /*, param */) {
-                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                    const param = arguments && arguments.length > 1 ? arguments[1] : undefined;
-                    aa.arg.test(evtName, aa.nonEmptyString, `'evtName'`);
-                    const that = _(this);
-
-                    evtName = "on"+evtName.trim();
-                    const listeners = that.listeners;
-                    if (listeners.hasOwnProperty(evtName) && aa.isArray(listeners[evtName])) {
-                        if (!(evtName === "onexecute" && that.disabled)) {
-                            listeners[evtName].forEach(function (callback) {
-                                callback(param);
-                            });
-                        }
-                    }
-                    if (param !== undefined && !(evtName === "onexecute" && that.disabled)) {
-                        dispatch.call(this, evtName.replace(/^on/, ''), param);
-                    }
-                },
                 hasCallback (callback) {
                     const that = _(this);
-                    return that.listeners.onexecute.has(callback);
+                    return that.listeners.onexecute.includes(callback);
                 },
                 isValid () {
                     const that = _(this);
@@ -690,15 +752,15 @@
                  * @return {void}
                  */
                 listenNode (node, evtName, callback) {
-                    aa.arg.test(node, aa.isElement, "'node'");
-                    aa.arg.test(evtName, aa.inArray(allowedEvents), "'evtName'");
-                    aa.arg.test(callback, aa.isFunction, "'callback'");
+                    throwIfNot(node, aa.isElement, "'node'");
+                    throwIfNot(evtName, aa.inArray(allowedEvents), "'evtName'");
+                    throwIfNot(callback, aa.isFunction, "'callback'");
                     const that = _(this);
 
                     const list = that.nodesToListen;
-                    if (!list.hasOwnProperty(evtName)) {
-                        list[evtName] = [];
-                    }
+                    list[evtName] ??= [];
+                    // if (!list.hasOwnProperty(evtName)) {
+                    // }
                     
                     list[evtName].push({
                         node: node,
@@ -725,80 +787,119 @@
                         return;
                     }
 
-                    aa.arg.test(evtName, aa.nonEmptyString, "'evtName'");
-                    aa.arg.test(callback, aa.isFunction, "'callback'");
+                    throwIfNot(evtName, aa.nonEmptyString, "'evtName'");
+                    throwIfNot(callback, aa.isFunction, "'callback'");
 
                     const that = _(this);
-                    let res = false;
-                    
                     evtName = "on"+evtName.trim();
                     const listeners = get(this, "listeners");
-                    if (!listeners.hasOwnProperty(evtName)) {
+
+                    if (evtName.match(/changed$/)) {
+                        if (!allowedEvents.includes(evtName.replace(/d$/, ''))) {
+                            console.warn("Action's event listener '"+evtName+"' not implemented.");
+                            return false;
+                        }
+                    } else if (!allowedEvents.includes(evtName)) {
                         console.warn("Action's event listener '"+evtName+"' not implemented.");
                         return false;
                     }
-                    if (!res && listeners.hasOwnProperty(evtName) && !listeners[evtName].has(callback)) {
-                        listeners[evtName].push(callback);
-                        res = true;
-                    }
-                    return res;
+                    
+                    listeners[evtName] ??= [];
+                    listeners[evtName].pushUnique(callback);
+                    set(this, "listeners", listeners);
+                    return true;
                 },
 
                 // Setters:
-                get:             aa.prototypes.get,
-                set:             aa.prototypes.set,
+                // get: aa.prototypes.get,
+                // set: aa.prototypes.set,
+                resetShortcuts (options={}) {
+                    throwIfNot(options, aa.verifyObject({
+                        everyApp: aa.isBool,
+                    }), "'options'");
+                    options.everyApp ??= false;
+                    const that = _(this);
+
+                    const doit = app => {
+                        aa.arg.test(app, app => app instanceof aa.EventApp, "'app'");
+                        log({app: app.name, "action.name": this.name, shortcuts: this.shortcuts.join(', ')});
+                        app.mute(this);
+
+                        that._defaultShortcuts
+                        ?.forEach(shortcut => {
+                            if (shortcut) {
+                                app.on(shortcut, this);
+                            }
+                            this.shortcut = shortcut;
+                        });
+                    };
+                    if (options.everyApp) {
+                        aa.events.forEachApp(app => {
+                            doit(app);
+                        });
+                    } else {
+                        doit(aa.events.app(this.app))
+                    }
+                },
                 setAccessible (accessible=true) {
-                    aa.arg.test(accessible, aa.isBool, "'accessible'");
+                    throwIfNot(accessible, aa.isBool, "'accessible'");
                     const that = _(this);
                     that.accessible = accessible;
                     return accessible;
                 },
                 setAddToManager (addToManager) {
-                    aa.arg.test(addToManager, verifiers.addToManager, "'addToManager'");
+                    throwIfNot(addToManager, verifiers.addToManager, "'addToManager'");
                     const that = _(this);
                     
                     that.addToManager = addToManager;
                     return addToManager;
                 },
                 setApp (appName) {
-                    aa.arg.test(appName, verifiers.app, "'appName'");
+                    throwIfNot(appName, verifiers.app, "'appName'");
                     const that = _(this);
 
                     that.app = appName.trim();
                     return true;
                 },
                 setCheckable (checkable) {
-                    aa.arg.test(checkable, aa.isBool, "'checkable'");
+                    throwIfNot(checkable, aa.isBool, "'checkable'");
                     const that = _(this);
                     
-                    const change = (that.checkable !== checkable);
+                    const isDifferent = (that.checkable !== checkable);
                     that.checkable = checkable;
-                    if (!that.constructing && change) {
-                        this.fire("checkablechange", checkable);
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "checkablechange", checkable);
                     }
                     return checkable;
                 },
                 setChecked (checked) {
-                    aa.arg.test(checked, aa.isBool, "'checked'");
+                    throwIfNot(checked, verifiers.checked, "'checked'");
                     const that = _(this);
 
                     if (that.checkable) {
-                        const change = (that.checked !== checked);
+                        const isDifferent = (that.checked !== checked);
                         that.checked = checked;
-                        if (!that.constructing && change) {
-                            this.fire("checkchange", checked);
+                        if (!that.constructing && isDifferent) {
+                            emit.call(this, "checkchange", checked);
                         }
                     }
                     return checked;
                 },
-                setDescription (description) {
-                    aa.arg.test(description, verifiers.description, "'description'");
+                setDefaultShortcuts (shortcuts) {
+                    throwIfNot(shortcuts, verifiers.defaultShortcuts, "'shortcuts'");
                     const that = _(this);
 
-                    const change = (that.description !== description);
+                    if (that._defaultShortcuts.length > 0) throw new ActionError("Can not reset default shortcut");
+                    that._defaultShortcuts.pushUnique(...shortcuts);
+                },
+                setDescription (description) {
+                    throwIfNot(description, verifiers.description, "'description'");
+                    const that = _(this);
+
+                    const isDifferent = (that.description !== description);
                     that.description = description;
-                    if (!that.constructing && change) {
-                        this.fire("descriptionchange", description);
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "descriptionchange", description);
                     }
                     return true;
                 },
@@ -808,40 +909,40 @@
                  * @return {void}
                  */
                 setDisabled (disabled) {
-                    aa.arg.test(disabled, verifiers.disabled, "'disabled'");
+                    throwIfNot(disabled, verifiers.disabled, "'disabled'");
                     const that = _(this);
 
-                    const change = (that.disabled !== disabled);
+                    const isDifferent = (that.disabled !== disabled);
                     that.disabled = disabled;
-                    if (!that.constructing && change) {
-                        this.fire("disablechange", disabled);
-                        this.fire((disabled ? "dis" : "en")+"able", disabled);
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "disablechange", disabled);
+                        emit.call(this, (disabled ? "dis" : "en")+"able", disabled);
                     }
                     return that.disabled;
                 },
                 setCallback (callback) {
                     aa.deprecated("aa.Action.callbacks");
-                    aa.arg.test(callback, verifiers.callback, "'callback'");
+                    throwIfNot(callback, verifiers.callback, "'callback'");
                     const that = _(this);
 
                     that.listeners["onexecute"].push(callback); // now in 'onexecute' instead of in 'callbacks'
                     return true;
                 },
                 setCallbacks (callbacks) {
-                    aa.arg.test(callbacks, verifiers.callbacks, "'callbacks'");
+                    throwIfNot(callbacks, verifiers.callbacks, "'callbacks'");
                     return callbacks.forEach((callback) => {
                         this.setCallback(callback);
                     });
                 },
                 setIcon (icon) {
-                    aa.arg.test(icon, verifiers.icon, "'icon'");
+                    throwIfNot(icon, verifiers.icon, "'icon'");
                     const that = _(this);
 
                     const previous = that.icon;
-                    const change = (previous !== icon);
+                    const isDifferent = (previous !== icon);
                     that.icon = icon.trim();
-                    if (!that.constructing && change) {
-                        this.fire("iconchange", {
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "iconchange", {
                             new: icon,
                             previous: previous
                         });
@@ -849,14 +950,14 @@
                     return true;
                 },
                 setName (name) {
-                    aa.arg.test(name, verifiers.name, "'name'");
+                    throwIfNot(name, verifiers.name, "'name'");
                     const that = _(this);
 
                     that.name = name.trim();
                     return true;
                 },
                 setOn (listeners) {
-                    aa.arg.test(listeners, verifiers.on, "'listeners'");
+                    throwIfNot(listeners, verifiers.on, "'listeners'");
 
                     const verifier = {};
                     allowedEvents.forEach((evtName) => {
@@ -870,36 +971,36 @@
                     });
                 },
                 setPriority (priority) {
-                    aa.arg.test(priority, verifiers.priority, "'priority'");
+                    throwIfNot(priority, verifiers.priority, "'priority'");
                     const that = _(this);
 
-                    const change = (that.priority !== priority);
+                    const isDifferent = (that.priority !== priority);
                     that.priority = priority;
-                    if (!that.constructing && change) {
-                        this.fire("prioritychange", priority);
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "prioritychange", priority);
                     }
                     return true;
                 },
                 setText (text) {
-                    aa.arg.test(text, verifiers.text, "'text'");
+                    throwIfNot(text, verifiers.text, "'text'");
                     const that = _(this);
 
-                    const change = (that.text !== text);
+                    const isDifferent = (that.text !== text);
                     that.text = text.trim();
-                    if (!that.constructing && change) {
-                        this.fire("textchange", text);
+                    if (!that.constructing && isDifferent) {
+                        emit.call(this, "textchange", text);
                     }
                     return true;
                 },
                 setTooltip (tooltip) {
-                    aa.arg.test(tooltip, verifiers.tooltip, "'tooltip'");
+                    throwIfNot(tooltip, verifiers.tooltip, "'tooltip'");
                     const that = _(this);
 
                     that.tooltip = tooltip.trim();
                     return true;
                 },
                 setType (type) {
-                    aa.arg.test(type, verifiers.type, "'type'");
+                    throwIfNot(type, verifiers.type, "'type'");
                     const that = _(this);
 
                     that.type = type;
@@ -960,18 +1061,18 @@
         }
 
         // Statics:
-        aa.deploy(Action, {
-            disableByName:  function (...names) {
+        Object.assign(Action, {
+            disableByName (...names) {
                 names.forEach(name => {
                     aa.action(name, action => action.disable());
                 });
             },
-            enableByName:   function (...names) {
+            enableByName (...names) {
                 names.forEach(name => {
                     aa.action(name, action => action.enable());
                 });
             },
-        }, {force: true});
+        });
         return Action;
     })();
     (function () { /* aa.Action static */
@@ -1577,7 +1678,7 @@
 
         return Collection;
     })();
-    aa.Event = (() => {
+    aa.Event                    = (() => {
         /**
          * aa.Event = function (Function callback[, Array options(String)]);
          * 
@@ -1608,15 +1709,15 @@
             },
             verifiers: {options: aa.isArrayOfStrings}
         };
-        function Event(actionOrCallback, options /* , spec */) {
+        function Listener(actionOrCallback, options /* , spec */) {
             // Attributes:
             this.action     = null;
             this.app        = null;
             this.module     = null;
             this.callback   = null;
             this.options    = {
-                always:         false,  // always execute this Event on the LAST App added
-                forever:        false,  // always execute this Event on EVERY Apps added
+                always:         false,  // always execute this Listener on the LAST App added
+                forever:        false,  // always execute this Listener on EVERY Apps added
                 // suspended:      false,
                 preventDefault: false   // prevent default browser's execution
             };
@@ -1626,7 +1727,7 @@
 
             privates.construct.apply(this, arguments);
         }
-        aa.deploy(Event.prototype, {
+        aa.deploy(Listener.prototype, {
 
             // Methods:
             isValid () {
@@ -1642,16 +1743,16 @@
             run () {
                 // this.suspended = false;
             },
-            execute () {
+            execute (...args) {
                 if (this.isValid()) {
                     if (this.action) {
-                        this.action.execute.apply(this.action, arguments);
+                        this.action.execute(...args);
                     } else if (this.callback) {
-                        this.callback.apply(null, arguments);
+                        this.callback.call(null, ...args);
                     }
                 } else {
-                    aa.gui.warn("Event not valid.");
-                    warn("Event not valid:", this);
+                    aa.gui.warn("Listener not valid.");
+                    warn("Listener not valid:", this);
                 }
             },
             isModule (name) {
@@ -1667,13 +1768,13 @@
                 aa.arg.test(name, aa.nonEmptyString, `'name'`);
                 this.app = name.trim();
             },
-            setActionOrCallback (param) {
-                if (aa.isFunction(param)) {
+            setActionOrCallback (listener) {
+                if (aa.isFunction(listener)) {
                     aa.deprecated('aa.Event.callback');
-                    this.setActionOrCallback(new aa.Action({ on: {execute: param}}));
+                    this.setActionOrCallback(new aa.Action({ on: {execute: listener}}));
                     return true;
-                } else if (param instanceof aa.Action && param.isValid) {
-                    this.action = param;
+                } else if (listener instanceof aa.Action && listener.isValid) {
+                    this.action = listener;
                     return true;
                 }
                 return false;
@@ -1700,36 +1801,60 @@
                 return true;
             },
         }, {force: true});
-        return Event;
+        return Listener;
     })();
-    aa.EventApp = (() => {
+    aa.EventApp                 = (() => {
+        class EventAppError extends Error {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "EventAppError"
+                });
+            }
+        }
+        class EventAppTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "EventAppTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(EventAppTypeError);
+        // --------------------------------
         const {cut, get, set} = aa.mapFactory();
         function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
         const privates = {
             construct (app) {
-                // aa.prototypes.initGetters.call(this, ['events']);
-                return this.setApp(app);
+                // aa.prototypes.initGetters.call(this, ['_events']);
+                initGetters.call(this);
+                this.setApp(app);
+                const that = _(this);
             },
             verifiers: {
                 appName: aa.nonEmptyString,
                 callback: aa.isFunction,
                 associableParam: (p) => { return (aa.isFunction(p) || ((p instanceof aa.Event || p instanceof aa.Action) && p.isValid()) || aa.nonEmptyString(p)); },
                 callbackOrUndefined: (f) => { return (aa.isFunction(f) || f === undefined); },
-                evtName: aa.nonEmptyString
+                evtName: aa.nonEmptyString,
+                shortcut: arg => arg === null || aa.shortcut.isValid(arg),
             },
         };
         function EventApp (app) {
             
             // Attributes:
             aa.defineAccessors.call(this, {
-                execute: {
-                    name: () => get(this, 'app')
+                // execute: {
+                //     name: () => get(this, 'app')
+                // },
+                read: {
+                    name:   null,
                 },
                 privates: {
                     app:    null,
                     module: null,
-                    events: {},
+                    _events: {},
                 },
             }, {cutter: cut, getter: get, setter: set});
 
@@ -1737,35 +1862,41 @@
             // Init:
             return privates.construct.apply(this, arguments);
         }
+        function initGetters () {
+            const that = _(this);
+            Object.defineProperties(this, {
+                // events: {get: () => that._events}
+            });
+        }
 
         // Public:
         aa.deploy(EventApp.prototype, {
             // Methods:
-            associate (evtName, param) {
+            associate (evtName, listener) {
                 /**
                  * @param {String} evtName
-                 * @param {aa.Action|Function|String} param
+                 * @param {aa.Action|Function|String} listener
                  *
                  * @return {void}
                  */
 
-                aa.arg.test(param, privates.verifiers.associableParam, "'param'");
-                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
+                throwIfNot(listener, privates.verifiers.associableParam, "'listener'");
+                throwIfNot(evtName, privates.verifiers.evtName, "'evtName'");
 
                 const o = {};
 
                 // Regular syntax:
-                if (param instanceof aa.Event) {
-                    o[evtName] = param;
+                if (listener instanceof aa.Event) {
+                    o[evtName] = listener;
                     this.listen(o);
                 }
                 
                 // Other syntax:
-                else if (aa.isFunction(param)) {
-                    this.associate(evtName, new aa.Action({on: {execute: param}}));
-                } else if (param instanceof aa.Action) {
-                    this.associate(evtName, new aa.Event(param))
-                } else if (aa.isString(param)) {
+                else if (aa.isFunction(listener)) {
+                    this.associate(evtName, new aa.Action({on: {execute: listener}}));
+                } else if (listener instanceof aa.Action) {
+                    this.associate(evtName, new aa.Event(listener, ["preventDefault"]));
+                } else if (aa.isString(listener)) {
                     this.associate(evtName, aa.actionManager.get(evtName));
                 }
             },
@@ -1779,104 +1910,132 @@
                     return;
                 }
 
-                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
-                aa.arg.test(callback, privates.verifiers.callback, "'callback'");
+                throwIfNot(evtName, privates.verifiers.evtName, "'evtName'");
+                throwIfNot(callback, privates.verifiers.callback, "'callback'");
                 const that = _(this);
 
-                const events = that.events;
-                if (events.hasOwnProperty(evtName)) {
-                    events[evtName].forEachReverse(event => {
-                        aa.throwErrorIf(
-                            !(event.action instanceof aa.Action),
-                            "Event 'action' attribute must be an Action."
-                        );
-                        if (event.action.hasCallback(callback)) {
-                            events[evtName].remove(event)
-                        }
-                    });
-                }
+                const {_events} = that;
+                _events[evtName]?.forEachReverse(event => {
+                    if (!(event.action instanceof aa.Action)) throw new EventAppTypeError("Event 'action' attribute must be an Action.");
+                    if (event.action.hasCallback(callback)) {
+                        _events[evtName].remove(event)
+                    }
+                });
             },
-            dissociate (evtName /*, param */) {
+            dissociate (evtName, listener) {
                 /**
                  * @param {String} evtName
-                 * @param {aa.Action|Function|String} param
+                 * @param {aa.Action|Function|String} listener
                  *
                  * @return {void}
                  */
-                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
-                const param = aa.arg.optional(arguments, 1, undefined, privates.verifiers.associableParam);
+                throwIfNot(evtName, privates.verifiers.evtName, "'evtName'");
+                throwIfNot(listener, privates.verifiers.associableParam, "'listener'");
                 const that = _(this);
 
-                const list = [];
-                const events = this.getEvents(evtName);
-                if (events) {
-                    if (param) {
-                        events.forEach((evt) => {
+                // const events = this.getEvents(evtName);
+                const {_events} = that;
+                _events[evtName]?.forEachReverse(events => {
 
-                            // Regular syntax:
-                            if (param instanceof aa.Event) {
-                                if (param !== evt) {
-                                }
-                            }
+                    // Regular type:
+                    if (listener instanceof aa.Event) {
+                        if (event === listener) events.remove(event);
+                    }
 
-                            // Other syntax:
-                            else if (aa.isFunction(param)) {
+                    // Other type:
+                    else if (aa.isFunction(listener)) {
+                        aa.deprecated("aa.Event.callback");
+                        if (event.callback === listener) {
+                            events.remove(event);
+                        }
+                    } else if (listener instanceof aa.Action) {
+                        if (event?.callback === listener.execute) {
+                            aa.deprecated("aa.Event.callback");
+                            events.remove(event);
+                        } else if (event.action === action) {
+                            events.remove(event);
+                        }
+                    } else if (aa.isString(listener)) {
+                        aa.action(listener, action => {
+                            if (event?.callback === action.execute) {
                                 aa.deprecated("aa.Event.callback");
-                                if (evt.callback === param) {
-                                } else {
-                                    list.push(evt);
-                                }
-                            } else if (param instanceof aa.Action) {
-                                if (evt) {
-                                    if (evt.callback === param.execute) {
-                                        aa.deprecated("aa.Event.callback");
-                                    } else if (evt.action === param) {
-                                    } else {
-                                        list.push(evt.callback);
-                                    }
-                                }
-                            } else if (aa.isString(param)) {
-                                aa.gui.todo("Dissociate with String", true);
+                                events.remove(event);
+                            } else if (event?.action === action) {
+                                events.remove(event);
                             }
                         });
                     }
-                    that.events[evtName] = list;
-                }
+                });
             },
-            listen (spec) {
-                aa.arg.test(spec, aa.isObject, "'spec'");
+            listen (listeners) {
+                throwIfNot(listeners, aa.isObject, "'listeners'");
                 const that = _(this);
 
-                spec.forEach((evt, evtName) => {
+                listeners.forEach((event, evtName) => {
                     evtName = aa.shortcut.rename(evtName);
-                    aa.arg.test(evtName, privates.verifiers.evtName, `'evtName'`);
+                    throwIfNot(evtName, privates.verifiers.evtName, `'evtName'`);
 
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let pile = [];
-                    if (evt instanceof aa.Event) {
-                        pile.push(evt);
-                    } else if(aa.isArray(evt)) {
-                        aa.arg.test(evt, aa.isArrayOf(e => e instanceof aa.Event), `'evt'`);
-                        evt.forEach(e => {
-                            pile.push(e);
-                        });
+                    if (event instanceof aa.Event) {
+                        pile.push(event);
+                    } else if(aa.isArray(event)) {
+                        throwIfNot(event, aa.isArrayOf(item => item instanceof aa.Event), `'event'`);
+                        pile.push(...event);
                     }
-                    pile.forEach((event) => {
-                        const events = that.events;
+                    pile.forEach(event => {
+                        const {_events} = that;
 
                         if (event.callback) {
                             aa.deprecated("aa.Event.callback");
                         }
                         event.setModule(that.module);
                         event.setApp(that.app);
-                        if (!events.hasOwnProperty(evtName)) {
-                            events[evtName] = [];
-                        }
+                        _events[evtName] ??= [];
                         if (event === null) { log("this one is null"); }
-                        events[evtName].push(event);
+                        _events[evtName].push(event);
                     });
                 });
                 return true;
+            },
+            loadShortcutFromDB (action, ...initialShortcuts) {
+                aa.arg.test(action, arg => arg instanceof aa.Action, "'action'");
+                aa.arg.test(initialShortcuts, aa.isArrayOf(aa.isNullOr(aa.shortcut.isValid.bind(aa.shortcut))), "'initialShortcuts'");
+
+                const db = aa.Storage.get("custom");
+                db.load();
+                
+                const dbShortcuts = db.select("shortcuts")?.[this.name]?.[action.name];
+                if (dbShortcuts) {
+                    dbShortcuts?.filter(shortcut => !!shortcut)
+                    .map(shortcut => aa.shortcut.cmdOrCtrl(shortcut))
+                    .forEach(shortcut => {
+                        this.on(shortcut, action);
+                    });
+                } else {
+                    initialShortcuts.forEach(shortcut => {
+                        this.on(shortcut, action);
+                    });
+                }
+            },
+            mute (listener) {
+                if (listener instanceof aa.Action) return this.muteAction(listener);
+
+                throw new EventAppTypeError("Listener not implemented");
+            },
+            muteAction (action) {
+                aa.arg.test(action, arg => arg instanceof aa.Action, "'action'");
+
+                const that = _(this);
+                const {_events} = that;
+                _events.forEach((listeners, evtName) => {
+                    listeners.forEachReverse(listener => {
+                        if (listener.action === action) {
+                            listeners.remove(listener);
+                        }
+                    });
+                    if (listeners.length === 0) delete _events[evtName];
+                });
             },
             on (evtName, callback, options=[]) {
                 /**
@@ -1893,7 +2052,7 @@
                  * @return {object} this (=> chainable 'on' functions)
                  */
 
-                aa.arg.test(options, aa.isArrayOfNonEmptyStrings, "'options'");
+                throwIfNot(options, aa.isArrayOfNonEmptyStrings, "'options'");
                 options.pushUnique("preventDefault");
 
                 // Recur in case of signature: aa.EventApp.prototype.on({eventName: callback} /*, options */);
@@ -1906,7 +2065,7 @@
                     return this;
                 }
 
-                aa.arg.test(evtName, privates.verifiers.evtName, "'evtName'");
+                throwIfNot(evtName, privates.verifiers.evtName, "'evtName'");
                 const that = _(this);
 
                 const spec = {};
@@ -1924,13 +2083,13 @@
                 return this;
             },
             forEachEvent (callback) {
-                aa.arg.test(callback, privates.verifiers.callback, "'callback'");
+                throwIfNot(callback, privates.verifiers.callback, "'callback'");
                 const that = _(this);
 
-                that.events.forEach(callback);
+                that._events.forEach(callback);
             },
             module (mod) {
-                aa.arg.test(mod, aa.isNullOrNonEmptyString, "'mod'");
+                throwIfNot(mod, aa.isNullOrNonEmptyString, "'mod'");
                 const that = _(this);
 
                 if (aa.isString(mod)) {
@@ -1942,14 +2101,14 @@
                 aa.events.moveTop(this);
             },
             pop (evt) {
-                aa.arg.test(evt, privates.verifiers.evtName, "'evt'");
+                throwIfNot(evt, privates.verifiers.evtName, "'evt'");
                 const that = _(this);
-                const events = that.events;
-                events[evt]?.pop();
+                const {_events} = that;
+                _events[evt]?.pop();
             },
             run (evt) {},
             suspend (param) {
-                aa.arg.test(param, arg => aa.isArrayOfNonEmptyStrings(arg) || aa.nonEmptyString(arg), 'param');
+                throwIfNot(param, arg => aa.isArrayOfNonEmptyStrings(arg) || aa.nonEmptyString(arg), 'param');
 
                 const toSuspend = [];
                 if (aa.isString(param)) {
@@ -1960,7 +2119,7 @@
                         toSuspend.push(s);
                     });
                 }
-                toSuspend.forEach((evtName) => {
+                toSuspend.forEach(evtName => {
                     evtName = aa.shortcut.cmdOrCtrl(evtName);
                     let o = {};
                     o[evtName] = new aa.Event(new aa.Action({on: {execute () {}}}),["preventDefault"]);
@@ -1968,12 +2127,69 @@
                 });
                 return this;
             },
+            updateShortcut (action, oldShortcut=null, newShortcut=null) {
+                throwIfNot(action, arg => arg instanceof aa.Action, "'action'");
+                throwIfNot(oldShortcut, privates.verifiers.shortcut, "'oldShortcut'");
+                throwIfNot(newShortcut, privates.verifiers.shortcut, "'newShortcut'");
+
+                const that = _(this);
+                update_DB: {
+                    const db = aa.Storage.get("custom");
+                    db.load();
+                    const apps = db.select("shortcuts") ?? {};
+                    const appName = that.name;
+                    if (!appName) break update_DB;
+                    
+                    apps[appName] ??= {};
+                    const app = apps[appName];
+                    
+                    defaults.shortcuts[appName] ??= {};
+                    defaults.shortcuts[appName][action.name] ??= [oldShortcut];
+
+                    app[action.name] ??= defaults.shortcuts[appName]?.[action.name];
+                    const shortcuts = app[action.name];
+                    
+                    shortcuts.remove(oldShortcut);
+                    if (newShortcut) {
+                        while (shortcuts.includes(null)) {
+                            shortcuts.remove(null);
+                        }
+                    }
+                    if (!action.defaultShortcuts.includes(newShortcut)) {
+                        shortcuts.pushUnique(newShortcut);
+                    } else {
+                        delete app[action.name];
+                    }
+                    
+                    db.insert("shortcuts", apps);
+                }
+                update_events: {
+                    const that = _(this);
+                    const {_events} = that;
+                    let found = null;
+                    if (oldShortcut) {
+                        const listeners = _events[oldShortcut] ?? [];
+                        listeners.forEachReverse(listener => {
+                            if (listener.action === action) {
+                                found = listeners.remove(listener);
+                            }
+                        });
+                        if (listeners.length === 0) delete _events[oldShortcut];
+                    }
+                    if (found && newShortcut) {
+                        _events[newShortcut] ??= [];
+                        _events[newShortcut].pushUnique(found);
+                    }
+                }
+            },
 
             // Setters:
             setApp (name) {
-                aa.arg.test(name, privates.verifiers.appName, "'name'");
+                throwIfNot(name, privates.verifiers.appName, "'name'");
+                name = name?.trim() ?? null;
                 const that = _(this);
-                that.app = name.trim();
+                that.app = name;
+                that.name = name;
                 that.module = null;
                 return this;
             },
@@ -1983,41 +2199,41 @@
                 if (evtName !== undefined && !privates.verifiers.evtName(evtName)) { throw new TypeError("Argument must be undefined or a non-empty String."); }
 
                 const that = _(this);
-                const events = that.events;
+                const {_events} = that;
 
                 if (aa.isString(evtName)) {
                     evtName = evtName.trim();
-                    return events[evtName] ?? undefined;
+                    return _events[evtName] ?? undefined;
                 } else {
-                    return events;
+                    return _events;
                 }
             },
             getShortcutOf (obj) {
-                return this.getShortcutsOf(obj).first;
+                return this.getShortcutsOf(obj)?.[0] ?? undefined;
             },
             getShortcutsOf (obj) {
                 const that = _(this);
-                const db = new aa.Storage("custom");
+                const db = aa.Storage.get("custom");
                 const shortcuts = [];
 
-                // action's shortcut saved in DB:
+                // if custom shortcut is registered in DB:
                 if (that.app === obj.app) {
                     db.load();
                     const data = db.select("shortcuts");
                     if (data) {
-                        const app = data.find((list, name)=> name === that.app);
+                        const app = data.find((list, name) => name === that.app);
                         if (app && obj instanceof aa.Action) {
                             if (app[obj.name] && aa.isArray(app[obj.name])) {
-                                return app[obj.name];
+                                return Array.from(app[obj.name]);
                             }
                         }
                     }
                 }
 
                 // else:
-                that.events.forEach((events, evtName) => {
+                that._events.forEach((_events, evtName) => {
                     if (aa.shortcut.isValid(evtName)) {
-                        events.forEach((evt) => {
+                        _events.forEach(evt => {
                             if (obj instanceof aa.Event) {
                                 if (evt === obj) {
                                     shortcuts.push(evtName);
@@ -2039,11 +2255,11 @@
         }, {force: true});
 
         // Statics:
-        aa.deploy(EventApp, {
+        Object.assign(EventApp, {
             getCurrent () {
                 return aa.events.app(aa.events.appNames.last);
             },
-        }, {force: true});
+        });
 
         return EventApp;
     })();
@@ -2071,7 +2287,7 @@
                 type: aa.isNullOrNonEmptyString
             }
         };
-        aa.deploy(EventResponse.prototype, {
+        Object.assign(EventResponse.prototype, {
             // Methods:
             preventDefault (prevent=true) {
                 aa.arg.test(prevent, aa.isBool);
@@ -2093,7 +2309,7 @@
                 aa.arg.test(type, privates.verifiers.type, `'type'`);
                 set(this, "type", type ? type.trim() : null);
             },
-        }, {force: true});
+        });
 
         return EventResponse;
     })();
@@ -2134,13 +2350,25 @@
         }
         // return this;
     };
-    aa.Storage                  = function (table) {
+    aa.Storage                  = (() => {
+        const privates = {
+            singletons: {},
+        };
+        function Storage (table) {
 
-        // Attributes:
-        this.data = {};
-        set(this, "table", null);
+            // Attributes:
+            this.data = {};
+            set(this, "table", null);
 
-        // Magic:
+            // Magic:
+
+            // Methods:
+
+            // Instanciate:
+            construct.apply(this, arguments);
+        };
+
+        // Private methods:
         const construct     = function (table) {
             /**
              * @param {string} table
@@ -2172,8 +2400,8 @@
             set(this, "table", table.trim());
         };
 
-        // Methods:
-        aa.deploy(aa.Storage.prototype, {
+        // Public methods:
+        Object.assign(Storage.prototype, {
 
             // General:
             clear () {
@@ -2198,7 +2426,6 @@
                 register.call(this);
             },
             isValid () {
-
                 return (get(this, "table") !== null);
             },
             load () {
@@ -2230,11 +2457,19 @@
                     : undefined
                 );
             },
-        }, {force: true, condition: aa.Storage.prototype.hydrate === undefined});
+        });
 
-        // Instanciate:
-        construct.apply(this, arguments);
-    };
+        // Statics:
+        Object.assign(Storage, {
+            get (table) {
+                aa.arg.test(table, aa.nonEmptyString, "'table'");
+                table = table.trim();
+                privates.singletons[table] ??= new Storage(table);
+                return privates.singletons[table];
+            },
+        });
+        return Storage;
+    })();
 
     // Variables:
     aa.zIndexMax = 0;
@@ -2267,20 +2502,20 @@
         
         // Privates:
         const collection = {};
-        const construct   = function () {
-            if (arguments && arguments.length) {
-                this.hydrate(arguments[0]);
+        const construct   = function (...args) {
+            if (args.length > 0) {
+                this.hydrate(args[0]);
             }
         };
         const Builder               = function () {
             // Instanciate:
             construct.apply(this, arguments);
         };
-        aa.deploy(Builder.prototype, {
+        Object.assign(Builder.prototype, {
             hydrate: aa.prototypes.hydrate,
             
             // General:
-            set: function (name, myClass) {
+            set (name, myClass) {
                 if (!aa.nonEmptyString(name)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isFunction(myClass)) { throw new TypeError("Second argument must be a Class."); }
 
@@ -2294,7 +2529,7 @@
                     }
                 })
             },
-        }, {force: true});
+        });
         return new Builder();
     })();
 
@@ -2331,7 +2566,25 @@
             });
         },
     });
-    aa.actionManager            = new (function () {
+    aa.actionManager = (() => {
+        class ActionManagerError extends Error {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "ActionManagerError"
+                });
+            }
+        }
+        class ActionManagerTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "ActionManagerTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(ActionManagerTypeError);
+        // --------------------------------
 
         // Variables:
         let actions = {}; // collection
@@ -2347,127 +2600,146 @@
         };
         const verify = aa.prototypes.verify(verifier);
 
-        // Functions:
-        this.add    = function (a) {
-            /**
-             * @param {Action | array} a - can also be an Array of 'Action's
-             */
-            verify('add', a);
-            if (a instanceof aa.Action) {
-                if (a.isValid()) {
-                    actions[a.name] = a;
-                    return true;
+        function ActionManager () {
+            Object.defineProperties(this, {
+                actions: {get: () => Object.assign({}, actions)},
+            });
+        }
+        Object.assign(ActionManager.prototype, {
+            add (a) {
+                /**
+                 * @param {Action | array} a - can also be an Array of 'Action's
+                 */
+                verify('add', a);
+                if (a instanceof aa.Action) {
+                    if (a.isValid()) {
+                        actions[a.name] = a;
+                        return true;
+                    }
+                    return false;
+                } else if(aa.isArray(a)) {
+                    let res = true;
+                    a.forEach(function (action) {
+                        if (!this.add(action)) {
+                            res = false;
+                        }
+                    },this);
+                    return res;
+                }
+            },
+            build (specs, seasoning={}) {
+                /**
+                 * @param <object>  specs: An object of objects for each spec to build as many Actions. The given object keys will be used as Action names.
+                 * @param <object>  seasoning: Attributes that will extend each spec.
+                 *      Default values:
+                 *      @key <bool>     accessible: true by default
+                 *      @key <string[]> options:    ['always']
+                 * 
+                 * @return <void>
+                 * 
+                 * Usage:
+                 * aa.ActionManager({
+                 *      'my-action-name': {
+                 *          shortcut: 'ctrl+alt <Del>',
+                 *          on: {execute: () => {}}
+                 *      }
+                 * }, {
+                 *      app: 'myAppName',
+                 *      accessible: true, // true by default
+                 *      options: ['always']
+                 * });
+                 */
+                aa.arg.test(specs, aa.isObjectOfObjects, "'specs'");
+                aa.arg.test(seasoning, aa.isObject, "'seasoning'");
+
+                const defaultValues = {
+                    accessible: true,
+                    options:    ['always']
+                };
+
+                specs.forEach((spec, name) => {
+                    let shortcut = null;
+                    let options = [];
+
+                    spec.name = name;
+                    spec.sprinkle(seasoning);
+                    spec.sprinkle(defaultValues);
+
+                    if (spec.shortcut) {
+                        aa.arg.test(spec.shortcut, aa.nonEmptyString, "'shortcut'");
+                        shortcut = spec.shortcut;
+                        delete spec.shortcut;
+                    }
+                    if (spec.options) {
+                        aa.arg.test(spec.options, aa.isArrayOfNonEmptyStrings, "'options'");
+                        options = spec.options;
+                        delete spec.options;
+                    }
+                    const action = new aa.Action(spec);
+                    if (shortcut) {
+                        aa.events.app(appName).on(shortcut, action, options);
+                    }
+                });
+            },
+            remove (p) {
+                verify('remove', p);
+
+                if (aa.isString(p)) {
+                    p = p.trim();
+                } else if(p instanceof aa.Action) {
+                    p = p.name;
+                }
+
+                if (p && actions.hasOwnProperty(p)) {
+                    return delete actions[p];
                 }
                 return false;
-            } else if(aa.isArray(a)) {
-                let res = true;
-                a.forEach(function (action) {
-                    if (!this.add(action)) {
-                        res = false;
-                    }
-                },this);
-                return res;
-            }
-        };
-        this.build  = function (specs, seasoning={}) {
-            /**
-             * @param <object>  specs: An object of objects for each spec to build as many Actions. The given object keys will be used as Action names.
-             * @param <object>  seasoning: Attributes that will extend each spec.
-             *      Default values:
-             *      @key <bool>     accessible: true by default
-             *      @key <string[]> options:    ['always']
-             * 
-             * @return <void>
-             * 
-             * Usage:
-             * aa.actionManager({
-             *      'my-action-name': {
-             *          shortcut: 'ctrl+alt <Del>',
-             *          on: {execute: () => {}}
-             *      }
-             * }, {
-             *      app: 'myAppName',
-             *      accessible: true, // true by default
-             *      options: ['always']
-             * });
-             */
-            aa.arg.test(specs, aa.isObjectOfObjects, "'specs'");
-            aa.arg.test(seasoning, aa.isObject, "'seasoning'");
+            },
+            update (a) {
+                verify('action', a);
 
-            const defaultValues = {
-                accessible: true,
-                options:    ['always']
-            };
+                this.remove(a);
+                this.add(a);
+            },
 
-            specs.forEach((spec, name) => {
-                let shortcut = null;
-                let options = [];
+            // Getters:
+            get (p) {
+                verify('actionName', p);
 
-                spec.name = name;
-                spec.sprinkle(seasoning);
-                spec.sprinkle(defaultValues);
-
-                if (spec.shortcut) {
-                    aa.arg.test(spec.shortcut, aa.nonEmptyString, "'shortcut'");
-                    shortcut = spec.shortcut;
-                    delete spec.shortcut;
-                }
-                if (spec.options) {
-                    aa.arg.test(spec.options, aa.isArrayOfNonEmptyStrings, "'options'");
-                    options = spec.options;
-                    delete spec.options;
-                }
-                const action = new aa.Action(spec);
-                if (shortcut) {
-                    aa.events.app(appName).on(shortcut, action, options);
-                }
-            });
-        };
-        this.remove = function (p) {
-            verify('remove', p);
-
-            if (aa.isString(p)) {
                 p = p.trim();
-            } else if(p instanceof aa.Action) {
-                p = p.name;
-            }
-
-            if (p && actions.hasOwnProperty(p)) {
-                return delete actions[p];
-            }
-            return false;
-        };
-        this.update = function (a) {
-            verify('action', a);
-
-            this.remove(a);
-            this.add(a);
-        };
-
-        // Getters:
-        this.get    = function (p) {
-            verify('actionName', p);
-
-            p = p.trim();
-            if (actions.hasOwnProperty(p)) {
-                return actions[p];
-            } else {
-                return undefined;
-            }
-        };
-        this.getFrom = function (spec) {
-            verify('spec', spec);
-
-            // return actions.filter((action) => {
-            //     return spec.reduce((ok, v, k) => {
-            //         return (action[k] === undefined || action[k] !== v ? false : ok);
-            //     }, true);
-            // });
-            return actions.filter(action => !(Object.keys(spec).some(key => action[key] === undefined)));
-        };
-        Object.defineProperty(this, 'actions', {
-            get: () => { return ({}).sprinkle(actions); }
+                if (actions.hasOwnProperty(p)) {
+                    return actions[p];
+                } else {
+                    return undefined;
+                }
+            },
+            getFrom (spec) {
+                console.warning("Obsolete: use .getBy() method instead");
+                verify('spec', spec);
+                return actions.filter(action => !(Object.keys(spec).some(key => action[key] === undefined)));
+            },
+            getBy (filters) {
+                /**
+                 * Filter the manager actions for which every @filters values match the action values for the same property. If a function is provided, the action is included if the function returns true.
+                 * Return true if action[prop] === filters[prop]
+                 * In case a filter is a function, return true if filters[prop](action[prop]) === true
+                 */
+                throwIfNot(filters, aa.isObject, "'filters'");
+                return (
+                    Object.keys(actions)
+                    .map(name => actions[name])
+                    .filter(action =>
+                        Object.keys(filters)
+                        .every(prop =>
+                            typeof filters[prop] === "function" ?
+                                filters[prop](action[prop]) === true
+                                : action[prop] === filters[prop]
+                        )
+                    )
+                );
+            },
         });
+        return new ActionManager();
     })();
     aa.blob                     = Object.freeze({   
         build: function (data) {
@@ -2724,226 +2996,67 @@
 
         return Object.freeze(instance);
     })();
-    aa.events                   = new (function () {
+    aa.events = (() => {
+        class EventsError extends Error {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "EventsError"
+                });
+            }
+        }
+        class EventsTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "EventsTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(EventsTypeError);
+        // --------------------------------
+        const {cut, get, set} = aa.mapFactory();
             
         // Attributes:
         let timerShow = null;
         let timerFade = null;
-        const db = new aa.Storage("custom");
+        const db = aa.Storage.get("custom");
+        db.load();
 
-        // Lists:
-        this.appNames       = [];
-        this.apps           = {};
-
-        // Modules:
-        this.custom = {
-            click (e) {
-                let result = null;
-                let chaine = [];
-                e = self.window?.event || e;
-                
-                chaine[1] = "click.Left";
-                chaine[3] = "click.Right";
-
-                if ([1, 3].has(e.which)) {
-                    result = aa.events.execute(chaine[e.which], e);
-                }
-                
-                if (result && result.isPreventDefault()) {
-                    e.preventDefault();
-                }
+        const privates = {
+            initGetters () {
+                Object.defineProperties(this, {
+                    appNames: {get: () => Array.from(get(this, "appNames"))},
+                });
             },
-            keyboard (e) {
-                let combinaison         = null;
-                let touche              = '';
-                let touches             = [];
-                const allowLog          = true;
-                const allowKeyCodeLog   = false;
-                let result = new aa.EventResponse("keyboard");
+            loadOnce () {
+                delete privates.loadOnce;
 
-                e = self.window?.event || e;
+                db.load();
 
-                this.which          = e.which;
-                this.intKeyCode     = e.keyCode;
-                this.intAltKey      = e.altKey;
-                this.intCtrlKey     = e.ctrlKey;
-                this.intShiftKey    = e.shiftKey;
-                this.intCmdKey      = e.metaKey;
-
-                // Methods:
-                // --------------------------
-                this.log        = function (p) {
-                    if (allowLog) {
-                        log("keyboardEvent."+p);
-                    }
-                };
-                this.logKeyCode = function () {
-                    let txt = '';
-                    
-                    if (allowKeyCodeLog) {
-                        if (this.intCmdKey) {
-                            switch (aa.browser.os) {
-                                case "mac":
-                                    txt = '⌘'+txt;
-                                    break;
-                                default:
-                                    txt += "<cmd> ";
-                                    break;
+                get(this, "apps").forEach((app, appName) => {
+                    app.forEachEvent((events, evtName) => {
+                        events.forEach(event => {
+                            const action = event.action;
+                            if (action && action.isValid() && action.accessible) {
+                                defaults.shortcuts[appName] ??= {};
+                                defaults.shortcuts[appName][action.name] ??= [];
+                                defaults.shortcuts[appName][action.name].pushUnique(evtName);
                             }
-                        }
-                        if (this.intCtrlKey) {
-                            switch (aa.browser.os) {
-                                case "mac":
-                                    txt = '^'+txt;
-                                    break;
-                                default:
-                                    txt += "<ctrl> ";
-                                    break;
-                            }
-                        }
-                        if (this.intAltKey) {
-                            switch (aa.browser.os) {
-                                case "mac":
-                                    txt = '⌥'+txt;
-                                    break;
-                                default:
-                                    txt += "<alt> ";
-                                    break;
-                            }
-                        }
-                        if (this.intShiftKey) {
-                            switch (aa.browser.os) {
-                                case "mac":
-                                    txt = '⇧'+txt;
-                                    break;
-                                default:
-                                    txt += '<shift> ';
-                                    break;
-                            }
-                        }
-                        if (aa.inbetween(this.intKeyCode,65,90)) {
-                            switch (aa.browser.os) {
-                                case "mac":
-                                    txt += String.fromCharCode(this.intKeyCode);
-                                    break;
-                                default:
-                                    txt += '<'+String.fromCharCode(this.intKeyCode)+'>';
-                                    break;
-                            }
-                        }
-                        else {
-                            txt += '#'+this.intKeyCode;
-                        }
-                        txt = "key: "+txt;
-                        this.log(txt);
-                    }
-                };
-                
-                // Main :
-                // --------------------------
-                combinaison = aa.shortcut.get(e);
-
-                if (combinaison) {
-                    this.logKeyCode();
-                    (show => {
-                        if (show && !aa.settings.production) {
-                            clearTimeout(timerShow);
-                            clearInterval(timerFade);
-                            timerShow = null;
-                            timerFade = null;
-
-                            let div = document.querySelector("#aaFramework_eventLog");
-                            if (div) {
-                                div.removeNode();
-                            }
-                            div = $$("div#aaFramework_eventLog");
-                            document.body.appendChild(div);
-                            div.innerHTML = aa.shortcut.format(combinaison, ["htmlEncode", "simple"])
-                                // .replace(/\</g,"&lt;")
-                                // .replace(/\>/g,"&gt;")
-                            ;
-                            timerShow = setTimeout(() => {
-                                timerFade = setInterval((() => {
-                                    let i = 0;
-                                    return () => {
-                                        const div = el("aaFramework_eventLog");
-                                        if (i<20) {
-                                            if (div) {
-                                                aa.browser.setOpacity(div, 1-(i/10));
-                                            }
-                                        } else {
-                                            if (div) {
-                                                div.removeNode();
-                                            }
-                                            clearTimeout(timerShow);
-                                            clearInterval(timerFade);
-                                            timerShow = null;
-                                            timerFade = null;
-                                        }
-                                        i++;
-                                    };
-                                })(), 50);
-                            }, 1000);
-                        }
-                    })(allowLog);
-                    result = aa.events.execute(combinaison, e);
-                }
-                if (result && result.isPreventDefault()) {
-                    e.preventDefault();
-                }
-            },
-            mousewheel (e) {
-                let result = null;
-                let mouseWheel = e.wheelDelta || -e.detail;
-                e = self.window?.event || e;
-                
-                if (mouseWheel && mouseWheel>0) {
-                    result = aa.events.execute("mousewheel.Up", e);
-                }
-                if (mouseWheel && mouseWheel<0) {            
-                    result = aa.events.execute("mousewheel.Down", e);
-                }
-                
-                if (result && result.isPreventDefault()) {
-                    e.preventDefault();
-                }
-            }
-        };
-        const storage = {
-            privates: {
-                // Attributes:
-                shortcuts: {
-                    default: {}
-                },
-
-                // Methods:
-                loadOnce: function () {
-                    db.load();
-                    delete storage.privates.loadOnce;
-
-                    this.apps.forEach((app, appName) => {
-                        app.forEachEvent((events, evtName) => {
-                            events.forEach(event => {
-                                const action = event.action;
-                                if (action && action.isValid() && action.accessible) {
-                                    storage.privates.shortcuts.default[appName] ??= {};
-                                    storage.privates.shortcuts.default[appName][action.name] ??= [];
-                                    storage.privates.shortcuts.default[appName][action.name].pushUnique(evtName);
-                                }
-                            });
                         });
                     });
-                    let data = db.select("shortcuts");
-                    if (data) {
-                        data.forEach((actions, appName) => {
-                            actions.forEach((shortcuts, actionName) => {
-                                const action = aa.actionManager.get(actionName);
+                });
+                const data = db.select("shortcuts");
+                if (data) {
+                    data.forEach((actions, appName) => {
+                        actions.forEach((shortcuts, actionName) => {
+                            aa.action(actionName, action => {
                                 if (action && action.isValid() && action.accessible) {
-                                    storage.privates.shortcuts.default[appName][action.name].forEach((shortcut) => {
+                                    defaults.shortcuts[appName][action.name].forEach(shortcut => {
                                         aa.events.app(appName).dissociate(shortcut, action);
                                     });
 
-                                    shortcuts.forEach((shortcut) => {
+                                    shortcuts.forEach(shortcut => {
                                         if (aa.shortcut.isValid(shortcut)) {
                                             aa.events.app(appName).on(shortcut, action);
                                         }
@@ -2951,43 +3064,195 @@
                                 }
                             });
                         });
-                    }
+                    });
                 }
             },
-            publics: {
-                update: function (appName, action, oldShortcut, newShortcut) {
-                    const apps = db.select("shortcuts") || {};
-                    if (action instanceof aa.Action && action.isValid() && action.accessible) {
-                        if (!apps.hasOwnProperty(appName)) {
-                            apps[appName] = {};
-                        }
-                        const app = apps[appName];
-                        if (!app.hasOwnProperty(action.name)) {
-                            app[action.name] = storage.privates.shortcuts.default[appName][action.name];
-                        }
-                        if (app[action.name]) {
-                            if (oldShortcut) {
-                                app[action.name].remove(oldShortcut);
-                            }
-                            if (newShortcut && !app[action.name].has(newShortcut)) {
-                                app[action.name].push(newShortcut);
-                            }
-                        }
-                    }
-                    db.insert("shortcuts", apps);
-                }
-            }
         };
-        storage.publics.forEach((callback, key) => {
-            if (this.storage === undefined) {
-                this.storage = {};
-            }
-            this.storage[key] = (function (that) { return function () { callback.apply(that, arguments); }; })(this);
-        });
 
+        function Events () {
+            // Lists:
+            set(this, "appNames", []);
+            set(this, "apps", {});
+
+            // Modules:
+            this.custom = {
+                click (e) {
+                    let result = null;
+                    let chaine = [];
+                    e = self.window?.event || e;
+                    
+                    chaine[1] = "click.Left";
+                    chaine[3] = "click.Right";
+
+                    if ([1, 3].includes(e.which)) {
+                        result = aa.events.execute(chaine[e.which], e);
+                    }
+
+                    if (result && result.isPreventDefault()) {
+                        e.preventDefault();
+                    }
+                },
+                keyboard (e) {
+                    let combinaison         = null;
+                    let touche              = '';
+                    let touches             = [];
+                    const allowLog          = true;
+                    const allowKeyCodeLog   = false;
+                    let result = new aa.EventResponse("keyboard");
+
+                    e = self.window?.event || e;
+
+                    this.which          = e.which;
+                    this.intKeyCode     = e.keyCode;
+                    this.intAltKey      = e.altKey;
+                    this.intCtrlKey     = e.ctrlKey;
+                    this.intShiftKey    = e.shiftKey;
+                    this.intCmdKey      = e.metaKey;
+
+                    // Methods:
+                    // --------------------------
+                    this.log        = function (p) {
+                        if (allowLog) {
+                            log("keyboardEvent."+p);
+                        }
+                    };
+                    this.logKeyCode = function () {
+                        let txt = '';
+                        
+                        if (allowKeyCodeLog) {
+                            if (this.intCmdKey) {
+                                switch (aa.browser.os) {
+                                    case "mac":
+                                        txt = '⌘'+txt;
+                                        break;
+                                    default:
+                                        txt += "<cmd> ";
+                                        break;
+                                }
+                            }
+                            if (this.intCtrlKey) {
+                                switch (aa.browser.os) {
+                                    case "mac":
+                                        txt = '^'+txt;
+                                        break;
+                                    default:
+                                        txt += "<ctrl> ";
+                                        break;
+                                }
+                            }
+                            if (this.intAltKey) {
+                                switch (aa.browser.os) {
+                                    case "mac":
+                                        txt = '⌥'+txt;
+                                        break;
+                                    default:
+                                        txt += "<alt> ";
+                                        break;
+                                }
+                            }
+                            if (this.intShiftKey) {
+                                switch (aa.browser.os) {
+                                    case "mac":
+                                        txt = '⇧'+txt;
+                                        break;
+                                    default:
+                                        txt += '<shift> ';
+                                        break;
+                                }
+                            }
+                            if (aa.inbetween(this.intKeyCode,65,90)) {
+                                switch (aa.browser.os) {
+                                    case "mac":
+                                        txt += String.fromCharCode(this.intKeyCode);
+                                        break;
+                                    default:
+                                        txt += '<'+String.fromCharCode(this.intKeyCode)+'>';
+                                        break;
+                                }
+                            }
+                            else {
+                                txt += '#'+this.intKeyCode;
+                            }
+                            txt = "key: "+txt;
+                            this.log(txt);
+                        }
+                    };
+                    
+                    // Main :
+                    // --------------------------
+                    combinaison = aa.shortcut.get(e);
+
+                    if (combinaison) {
+                        this.logKeyCode();
+                        (show => {
+                            if (show && !aa.settings.production) {
+                                clearTimeout(timerShow);
+                                clearInterval(timerFade);
+                                timerShow = null;
+                                timerFade = null;
+
+                                let div = document.querySelector("#aaFramework_eventLog");
+                                if (div) {
+                                    div.removeNode();
+                                }
+                                div = $$("div#aaFramework_eventLog");
+                                document.body.appendChild(div);
+                                div.innerHTML = aa.shortcut.format(combinaison, ["htmlEncode", "simple"])
+                                    // .replace(/\</g,"&lt;")
+                                    // .replace(/\>/g,"&gt;")
+                                ;
+                                timerShow = setTimeout(() => {
+                                    timerFade = setInterval((() => {
+                                        let i = 0;
+                                        return () => {
+                                            const div = el("aaFramework_eventLog");
+                                            if (i<20) {
+                                                if (div) {
+                                                    aa.browser.setOpacity(div, 1-(i/10));
+                                                }
+                                            } else {
+                                                if (div) {
+                                                    div.removeNode();
+                                                }
+                                                clearTimeout(timerShow);
+                                                clearInterval(timerFade);
+                                                timerShow = null;
+                                                timerFade = null;
+                                            }
+                                            i++;
+                                        };
+                                    })(), 50);
+                                }, 1000);
+                            }
+                        })(allowLog);
+                        result = aa.events.execute(combinaison, e);
+                    }
+                    if (result && result.isPreventDefault()) {
+                        e.preventDefault();
+                    }
+                },
+                mousewheel (e) {
+                    let result = null;
+                    let mouseWheel = e.wheelDelta || -e.detail;
+                    e = self.window?.event || e;
+                    
+                    if (mouseWheel && mouseWheel>0) {
+                        result = aa.events.execute("mousewheel.Up", e);
+                    }
+                    if (mouseWheel && mouseWheel<0) {            
+                        result = aa.events.execute("mousewheel.Down", e);
+                    }
+                    
+                    if (result && result.isPreventDefault()) {
+                        e.preventDefault();
+                    }
+                }
+            };
+            privates.initGetters.call(this);
+        }
         // Methods:
-        aa.deploy(this, {
-            fire:               function (eventName /*, *args */) {
+        Object.assign(Events.prototype, {
+            fire (eventName /*, *args */) {
                 const args = arguments.reduce((args, arg, i) => {
                     if (i > 0) {
                         args.push(arg);
@@ -3000,8 +3265,17 @@
                 const event = new CustomEvent(eventName, {detail: args});
                 document.dispatchEvent(event);
             },
-            on:                 function (eventName, callback) {
-                if (aa.isObject(eventName)) {
+            forEachApp (callback) {
+                throwIfNot(callback, aa.isFunction, "'callback'");
+
+                let app;
+                get(this, "appNames").forEach((appName, i) => {
+                    app = aa.events.app(appName);
+                    if (app) callback(app, i, this);
+                });
+            },
+            on (eventName, callback) {
+                if (aa.isObjectOfFunctions(eventName)) {
                     eventName.forEach((callback, evtName) => {
                         this.on(evtName, callback);
                     });
@@ -3010,31 +3284,27 @@
                 if (!aa.nonEmptyString(eventName)) { throw new TypeError("First argument must be a non-empty String."); }
                 if (!aa.isFunction(callback)) { throw new TypeError("Second argument must be a Function."); }
 
-                document.on(eventName.trim(), function (e) {
-                    const args = e.detail || undefined;
-                    callback.apply(null, e.detail);
+                document.on(eventName.trim(), e => {
+                    const args = e.detail ?? undefined;
+                    callback.apply(null, args);
                 });
                 return this;
             },
-            app:                function () {
+            app (appName) {
 
                 let app = "";
-                if (arguments && arguments.length) {
-                    if (aa.nonEmptyString(arguments[0])) {
-                        app = arguments[0].trim();
-                    }
+                if (aa.nonEmptyString(appName)) {
+                    app = appName.trim();
                 }
-                if (!this.appNames.has(app)) {
-                    this.appNames.push(app);
-                }
-                if (!this.apps.hasOwnProperty(app)) {
-                    this.apps[app] = new aa.EventApp(app);
-                }
-                return this.apps[app];
+                if (app.length < 1) return undefined;
+                get(this, "appNames").pushUnique(app);
+                const apps = get(this, "apps");
+                apps[app] ??= new aa.EventApp(app);
+                return apps[app];
             },
-            cancel:             function (shortcut /*, callback */) {
+            cancel (shortcut /*, callback */) {
             },
-            execute:            function (evtName /*, e */) {
+            execute (evtName /*, e */) {
                 /**
                  * @param {String} evtName
                  * @param {aa.Event} e=undefined (optional)
@@ -3047,17 +3317,19 @@
                 let returnValues = null;
 
                 evtName = aa.shortcut.cmdOrCtrl(evtName);
+                const appNames = get(this, "appNames");
+                const apps = get(this, "apps");
 
-                if (this.appNames.length) {
+                if (appNames.length) {
 
                     // Execute 'forever' events:
-                    this.appNames.forEach((appName, i) => {
-                        if (i < this.appNames.length-1) {
-                            let app = this.apps[appName];
+                    appNames.forEach((appName, i) => {
+                        if (i < appNames.length-1) {
+                            let app = apps[appName];
                             if (app instanceof aa.EventApp) {
                                 evts = app.getEvents(evtName);
                                 if (evts) {
-                                    evts.forEach((evt) => {
+                                    evts.forEach(evt => {
                                         if (evt instanceof aa.Event && evt.isValid() && evt.hasOption("forever")) {
                                             returnValues = evt.execute(response, e);
                                             if (evt.hasOption("preventDefault")) {
@@ -3071,7 +3343,7 @@
                     });
 
                     // Execute current app events:
-                    app = this.apps[this.appNames.last];
+                    app = apps[appNames.last];
                     if (app instanceof aa.EventApp) {
                         evts = app.getEvents(evtName);
                         if (evts) {
@@ -3101,7 +3373,7 @@
 
                 switch (evtName) {
                     case "bodyload":
-                        storage.privates.loadOnce?.apply(this);
+                        privates.loadOnce?.apply(this);
                         break;
                     
                     case "windowunload":
@@ -3117,62 +3389,122 @@
 
                 return response;
             },
-            moveTop:            function (app) {
-                aa.arg.test(app, aa.instanceof(aa.EventApp), "'app'");
-                const oldIndex = this.appNames.indexOf(app.name);
+            moveTop (app) {
+                throwIfNot(app, aa.instanceof(aa.EventApp), "'app'");
+                
+                const appNames = get(this, "appNames");
+                const oldIndex = appNames.indexOf(app.name);
                 if (oldIndex > -1) {
-                    const newIndex = this.appNames.length - 1;
-                    this.appNames.splice(newIndex, 0, this.appNames.splice(oldIndex, 1)[0]);
+                    const newIndex = appNames.length - 1;
+                    appNames.splice(newIndex, 0, appNames.splice(oldIndex, 1)[0]);
                 }
             },
-            removeApp:          function (app) {
-                aa.arg.test(app, aa.nonEmptyString, "'app'")
+            mute (obj, options={}) {
+                if (obj instanceof aa.Action) return this.muteAction(obj, options);
 
-                app = app.trim();
-                // console.group('aa.events.remove('+app+')');
-                if (this.appNames.has(app) && typeof this.apps[app] !== 'undefined') {
-                    this.appNames.remove(app);
-                    delete this.apps[app];
+                throw new EventsTypeError("Type not implemented");
+            },
+            muteAction (action, options={}) {
+                aa.arg.test(action, arg => arg instanceof aa.Action, "'action'");
+                aa.arg.test(options, aa.verifyObject({
+                    app: aa.nonEmptyString,
+                }), "'options'");
+                const {app=null} = options;
+                
+                if (app) {
+                    this.app(app).mute(action);
+                } else {
+                    this.forEachApp(app => app.mute(action));
                 }
-                // console.groupEnd();
+            },
+            removeApp (app) {
+                throwIfNot(app, aa.nonEmptyString, "'app'")
+
+                const appNames = get(this, "appNames");
+                const apps = get(this, "apps");
+                app = app.trim();
+                if (appNames.includes(app) && typeof apps[app] !== 'undefined') {
+                    appNames.remove(app);
+                    delete apps[app];
+                }
                 return true;
             },
-            restoreShortcuts:   function (appName) {
-                const data = db.select("shortcuts");
+            restoreShortcuts (appName) {
+                throwIfNot(appName, aa.nonEmptyString, "'appName'");
+
+                db.load();
+                const data = db.select("shortcuts") ?? {};
+                const actions = [];
+                
                 if (data) {
                     if (data[appName]) {
-                        const actions = data[appName];
-                        actions.forEach((shortcuts, actionName) => {
-                            const action = aa.actionManager.get(actionName);
-                            if (action && action.isValid() && action.accessible) {
-                                shortcuts.forEach((shortcut) => {
-                                    if (aa.shortcut.isValid(shortcut)) {
-                                        aa.events.app(appName).dissociate(shortcut, action);
-                                    }
-                                });
-                                storage.privates.shortcuts.default[appName][actionName].forEach((shortcut) => {
-                                    if (aa.shortcut.isValid(shortcut)) {
-                                        aa.events.app(appName).on(shortcut, action);
-                                    }
-                                });
-                            }
-                        });
+                        actions.pushUnique(...(
+                            Object.keys(data[appName])
+                            .map(actionName => aa.action(actionName))
+                            .filter(action => action?.isValid() && action.accessible)
+                        ));
                         delete(data[appName]);
                     }
                 }
                 db.insert("shortcuts", data);
-            },
-        }, {force: true});
 
-        // Getters
-        this.getShortcut        = function (e) { // abstract
-            aa.deprecated("aa.events.getShortcut");
-            return aa.shortcut.get(e);
-        };
-        this.shortcutToString   = function (s) { // abstract 
-            aa.deprecated("aa.events.shortcutToString");
-            return aa.shortcut.format(s);
-        };
+                actions.forEach(action => {
+                    action.resetShortcuts({
+                        everyApp: true
+                    });
+                });
+            },
+            updateShortcut (appName, action, oldShortcut, newShortcut) {
+                if (action instanceof aa.Action && action.isValid() && action.accessible) {
+                    update_db: {
+                        // const apps = db.select("shortcuts") ?? {};
+                        // apps[appName] ??= {};
+                        // const app = apps[appName];
+                        
+                        // defaults.shortcuts[appName] ??= {};
+                        // defaults.shortcuts[appName][action.name] ??= [oldShortcut];
+
+                        // app[action.name] ??= defaults.shortcuts[appName]?.[action.name];
+                        // const shortcuts = app[action.name];
+                        
+                        // shortcuts.remove(oldShortcut);
+                        // if (newShortcut) {
+                        //     while (shortcuts.includes(null)) {
+                        //         shortcuts.remove(null);
+                        //     }
+                        // }
+                        // if (!action.defaultShortcuts.includes(newShortcut)) {
+                        //     shortcuts.pushUnique(newShortcut);
+                        // } else {
+                        //     delete app[action.name];
+                        // }
+                        
+                        // db.insert("shortcuts", apps);
+                    }
+                    update_eventApp: {
+                        const app = aa.events.app(appName);
+                        if (!app) break update_eventApp;
+
+                        this.forEachApp(app => {
+                            app.updateShortcut(action, oldShortcut, newShortcut);
+                        });
+                        action.shortcut = newShortcut;
+                    }
+                }
+            },
+            
+            // Getters
+            getShortcut (e) { // abstract
+                aa.deprecated("aa.events.getShortcut");
+                return aa.shortcut.get(e);
+            },
+            shortcutToString (s) { // abstract 
+                aa.deprecated("aa.events.shortcutToString");
+                return aa.shortcut.format(s);
+            },
+        });
+
+        return new Events();
     })();
     aa.file                     = Object.freeze(new (function () {
         class aaFileError extends Error {
@@ -4024,13 +4356,13 @@
                     keys:   null,
                 },
                 execute: {
-                    size: function () {
+                    size () {
                         const that = _(this);
                         return that.data.size;
                     },
                 },
             },
-            construct: function (/* [pairs=[]], [spec={}] */) {
+            construct (/* [pairs=[]], [spec={}] */) {
                 const pairs = [...arguments].find(aa.isArray) ?? [];
                 const spec = [...arguments].find(aa.isObject) ?? {};
 
@@ -4050,7 +4382,7 @@
             },
             methods: {
                 publics: {
-                    every:          function (callback, thisArg) {
+                    every (callback, thisArg) {
                         const that = _(this);
                         return that.keys.every((key, i) => {
                             const value = that.data.get(key);
@@ -4065,18 +4397,21 @@
                      * 
                      * @return {dictionary}
                      */
-                    filter:         function (callback, thisArg) {
+                    filter (callback, thisArg) {
                         const that = _(this);
                         const dico = new aaDictionary();
-                        that.keys.forEach((key, i) => {
+                        that.keys.forEach(key => {
                             const value = that.data.get(key);
                             const isVerified = callback.call(thisArg, value, key, this);
+                            
                             if (!aa.isBool(isVerified)) throw new TypeError("The callback Function must return a Boolean.");
-                            if (isVerified) dico.add(key, value);
+                            if (!isVerified) return;
+
+                            dico.add(key, value);
                         });
                         return dico;
                     },
-                    find:           function (callback, thisArg) {
+                    find (callback, thisArg) {
                         const that = _(this);
                         const key = that.keys.find((key, i) => {
                             const value = that.data.get(key);
@@ -4086,7 +4421,7 @@
                         });
                         return key !== undefined ? that.data.get(key) : undefined;
                     },
-                    findKey:        function (callback, thisArg) {
+                    findKey (callback, thisArg) {
                         const that = _(this);
                         const key = that.keys.find((key, i) => {
                             const value = that.data.get(key);
@@ -4096,13 +4431,13 @@
                         });
                         return key;
                     },
-                    forEach:        function (callback, thisArg) {
+                    forEach (callback, thisArg) {
                         const that = _(this);
                         that.keys.forEach((key, i) => {
                             callback.call(thisArg, that.data.get(key), key, this);
                         });
                     },
-                    map:            function (callback, thisArg) {
+                    map (callback, thisArg) {
                         const that = _(this);
                         const dico = new aaDictionary({ authenticate: that.authenticate });
                         that.keys.forEach((key, i) => {
@@ -4111,7 +4446,7 @@
                         });
                         return dico;
                     },
-                    some:           function (callback, thisArg) {
+                    some (callback, thisArg) {
                         const that = _(this);
                         return that.keys.some((key, i) => {
                             const value = that.data.get(key);
@@ -4122,42 +4457,42 @@
                     },
 
                     // Getters:
-                    entries:        function () {
+                    entries () {
                         const that = _(this);
                         return that.data.entries();
                     },
-                    get:            function (key) {
+                    get (key) {
                         const that = _(this);
                         aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         return that.data.get(key);
                     },
-                    has:            function (key) {
+                    has (key) {
                         const that = _(this);
                         aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         return that.data.has(key);
                     },
-                    keys:           function () {
+                    keys () {
                         const that = _(this);
                         return [...that.keys];
                     },
-                    toJSON:         function () {
+                    toJSON () {
                         const that = _(this);
                         return that.keys.reduce((acc, key) => {
                             acc.push([key, that.data.get(key)]);
                             return acc;
                         }, []);
                     },
-                    toObject:       function () {
+                    toObject () {
                         const that = _(this);
                         return ({...that.values});
                     },
-                    values:         function () {
+                    values () {
                         const that = _(this);
                         return that.data.values();
                     },
 
                     // Setters:
-                    add:            function (key, value, shiftKeyToEndIfAlreadyExists=false) {
+                    add (key, value, shiftKeyToEndIfAlreadyExists=false) {
                         const that = _(this);
                         aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         aa.arg.test(value, that.authenticate.values, "'value'", aaDictionaryTypeError);
@@ -4172,12 +4507,12 @@
                         that.data.set(key, value);
                         that.keys.pushUnique(key);
                     },
-                    clear:          function () {
+                    clear () {
                         const that = _(this);
                         that.data.clear();
                         that.keys.clear();
                     },
-                    delete:         function (key) {
+                    delete (key) {
                         const that = _(this);
                         aa.arg.test(key, that.authenticate.keys, "'key'", aaDictionaryTypeError);
                         that.data.delete(key);
@@ -4186,12 +4521,12 @@
                         //     delete this[key];
                         // }
                     },
-                    remove:         function (key) {
+                    remove (key) {
                         this.delete(key);
                     },
                 },
                 setters: {
-                    authenticate:   function (authenticate) {
+                    authenticate (authenticate) {
                         const that = _(this);
                         Object.keys(that.authenticate)
                         .forEach(key => {
@@ -4205,7 +4540,7 @@
                 /**
                  * @param {string|array[]} json: If an Array is provided, it must be an Array of Arrays containing two items: The first item will be used as dictionary key and must be a non-empty string; the second will be the associated value.
                  */
-                fromJSON:   function (json) {
+                fromJSON (json) {
                     json = aa.isString(json) ? JSON.parse(json) : json;
                     return new aaDictionary(json);
                 },
@@ -4300,8 +4635,8 @@
                         const fieldset = $$("fieldset", {
                             legend: app
                         });
-                        content.appendChild(fieldset);
-                        fieldset.appendChild($$("div", "Ask for my confirmation before:"));
+                        content.append(fieldset);
+                        fieldset.append($$("div", "Ask for my confirmation before:"));
                         const list = reminders[app].reduce((list, message, id) => {
                             list.push({id, message});
                             return list;
@@ -4324,8 +4659,8 @@
                                 name: "doNotRemind[]",
                                 value: entry.id
                             });
-                            fieldset.appendChild(hidden);
-                            fieldset.appendChild($$('div', aa.cook("checkbox", {
+                            fieldset.append(hidden);
+                            fieldset.append($$('div', aa.cook("checkbox", {
                                 checked: !remindersInDB.has(entry.id),
                                 label: entry.message,
                                 name: "remind[]",
@@ -4349,8 +4684,8 @@
                                     name: "doNotRemind[]",
                                     value: id
                                 });
-                                fieldset.appendChild(hidden);
-                                fieldset.appendChild(aa.cook("checkbox", {
+                                fieldset.append(hidden);
+                                fieldset.append(aa.cook("checkbox", {
                                     checked: !remindersInDB.has(id),
                                     label: desc,
                                     name: "remind[]",
@@ -4421,13 +4756,13 @@
                         item.classList.add("expand");
                         item.classList.add("shortcut");
                         item.on('mouseover', e => { button.focus(); });
-                        menu.appendChild(item);
+                        menu.append(item);
                         if (top === true) {
                             tops[i] = item;
                             index = i;
                         }
                         if (entry.collection.length) {
-                            item.appendChild(explore(entry.collection, shortcut, callback, index));
+                            item.append(explore(entry.collection, shortcut, callback, index));
                         } else {
                             item.classList.add("disabled");
                         }
@@ -4437,6 +4772,9 @@
                             : entry
                         );
                         if (action instanceof aa.Action && action.isValid()) {
+                            if (action.callbacks.length > 0) {
+                                aa.deprecated("action.callbacks");
+                            }
                             if (index !== null) {
                                 action.on("execute", () => {
                                     const top = tops[index];
@@ -4454,6 +4792,10 @@
                                 item.classList.add("shortcut");
                             }
                             item.classList[(action.disabled || !action.listeners.onexecute.length ? "add" : "remove")]("disabled");
+                            const type = (action.type ?
+                                `.${action.type}`
+                                : ''
+                            );
                             const icon = (action.checkable ?
                                 (action.checked ?
                                     ".fa-check.checked"
@@ -4464,33 +4806,68 @@
                                     : ''
                                 )
                             );
-                            const type = (action.type ?
-                                '.'+action.type
-                                : ''
+                            const listeners = {
+                                button: {
+                                    click: e => {
+                                        if (callback) {
+                                            callback();
+                                        }
+                                        if (!action.disabled) {
+                                            action.listeners.onexecute.forEach((func) => {
+                                                func(e);
+                                            });
+                                        }
+                                    },
+                                    mouseover: e => {
+                                        btn.focus();
+                                    },
+                                },
+                                action: {
+                                    disablechange: disabled => {
+                                        btn.disabled = action.disabled;
+                                    },
+                                    shortcutchange: shortcut => {
+                                        nodes.shortcut.innerHTML = shortcut ? aa.shortcut.format(shortcut, ["simple"]) : '';
+                                    },
+                                    textchange: text => {
+                                        nodes.text.innerHTML = text ?? action.name;
+                                    },
+                                },
+                            };
+                            const nodes = {
+                                icon: $$(`span.icon.fa.fa-fw${icon}${type}`),
+                                text: $$("span", action.text ?? action.name),
+                                shortcut: $$("span.shortcut", action.shortcut ? aa.shortcut.format(action.shortcut, ["simple"]) : ''),
+                                void: $$("aa-void", {on: {
+                                    connected: e => {
+                                        action.on(listeners.action);
+                                        btn.on(listeners.button);
+                                        if (action.shortcut) {
+                                            aa.events.app("aaContextMenu").on(action.shortcut, action, ["forever", "preventDefault"]);
+                                        }
+                                    },
+                                    disconnected: e => {
+                                        action.cancel(listeners.action);
+                                        btn.cancel(listeners.button);
+                                    },
+                                }}),
+                            };
+
+                            const content = new DocumentFragment();
+                            content.append(
+                                $$("span",
+                                    nodes.icon,
+                                    nodes.text,
+                                    nodes.void,
+                                ),
+                                nodes.shortcut,
                             );
-                            if (action.callbacks.length > 0) {
-                                aa.deprecated("action.callbacks");
-                            }
-                            const span = $$("span"+".icon.fa.fa-fw"+icon+type);
-                            const btn = $$("button", span, {
-                                disabled: action.disabled
+                            const btn = $$("button", content, {
+                                disabled: action.disabled,
                             });
-                            btn.innerHTML += ' '+(action.text ? action.text : action.name);
-                            btn.on("click", (e) => {
-                                if (callback) {
-                                    callback();
-                                }
-                                if (!action.disabled) {
-                                    action.listeners.onexecute.forEach((func) => {
-                                        func(e);
-                                    });
-                                }
-                            });
-                            btn.on('mouseover', e => { btn.focus(); });
-                            action.on('disablechange', disabled => { btn.disabled = action.disabled; });
                             
-                            item.appendChild(btn);
-                            menu.appendChild(item);
+                            item.append(btn);
+                            menu.append(item);
 
                             if (action.checkable) {
                                 action.listenNode(btn, "oncheckchange", (node, checked) => {
@@ -4513,7 +4890,7 @@
                             console.warn(`Invalid Action${aa.nonEmptyString(entry) ? ` '${entry}'` : ''}.`);
                         }
                     } else if (entry === null) {
-                        menu.appendChild($$("hr"));
+                        menu.append($$("hr"));
                     }
                 });
                 return menu;
@@ -4522,22 +4899,39 @@
         };
 
         // Classes:
-        this.Menu           = (function () {
+        this.Menu = (function () {
+            class MenuError extends Error {
+                constructor (...args) {
+                    super(...args);
+                    Object.defineProperty(this, "name", {
+                        get: () => "MenuError"
+                    });
+                }
+            }
+            class MenuTypeError extends TypeError {
+                constructor (...args) {
+                    super(...args);
+                    Object.defineProperty(this, "name", {
+                        get: () => "MenuTypeError"
+                    });
+                }
+            }
+            const throwIfNot = aa.arg.testerBy(MenuTypeError);
 
             // Private variables:
             const emit = aa.prototypes.events.getEmitter({cut, get, set});
-            const construct = function () {
+            function construct () {
                 this.setTheme(aa.settings.theme);
                 aa.settings.on({
                     themechanged: e => {
-                        this.setTheme(e.data.theme);
+                        // this.setTheme(e.data.theme);
                     },
                 });
                 if (arguments && arguments.length) {
                     this.hydrate(arguments[0]);
                 }
-            };
-            const Menu      = function () {
+            }
+            function Menu () {
 
                 // Attributes:
                 aa.defineAccessors.call(this, {
@@ -4552,10 +4946,10 @@
 
                 // Instanciate:
                 construct.apply(this, arguments);
-            };
+            }
 
             // Public:
-            aa.deploy(Menu.prototype, {
+            Object.assign(Menu.prototype, {
                 hydrate:    aa.prototypes.hydrate,
                 on:         aa.prototypes.events.getListener({cut, get, set}),
 
@@ -4567,17 +4961,17 @@
                         return this.addAction(a);
                     }, this);
                 },
-                addAction (p) {
-                    if (aa.nonEmptyString(p)) {
-                        p = p.trim();
-                        if (p.match(/^[a-zA-Z0-9\_\.\s\-\(\)]+$/)) {
-                            get(this, "items").push(p);
+                addAction (arg) {
+                    if (aa.nonEmptyString(arg)) {
+                        arg = arg.trim();
+                        if (arg.match(/^[a-zA-Z0-9\_\.\s\-\(\)]+$/)) {
+                            get(this, "items").push(arg);
                         }
-                    } else if (p instanceof aa.ActionGroup) {
-                        get(this, "items").push(p);
-                    } else if (p instanceof aa.Action && p.isValid()) {
-                        get(this, "items").push(p.name);
-                    } else if (p === null || p === undefined) {
+                    } else if (arg instanceof aa.ActionGroup) {
+                        get(this, "items").push(arg);
+                    } else if (arg instanceof aa.Action && arg.isValid()) {
+                        get(this, "items").push(arg.name);
+                    } else if (arg === null || arg === undefined) {
                         this.addSep();
                     } else {
                         throw new TypeError("Invalid Action argument.");
@@ -4632,39 +5026,48 @@
                     // Call on single entry:
                     this.on.apply(this, arguments);
                 },
-                setTheme (p) {
-                    if (!aa.nonEmptyString(p)) {
-                        warn("Provided:", p);
-                        throw new TypeError("Argument must be a non-empty String.");
-                    }
+                setTheme (theme) {
+                    throwIfNot(theme, aa.inArray(ENV.THEMES), "'theme'");
 
-                    p = p.trim();
-                    if (ENV.THEMES.has(p)) {
-                        set(this, "theme", p);
-                    }
+                    theme = theme.trim();
+                    set(this, "theme", theme);
                 },
 
                 // Getters:
                 getNode () {
                     const shortcut = shortcutMaker(get(this, "appName"));
 
-                    const menu = $$("div.aaMenu", parse(get(this, "items"), shortcut, this.hide));
-                    
+                    const listeners = {
+                        settings: {
+                            themechanged: e => {
+                                const {previous, theme} = e.data;
+                                log({previous, theme});
+                                menu.classList.remove(previous);
+                                menu.classList.add(theme);
+                            }
+                        },
+                    };
+
+                    const menu = $$("div.aaMenu",
+                        parse(get(this, "items"), shortcut, this.hide),
+                        $$("aa-void", {on: {
+                            connected: e => {
+                                aa.settings.on(listeners.settings);
+                            },
+                            disconnected: e => {
+                                aa.settings.cancel(listeners.settings);
+                            },
+                        }})
+                    );
+
                     // Theme:
                     menu.classList.add(get(this, "theme"));
-                    aa.settings.on("themechanged", e => {
-                        const {previous, theme} = e.data;
-                        menu.classList.remove(previous);
-                        menu.classList.add(theme);
-                    });
 
                     menu.children.forEach(ul => {
                         ul.children.forEach(li => {
                             li.children.forEach(btn => {
                                 btn.children.forEach(span => {
                                     if (span.classList.contains("icon")) {
-                                        // span.classList.remove("fa");
-                                        // span.classList.remove("fa-fw");
                                         span.removeNode();
                                     }
                                 });
@@ -4678,14 +5081,13 @@
                         o[key] = get(this, key);
                         return o;
                     }, {});
-                    // o.actions = get(this, "items");
                     return Object.freeze(o);
                 },
-            }, {force: true});
+            });
 
             return Object.freeze(Menu);
         })();
-        this.ContextMenu    = (function () {
+        this.ContextMenu = (function () {
             const {cut, get, set} = aa.mapFactory();
             function _(that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
@@ -4755,7 +5157,7 @@
             });
 
             // Public:
-            aa.deploy(ContextMenu.prototype, {
+            Object.assign(ContextMenu.prototype, {
                 on:     aa.prototypes.events.getListener({cut, get, set}),
 
                 hide () {
@@ -4813,7 +5215,7 @@
                         that.node.style.top = `${that.top}px`;
                         that.node.style.left = `${that.left+4}px`;
                         that.node.style.zIndex = aa.getMaxZIndex();
-                        document.body.appendChild(that.node);
+                        document.body.append(that.node);
                         document.body.classList.add('aaContextMenuFreeze');
                         
                         const escape = new aa.Action({
@@ -4942,10 +5344,10 @@
                     const that = _(this);
                     that.left = left;
                 },
-            }, {force: true});
+            });
             return Object.freeze(ContextMenu);
         })();
-        this.Dialog         = (function () {
+        this.Dialog = (function () {
             const db = new aa.Storage("aaDialog");
             const dialogCollection = {}; // liste des <aa.gui.Dialog> ouvertes
 
@@ -5007,7 +5409,7 @@
                 // Construct:
                 construct.apply(this, arguments);
             };
-            aa.deploy(Dialog.prototype, {
+            Object.assign(Dialog.prototype, {
 
                 // Methods:
                 checkValidation () {
@@ -5609,11 +6011,11 @@
                     }
                     return "aaDialog-"+this.getID();
                 }
-            }, {force: true });
-            aa.deploy(Dialog.prototype, {
+            });
+            Object.assign(Dialog.prototype, {
                 setDefault:       Dialog.prototype.setDefaultValue,
                 setValue:         Dialog.prototype.setDefaultValue,
-            }, {force: true});
+            });
             /**
              * How to use:
                 let d = new aa.Dialog(String type);
@@ -6293,28 +6695,6 @@
                         return false;
                     });
 
-                    // Click outside:
-                    let outside;
-                    const isOutside = (e) => {
-                        return e.composedPath().reduce((outside, node) => {
-                            return (node.classList && node.classList.contains("aaDialog") ?
-                                false
-                                : outside
-                            );
-                        }, true);
-                    };
-                    dom.on("mousedown", (e) => {
-                        outside = isOutside(e);
-                        return true;
-                    });
-                    dom.on("mouseup", (e) => {
-                        if (outside && isOutside(e)) {
-                            fire.call(this, "cancel", this);
-                            this.hide();
-                            return false;
-                        }
-                        return true;
-                    });
                     that.node = dom;
                     return dom;
                 },
@@ -6395,6 +6775,40 @@
                 getModal () {
                     const modal = $$("div#aaDialog-"+this.getID()+".aaDialog");
                     View.addThemeTo.call(this, modal);
+
+                    click_outside: {
+                        let outside;
+                        const listeners = {
+                            body: {
+                                pointerdown: e => {
+                                    outside = isOutside(e);
+                                },
+                                pointerup: e => {
+                                    if (outside && isOutside(e)) {
+                                        fire.call(this, "cancel", this);
+                                        this.hide();
+                                    }
+                                }
+                            },
+                            modal: {
+                                scroll: aa.throttle(e => {
+                                    modal.classList.toggle("scroll", modal.scrollTop > 0);
+                                }, 50)
+                            }
+                        };
+                        modal.append($$("aa-void", {on: {
+                            connected: e => {
+                                document.body.on(listeners.body);
+                                modal.on(listeners.modal);
+                            },
+                            disconnected: e => {
+                                document.body.cancel(listeners.body);
+                                modal.cancel(listeners.modal);
+                            },
+                        }}));
+                        const isOutside = e => !e.composedPath().some(node => node === modal);
+                    }
+
                     return modal;
                 },
                 getMenuIcon () {
@@ -6966,6 +7380,7 @@
                             node.style.zIndex = aa.getMaxZIndex()+1;
                             aa.settings.on("themechanged", e => {
                                 const {theme, previous} = e.data;
+                                log({previous, theme});
                                 dialog.classList.remove(previous);
                                 dialog.classList.add(theme);
                             });
@@ -7279,799 +7694,802 @@
     })());
     aa.icon                     = (() => {
         function FontAwesome4 () {
-            this.data = [
-                "glass",
-                "music",
-                "search",
-                "envelope-o",
-                "heart",
-                "star",
-                "star-o",
-                "user",
-                "film",
-                "th-large",
-                "th",
-                "th-list",
-                "check",
-                "remove",
-                "close",
-                "times",
-                "search-plus",
-                "search-minus",
-                "power-off",
-                "signal",
-                "gear",
-                "cog",
-                "trash-o",
-                "home",
-                "file-o",
-                "clock-o",
-                "road",
-                "download",
-                "arrow-circle-o-down",
-                "arrow-circle-o-up",
-                "inbox",
-                "play-circle-o",
-                "rotate-right",
-                "repeat",
-                "refresh",
-                "list-alt",
-                "lock",
-                "flag",
-                "headphones",
-                "volume-off",
-                "volume-down",
-                "volume-up",
-                "qrcode",
-                "barcode",
-                "tag",
-                "tags",
-                "book",
-                "bookmark",
-                "print",
-                "camera",
-                "font",
-                "bold",
-                "italic",
-                "text-height",
-                "text-width",
-                "align-left",
-                "align-center",
-                "align-right",
-                "align-justify",
-                "list",
-                "dedent",
-                "outdent",
-                "indent",
-                "video-camera",
-                "photo",
-                "image",
-                "picture-o",
-                "pencil",
-                "map-marker",
-                "adjust",
-                "tint",
-                "edit",
-                "pencil-square-o",
-                "share-square-o",
-                "check-square-o",
-                "arrows",
-                "step-backward",
-                "fast-backward",
-                "backward",
-                "play",
-                "pause",
-                "stop",
-                "forward",
-                "fast-forward",
-                "step-forward",
-                "eject",
-                "chevron-left",
-                "chevron-right",
-                "plus-circle",
-                "minus-circle",
-                "times-circle",
-                "check-circle",
-                "question-circle",
-                "info-circle",
-                "crosshairs",
-                "times-circle-o",
-                "check-circle-o",
-                "ban",
-                "arrow-left",
-                "arrow-right",
-                "arrow-up",
-                "arrow-down",
-                "mail-forward",
-                "share",
-                "expand",
-                "compress",
-                "plus",
-                "minus",
-                "asterisk",
-                "exclamation-circle",
-                "gift",
-                "leaf",
-                "fire",
-                "eye",
-                "eye-slash",
-                "warning",
-                "exclamation-triangle",
-                "plane",
-                "calendar",
-                "random",
-                "comment",
-                "magnet",
-                "chevron-up",
-                "chevron-down",
-                "retweet",
-                "shopping-cart",
-                "folder",
-                "folder-open",
-                "arrows-v",
-                "arrows-h",
-                "bar-chart-o",
-                "bar-chart",
-                "twitter-square",
-                "facebook-square",
-                "camera-retro",
-                "key",
-                "gears",
-                "cogs",
-                "comments",
-                "thumbs-o-up",
-                "thumbs-o-down",
-                "star-half",
-                "heart-o",
-                "sign-out",
-                "linkedin-square",
-                "thumb-tack",
-                "external-link",
-                "sign-in",
-                "trophy",
-                "github-square",
-                "upload",
-                "lemon-o",
-                "phone",
-                "square-o",
-                "bookmark-o",
-                "phone-square",
-                "twitter",
-                "facebook-f",
-                "facebook",
-                "github",
-                "unlock",
-                "credit-card",
-                "feed",
-                "rss",
-                "hdd-o",
-                "bullhorn",
-                "bell",
-                "certificate",
-                "hand-o-right",
-                "hand-o-left",
-                "hand-o-up",
-                "hand-o-down",
-                "arrow-circle-left",
-                "arrow-circle-right",
-                "arrow-circle-up",
-                "arrow-circle-down",
-                "globe",
-                "wrench",
-                "tasks",
-                "filter",
-                "briefcase",
-                "arrows-alt",
-                "group",
-                "users",
-                "chain",
-                "link",
-                "cloud",
-                "flask",
-                "cut",
-                "scissors",
-                "copy",
-                "files-o",
-                "paperclip",
-                "save",
-                "floppy-o",
-                "square",
-                "navicon",
-                "reorder",
-                "bars",
-                "list-ul",
-                "list-ol",
-                "strikethrough",
-                "underline",
-                "table",
-                "magic",
-                "truck",
-                "pinterest",
-                "pinterest-square",
-                "google-plus-square",
-                "google-plus",
-                "money",
-                "caret-down",
-                "caret-up",
-                "caret-left",
-                "caret-right",
-                "columns",
-                "unsorted",
-                "sort",
-                "sort-down",
-                "sort-desc",
-                "sort-up",
-                "sort-asc",
-                "envelope",
-                "linkedin",
-                "rotate-left",
-                "undo",
-                "legal",
-                "gavel",
-                "dashboard",
-                "tachometer",
-                "comment-o",
-                "comments-o",
-                "flash",
-                "bolt",
-                "sitemap",
-                "umbrella",
-                "paste",
-                "clipboard",
-                "lightbulb-o",
-                "exchange",
-                "cloud-download",
-                "cloud-upload",
-                "user-md",
-                "stethoscope",
-                "suitcase",
-                "bell-o",
-                "coffee",
-                "cutlery",
-                "file-text-o",
-                "building-o",
-                "hospital-o",
-                "ambulance",
-                "medkit",
-                "fighter-jet",
-                "beer",
-                "h-square",
-                "plus-square",
-                "angle-double-left",
-                "angle-double-right",
-                "angle-double-up",
-                "angle-double-down",
-                "angle-left",
-                "angle-right",
-                "angle-up",
-                "angle-down",
-                "desktop",
-                "laptop",
-                "tablet",
-                "mobile-phone",
-                "mobile",
-                "circle-o",
-                "quote-left",
-                "quote-right",
-                "spinner",
-                "circle",
-                "mail-reply",
-                "reply",
-                "github-alt",
-                "folder-o",
-                "folder-open-o",
-                "smile-o",
-                "frown-o",
-                "meh-o",
-                "gamepad",
-                "keyboard-o",
-                "flag-o",
-                "flag-checkered",
-                "terminal",
-                "code",
-                "mail-reply-all",
-                "reply-all",
-                "star-half-empty",
-                "star-half-full",
-                "star-half-o",
-                "location-arrow",
-                "crop",
-                "code-fork",
-                "unlink",
-                "chain-broken",
-                "question",
-                "info",
-                "exclamation",
-                "superscript",
-                "subscript",
-                "eraser",
-                "puzzle-piece",
-                "microphone",
-                "microphone-slash",
-                "shield",
-                "calendar-o",
-                "fire-extinguisher",
-                "rocket",
-                "maxcdn",
-                "chevron-circle-left",
-                "chevron-circle-right",
-                "chevron-circle-up",
-                "chevron-circle-down",
-                "html5",
-                "css3",
-                "anchor",
-                "unlock-alt",
-                "bullseye",
-                "ellipsis-h",
-                "ellipsis-v",
-                "rss-square",
-                "play-circle",
-                "ticket",
-                "minus-square",
-                "minus-square-o",
-                "level-up",
-                "level-down",
-                "check-square",
-                "pencil-square",
-                "external-link-square",
-                "share-square",
-                "compass",
-                "toggle-down",
-                "caret-square-o-down",
-                "toggle-up",
-                "caret-square-o-up",
-                "toggle-right",
-                "caret-square-o-right",
-                "euro",
-                "eur",
-                "gbp",
-                "dollar",
-                "usd",
-                "rupee",
-                "inr",
-                "cny",
-                "rmb",
-                "yen",
-                "jpy",
-                "ruble",
-                "rouble",
-                "rub",
-                "won",
-                "krw",
-                "bitcoin",
-                "btc",
-                "file",
-                "file-text",
-                "sort-alpha-asc",
-                "sort-alpha-desc",
-                "sort-amount-asc",
-                "sort-amount-desc",
-                "sort-numeric-asc",
-                "sort-numeric-desc",
-                "thumbs-up",
-                "thumbs-down",
-                "youtube-square",
-                "youtube",
-                "xing",
-                "xing-square",
-                "youtube-play",
-                "dropbox",
-                "stack-overflow",
-                "instagram",
-                "flickr",
-                "adn",
-                "bitbucket",
-                "bitbucket-square",
-                "tumblr",
-                "tumblr-square",
-                "long-arrow-down",
-                "long-arrow-up",
-                "long-arrow-left",
-                "long-arrow-right",
-                "apple",
-                "windows",
-                "android",
-                "linux",
-                "dribbble",
-                "skype",
-                "foursquare",
-                "trello",
-                "female",
-                "male",
-                "gittip",
-                "gratipay",
-                "sun-o",
-                "moon-o",
-                "archive",
-                "bug",
-                "vk",
-                "weibo",
-                "renren",
-                "pagelines",
-                "stack-exchange",
-                "arrow-circle-o-right",
-                "arrow-circle-o-left",
-                "toggle-left",
-                "caret-square-o-left",
-                "dot-circle-o",
-                "wheelchair",
-                "vimeo-square",
-                "turkish-lira",
-                "try",
-                "plus-square-o",
-                "space-shuttle",
-                "slack",
-                "envelope-square",
-                "wordpress",
-                "openid",
-                "institution",
-                "bank",
-                "university",
-                "mortar-board",
-                "graduation-cap",
-                "yahoo",
-                "google",
-                "reddit",
-                "reddit-square",
-                "stumbleupon-circle",
-                "stumbleupon",
-                "delicious",
-                "digg",
-                "pied-piper-pp",
-                "pied-piper-alt",
-                "drupal",
-                "joomla",
-                "language",
-                "fax",
-                "building",
-                "child",
-                "paw",
-                "spoon",
-                "cube",
-                "cubes",
-                "behance",
-                "behance-square",
-                "steam",
-                "steam-square",
-                "recycle",
-                "automobile",
-                "car",
-                "cab",
-                "taxi",
-                "tree",
-                "spotify",
-                "deviantart",
-                "soundcloud",
-                "database",
-                "file-pdf-o",
-                "file-word-o",
-                "file-excel-o",
-                "file-powerpoint-o",
-                "file-photo-o",
-                "file-picture-o",
-                "file-image-o",
-                "file-zip-o",
-                "file-archive-o",
-                "file-sound-o",
-                "file-audio-o",
-                "file-movie-o",
-                "file-video-o",
-                "file-code-o",
-                "vine",
-                "codepen",
-                "jsfiddle",
-                "life-bouy",
-                "life-buoy",
-                "life-saver",
-                "support",
-                "life-ring",
-                "circle-o-notch",
-                "ra",
-                "resistance",
-                "rebel",
-                "ge",
-                "empire",
-                "git-square",
-                "git",
-                "y-combinator-square",
-                "yc-square",
-                "hacker-news",
-                "tencent-weibo",
-                "qq",
-                "wechat",
-                "weixin",
-                "send",
-                "paper-plane",
-                "send-o",
-                "paper-plane-o",
-                "history",
-                "circle-thin",
-                "header",
-                "paragraph",
-                "sliders",
-                "share-alt",
-                "share-alt-square",
-                "bomb",
-                "soccer-ball-o",
-                "futbol-o",
-                "tty",
-                "binoculars",
-                "plug",
-                "slideshare",
-                "twitch",
-                "yelp",
-                "newspaper-o",
-                "wifi",
-                "calculator",
-                "paypal",
-                "google-wallet",
-                "cc-visa",
-                "cc-mastercard",
-                "cc-discover",
-                "cc-amex",
-                "cc-paypal",
-                "cc-stripe",
-                "bell-slash",
-                "bell-slash-o",
-                "trash",
-                "copyright",
-                "at",
-                "eyedropper",
-                "paint-brush",
-                "birthday-cake",
-                "area-chart",
-                "pie-chart",
-                "line-chart",
-                "lastfm",
-                "lastfm-square",
-                "toggle-off",
-                "toggle-on",
-                "bicycle",
-                "bus",
-                "ioxhost",
-                "angellist",
-                "cc",
-                "shekel",
-                "sheqel",
-                "ils",
-                "meanpath",
-                "buysellads",
-                "connectdevelop",
-                "dashcube",
-                "forumbee",
-                "leanpub",
-                "sellsy",
-                "shirtsinbulk",
-                "simplybuilt",
-                "skyatlas",
-                "cart-plus",
-                "cart-arrow-down",
-                "diamond",
-                "ship",
-                "user-secret",
-                "motorcycle",
-                "street-view",
-                "heartbeat",
-                "venus",
-                "mars",
-                "mercury",
-                "intersex",
-                "transgender",
-                "transgender-alt",
-                "venus-double",
-                "mars-double",
-                "venus-mars",
-                "mars-stroke",
-                "mars-stroke-v",
-                "mars-stroke-h",
-                "neuter",
-                "genderless",
-                "facebook-official",
-                "pinterest-p",
-                "whatsapp",
-                "server",
-                "user-plus",
-                "user-times",
-                "hotel",
-                "bed",
-                "viacoin",
-                "train",
-                "subway",
-                "medium",
-                "yc",
-                "y-combinator",
-                "optin-monster",
-                "opencart",
-                "expeditedssl",
-                "battery-4",
-                "battery",
-                "battery-full",
-                "battery-3",
-                "battery-three-quarters",
-                "battery-2",
-                "battery-half",
-                "battery-1",
-                "battery-quarter",
-                "battery-0",
-                "battery-empty",
-                "mouse-pointer",
-                "i-cursor",
-                "object-group",
-                "object-ungroup",
-                "sticky-note",
-                "sticky-note-o",
-                "cc-jcb",
-                "cc-diners-club",
-                "clone",
-                "balance-scale",
-                "hourglass-o",
-                "hourglass-1",
-                "hourglass-start",
-                "hourglass-2",
-                "hourglass-half",
-                "hourglass-3",
-                "hourglass-end",
-                "hourglass",
-                "hand-grab-o",
-                "hand-rock-o",
-                "hand-stop-o",
-                "hand-paper-o",
-                "hand-scissors-o",
-                "hand-lizard-o",
-                "hand-spock-o",
-                "hand-pointer-o",
-                "hand-peace-o",
-                "trademark",
-                "registered",
-                "creative-commons",
-                "gg",
-                "gg-circle",
-                "tripadvisor",
-                "odnoklassniki",
-                "odnoklassniki-square",
-                "get-pocket",
-                "wikipedia-w",
-                "safari",
-                "chrome",
-                "firefox",
-                "opera",
-                "internet-explorer",
-                "tv",
-                "television",
-                "contao",
-                "500px",
-                "amazon",
-                "calendar-plus-o",
-                "calendar-minus-o",
-                "calendar-times-o",
-                "calendar-check-o",
-                "industry",
-                "map-pin",
-                "map-signs",
-                "map-o",
-                "map",
-                "commenting",
-                "commenting-o",
-                "houzz",
-                "vimeo",
-                "black-tie",
-                "fonticons",
-                "reddit-alien",
-                "edge",
-                "credit-card-alt",
-                "codiepie",
-                "modx",
-                "fort-awesome",
-                "usb",
-                "product-hunt",
-                "mixcloud",
-                "scribd",
-                "pause-circle",
-                "pause-circle-o",
-                "stop-circle",
-                "stop-circle-o",
-                "shopping-bag",
-                "shopping-basket",
-                "hashtag",
-                "bluetooth",
-                "bluetooth-b",
-                "percent",
-                "gitlab",
-                "wpbeginner",
-                "wpforms",
-                "envira",
-                "universal-access",
-                "wheelchair-alt",
-                "question-circle-o",
-                "blind",
-                "audio-description",
-                "volume-control-phone",
-                "braille",
-                "assistive-listening-systems",
-                "asl-interpreting",
-                "american-sign-language-interpreting",
-                "deafness",
-                "hard-of-hearing",
-                "deaf",
-                "glide",
-                "glide-g",
-                "signing",
-                "sign-language",
-                "low-vision",
-                "viadeo",
-                "viadeo-square",
-                "snapchat",
-                "snapchat-ghost",
-                "snapchat-square",
-                "pied-piper",
-                "first-order",
-                "yoast",
-                "themeisle",
-                "google-plus-circle",
-                "google-plus-official",
-                "fa",
-                "font-awesome",
-                "handshake-o",
-                "envelope-open",
-                "envelope-open-o",
-                "linode",
-                "address-book",
-                "address-book-o",
-                "vcard",
-                "address-card",
-                "vcard-o",
-                "address-card-o",
-                "user-circle",
-                "user-circle-o",
-                "user-o",
-                "id-badge",
-                "drivers-license",
-                "id-card",
-                "drivers-license-o",
-                "id-card-o",
-                "quora",
-                "free-code-camp",
-                "telegram",
-                "thermometer-4",
-                "thermometer",
-                "thermometer-full",
-                "thermometer-3",
-                "thermometer-three-quarters",
-                "thermometer-2",
-                "thermometer-half",
-                "thermometer-1",
-                "thermometer-quarter",
-                "thermometer-0",
-                "thermometer-empty",
-                "shower",
-                "bathtub",
-                "s15",
-                "bath",
-                "podcast",
-                "window-maximize",
-                "window-minimize",
-                "window-restore",
-                "times-rectangle",
-                "window-close",
-                "times-rectangle-o",
-                "window-close-o",
-                "bandcamp",
-                "grav",
-                "etsy",
-                "imdb",
-                "ravelry",
-                "eercast",
-                "microchip",
-                "snowflake-o",
-                "superpowers",
-                "wpexplorer",
-                "meetup"
-            ];
+            this.data = {
+                "glass": "\uf000",
+                "music": "\uf001",
+                "search": "\uf002",
+                "envelope-o": "\uf003",
+                "heart": "\uf004",
+                "star": "\uf005",
+                "star-o": "\uf006",
+                "user": "\uf007",
+                "film": "\uf008",
+                "th-large": "\uf009",
+                "th": "\uf00a",
+                "th-list": "\uf00b",
+                "check": "\uf00c",
+                "remove": "\uf00d",
+                "close": "\uf00d",
+                "times": "\uf00d",
+                "search-plus": "\uf00e",
+                "search-minus": "\uf010",
+                "power-off": "\uf011",
+                "signal": "\uf012",
+                "gear": "\uf013",
+                "cog": "\uf013",
+                "trash-o": "\uf014",
+                "home": "\uf015",
+                "file-o": "\uf016",
+                "clock-o": "\uf017",
+                "road": "\uf018",
+                "download": "\uf019",
+                "arrow-circle-o-down": "\uf01a",
+                "arrow-circle-o-up": "\uf01b",
+                "inbox": "\uf01c",
+                "play-circle-o": "\uf01d",
+                "rotate-right": "\uf01e",
+                "repeat": "\uf01e",
+                "refresh": "\uf021",
+                "list-alt": "\uf022",
+                "lock": "\uf023",
+                "flag": "\uf024",
+                "headphones": "\uf025",
+                "volume-off": "\uf026",
+                "volume-down": "\uf027",
+                "volume-up": "\uf028",
+                "qrcode": "\uf029",
+                "barcode": "\uf02a",
+                "tag": "\uf02b",
+                "tags": "\uf02c",
+                "book": "\uf02d",
+                "bookmark": "\uf02e",
+                "print": "\uf02f",
+                "camera": "\uf030",
+                "font": "\uf031",
+                "bold": "\uf032",
+                "italic": "\uf033",
+                "text-height": "\uf034",
+                "text-width": "\uf035",
+                "align-left": "\uf036",
+                "align-center": "\uf037",
+                "align-right": "\uf038",
+                "align-justify": "\uf039",
+                "list": "\uf03a",
+                "dedent": "\uf03b",
+                "outdent": "\uf03b",
+                "indent": "\uf03c",
+                "video-camera": "\uf03d",
+                "photo": "\uf03e",
+                "image": "\uf03e",
+                "picture-o": "\uf03e",
+                "pencil": "\uf040",
+                "map-marker": "\uf041",
+                "adjust": "\uf042",
+                "tint": "\uf043",
+                "edit": "\uf044",
+                "pencil-square-o": "\uf044",
+                "share-square-o": "\uf045",
+                "check-square-o": "\uf046",
+                "arrows": "\uf047",
+                "step-backward": "\uf048",
+                "fast-backward": "\uf049",
+                "backward": "\uf04a",
+                "play": "\uf04b",
+                "pause": "\uf04c",
+                "stop": "\uf04d",
+                "forward": "\uf04e",
+                "fast-forward": "\uf050",
+                "step-forward": "\uf051",
+                "eject": "\uf052",
+                "chevron-left": "\uf053",
+                "chevron-right": "\uf054",
+                "plus-circle": "\uf055",
+                "minus-circle": "\uf056",
+                "times-circle": "\uf057",
+                "check-circle": "\uf058",
+                "question-circle": "\uf059",
+                "info-circle": "\uf05a",
+                "crosshairs": "\uf05b",
+                "times-circle-o": "\uf05c",
+                "check-circle-o": "\uf05d",
+                "ban": "\uf05e",
+                "arrow-left": "\uf060",
+                "arrow-right": "\uf061",
+                "arrow-up": "\uf062",
+                "arrow-down": "\uf063",
+                "mail-forward": "\uf064",
+                "share": "\uf064",
+                "expand": "\uf065",
+                "compress": "\uf066",
+                "plus": "\uf067",
+                "minus": "\uf068",
+                "asterisk": "\uf069",
+                "exclamation-circle": "\uf06a",
+                "gift": "\uf06b",
+                "leaf": "\uf06c",
+                "fire": "\uf06d",
+                "eye": "\uf06e",
+                "eye-slash": "\uf070",
+                "warning": "\uf071",
+                "exclamation-triangle": "\uf071",
+                "plane": "\uf072",
+                "calendar": "\uf073",
+                "random": "\uf074",
+                "comment": "\uf075",
+                "magnet": "\uf076",
+                "chevron-up": "\uf077",
+                "chevron-down": "\uf078",
+                "retweet": "\uf079",
+                "shopping-cart": "\uf07a",
+                "folder": "\uf07b",
+                "folder-open": "\uf07c",
+                "arrows-v": "\uf07d",
+                "arrows-h": "\uf07e",
+                "bar-chart-o": "\uf080",
+                "bar-chart": "\uf080",
+                "twitter-square": "\uf081",
+                "facebook-square": "\uf082",
+                "camera-retro": "\uf083",
+                "key": "\uf084",
+                "gears": "\uf085",
+                "cogs": "\uf085",
+                "comments": "\uf086",
+                "thumbs-o-up": "\uf087",
+                "thumbs-o-down": "\uf088",
+                "star-half": "\uf089",
+                "heart-o": "\uf08a",
+                "sign-out": "\uf08b",
+                "linkedin-square": "\uf08c",
+                "thumb-tack": "\uf08d",
+                "external-link": "\uf08e",
+                "sign-in": "\uf090",
+                "trophy": "\uf091",
+                "github-square": "\uf092",
+                "upload": "\uf093",
+                "lemon-o": "\uf094",
+                "phone": "\uf095",
+                "square-o": "\uf096",
+                "bookmark-o": "\uf097",
+                "phone-square": "\uf098",
+                "twitter": "\uf099",
+                "facebook-f": "\uf09a",
+                "facebook": "\uf09a",
+                "github": "\uf09b",
+                "unlock": "\uf09c",
+                "credit-card": "\uf09d",
+                "feed": "\uf09e",
+                "rss": "\uf09e",
+                "hdd-o": "\uf0a0",
+                "bullhorn": "\uf0a1",
+                "bell": "\uf0f3",
+                "certificate": "\uf0a3",
+                "hand-o-right": "\uf0a4",
+                "hand-o-left": "\uf0a5",
+                "hand-o-up": "\uf0a6",
+                "hand-o-down": "\uf0a7",
+                "arrow-circle-left": "\uf0a8",
+                "arrow-circle-right": "\uf0a9",
+                "arrow-circle-up": "\uf0aa",
+                "arrow-circle-down": "\uf0ab",
+                "globe": "\uf0ac",
+                "wrench": "\uf0ad",
+                "tasks": "\uf0ae",
+                "filter": "\uf0b0",
+                "briefcase": "\uf0b1",
+                "arrows-alt": "\uf0b2",
+                "group": "\uf0c0",
+                "users": "\uf0c0",
+                "chain": "\uf0c1",
+                "link": "\uf0c1",
+                "cloud": "\uf0c2",
+                "flask": "\uf0c3",
+                "cut": "\uf0c4",
+                "scissors": "\uf0c4",
+                "copy": "\uf0c5",
+                "files-o": "\uf0c5",
+                "paperclip": "\uf0c6",
+                "save": "\uf0c7",
+                "floppy-o": "\uf0c7",
+                "square": "\uf0c8",
+                "navicon": "\uf0c9",
+                "reorder": "\uf0c9",
+                "bars": "\uf0c9",
+                "list-ul": "\uf0ca",
+                "list-ol": "\uf0cb",
+                "strikethrough": "\uf0cc",
+                "underline": "\uf0cd",
+                "table": "\uf0ce",
+                "magic": "\uf0d0",
+                "truck": "\uf0d1",
+                "pinterest": "\uf0d2",
+                "pinterest-square": "\uf0d3",
+                "google-plus-square": "\uf0d4",
+                "google-plus": "\uf0d5",
+                "money": "\uf0d6",
+                "caret-down": "\uf0d7",
+                "caret-up": "\uf0d8",
+                "caret-left": "\uf0d9",
+                "caret-right": "\uf0da",
+                "columns": "\uf0db",
+                "unsorted": "\uf0dc",
+                "sort": "\uf0dc",
+                "sort-down": "\uf0dd",
+                "sort-desc": "\uf0dd",
+                "sort-up": "\uf0de",
+                "sort-asc": "\uf0de",
+                "envelope": "\uf0e0",
+                "linkedin": "\uf0e1",
+                "rotate-left": "\uf0e2",
+                "undo": "\uf0e2",
+                "legal": "\uf0e3",
+                "gavel": "\uf0e3",
+                "dashboard": "\uf0e4",
+                "tachometer": "\uf0e4",
+                "comment-o": "\uf0e5",
+                "comments-o": "\uf0e6",
+                "flash": "\uf0e7",
+                "bolt": "\uf0e7",
+                "sitemap": "\uf0e8",
+                "umbrella": "\uf0e9",
+                "paste": "\uf0ea",
+                "clipboard": "\uf0ea",
+                "lightbulb-o": "\uf0eb",
+                "exchange": "\uf0ec",
+                "cloud-download": "\uf0ed",
+                "cloud-upload": "\uf0ee",
+                "user-md": "\uf0f0",
+                "stethoscope": "\uf0f1",
+                "suitcase": "\uf0f2",
+                "bell-o": "\uf0a2",
+                "coffee": "\uf0f4",
+                "cutlery": "\uf0f5",
+                "file-text-o": "\uf0f6",
+                "building-o": "\uf0f7",
+                "hospital-o": "\uf0f8",
+                "ambulance": "\uf0f9",
+                "medkit": "\uf0fa",
+                "fighter-jet": "\uf0fb",
+                "beer": "\uf0fc",
+                "h-square": "\uf0fd",
+                "plus-square": "\uf0fe",
+                "angle-double-left": "\uf100",
+                "angle-double-right": "\uf101",
+                "angle-double-up": "\uf102",
+                "angle-double-down": "\uf103",
+                "angle-left": "\uf104",
+                "angle-right": "\uf105",
+                "angle-up": "\uf106",
+                "angle-down": "\uf107",
+                "desktop": "\uf108",
+                "laptop": "\uf109",
+                "tablet": "\uf10a",
+                "mobile-phone": "\uf10b",
+                "mobile": "\uf10b",
+                "circle-o": "\uf10c",
+                "quote-left": "\uf10d",
+                "quote-right": "\uf10e",
+                "spinner": "\uf110",
+                "circle": "\uf111",
+                "mail-reply": "\uf112",
+                "reply": "\uf112",
+                "github-alt": "\uf113",
+                "folder-o": "\uf114",
+                "folder-open-o": "\uf115",
+                "smile-o": "\uf118",
+                "frown-o": "\uf119",
+                "meh-o": "\uf11a",
+                "gamepad": "\uf11b",
+                "keyboard-o": "\uf11c",
+                "flag-o": "\uf11d",
+                "flag-checkered": "\uf11e",
+                "terminal": "\uf120",
+                "code": "\uf121",
+                "mail-reply-all": "\uf122",
+                "reply-all": "\uf122",
+                "star-half-empty": "\uf123",
+                "star-half-full": "\uf123",
+                "star-half-o": "\uf123",
+                "location-arrow": "\uf124",
+                "crop": "\uf125",
+                "code-fork": "\uf126",
+                "unlink": "\uf127",
+                "chain-broken": "\uf127",
+                "question": "\uf128",
+                "info": "\uf129",
+                "exclamation": "\uf12a",
+                "superscript": "\uf12b",
+                "subscript": "\uf12c",
+                "eraser": "\uf12d",
+                "puzzle-piece": "\uf12e",
+                "microphone": "\uf130",
+                "microphone-slash": "\uf131",
+                "shield": "\uf132",
+                "calendar-o": "\uf133",
+                "fire-extinguisher": "\uf134",
+                "rocket": "\uf135",
+                "maxcdn": "\uf136",
+                "chevron-circle-left": "\uf137",
+                "chevron-circle-right": "\uf138",
+                "chevron-circle-up": "\uf139",
+                "chevron-circle-down": "\uf13a",
+                "html5": "\uf13b",
+                "css3": "\uf13c",
+                "anchor": "\uf13d",
+                "unlock-alt": "\uf13e",
+                "bullseye": "\uf140",
+                "ellipsis-h": "\uf141",
+                "ellipsis-v": "\uf142",
+                "rss-square": "\uf143",
+                "play-circle": "\uf144",
+                "ticket": "\uf145",
+                "minus-square": "\uf146",
+                "minus-square-o": "\uf147",
+                "level-up": "\uf148",
+                "level-down": "\uf149",
+                "check-square": "\uf14a",
+                "pencil-square": "\uf14b",
+                "external-link-square": "\uf14c",
+                "share-square": "\uf14d",
+                "compass": "\uf14e",
+                "toggle-down": "\uf150",
+                "caret-square-o-down": "\uf150",
+                "toggle-up": "\uf151",
+                "caret-square-o-up": "\uf151",
+                "toggle-right": "\uf152",
+                "caret-square-o-right": "\uf152",
+                "euro": "\uf153",
+                "eur": "\uf153",
+                "gbp": "\uf154",
+                "dollar": "\uf155",
+                "usd": "\uf155",
+                "rupee": "\uf156",
+                "inr": "\uf156",
+                "cny": "\uf157",
+                "rmb": "\uf157",
+                "yen": "\uf157",
+                "jpy": "\uf157",
+                "ruble": "\uf158",
+                "rouble": "\uf158",
+                "rub": "\uf158",
+                "won": "\uf159",
+                "krw": "\uf159",
+                "bitcoin": "\uf15a",
+                "btc": "\uf15a",
+                "file": "\uf15b",
+                "file-text": "\uf15c",
+                "sort-alpha-asc": "\uf15d",
+                "sort-alpha-desc": "\uf15e",
+                "sort-amount-asc": "\uf160",
+                "sort-amount-desc": "\uf161",
+                "sort-numeric-asc": "\uf162",
+                "sort-numeric-desc": "\uf163",
+                "thumbs-up": "\uf164",
+                "thumbs-down": "\uf165",
+                "youtube-square": "\uf166",
+                "youtube": "\uf167",
+                "xing": "\uf168",
+                "xing-square": "\uf169",
+                "youtube-play": "\uf16a",
+                "dropbox": "\uf16b",
+                "stack-overflow": "\uf16c",
+                "instagram": "\uf16d",
+                "flickr": "\uf16e",
+                "adn": "\uf170",
+                "bitbucket": "\uf171",
+                "bitbucket-square": "\uf172",
+                "tumblr": "\uf173",
+                "tumblr-square": "\uf174",
+                "long-arrow-down": "\uf175",
+                "long-arrow-up": "\uf176",
+                "long-arrow-left": "\uf177",
+                "long-arrow-right": "\uf178",
+                "apple": "\uf179",
+                "windows": "\uf17a",
+                "android": "\uf17b",
+                "linux": "\uf17c",
+                "dribbble": "\uf17d",
+                "skype": "\uf17e",
+                "foursquare": "\uf180",
+                "trello": "\uf181",
+                "female": "\uf182",
+                "male": "\uf183",
+                "gittip": "\uf184",
+                "gratipay": "\uf184",
+                "sun-o": "\uf185",
+                "moon-o": "\uf186",
+                "archive": "\uf187",
+                "bug": "\uf188",
+                "vk": "\uf189",
+                "weibo": "\uf18a",
+                "renren": "\uf18b",
+                "pagelines": "\uf18c",
+                "stack-exchange": "\uf18d",
+                "arrow-circle-o-right": "\uf18e",
+                "arrow-circle-o-left": "\uf190",
+                "toggle-left": "\uf191",
+                "caret-square-o-left": "\uf191",
+                "dot-circle-o": "\uf192",
+                "wheelchair": "\uf193",
+                "vimeo-square": "\uf194",
+                "turkish-lira": "\uf195",
+                "try": "\uf195",
+                "plus-square-o": "\uf196",
+                "space-shuttle": "\uf197",
+                "slack": "\uf198",
+                "envelope-square": "\uf199",
+                "wordpress": "\uf19a",
+                "openid": "\uf19b",
+                "institution": "\uf19c",
+                "bank": "\uf19c",
+                "university": "\uf19c",
+                "mortar-board": "\uf19d",
+                "graduation-cap": "\uf19d",
+                "yahoo": "\uf19e",
+                "google": "\uf1a0",
+                "reddit": "\uf1a1",
+                "reddit-square": "\uf1a2",
+                "stumbleupon-circle": "\uf1a3",
+                "stumbleupon": "\uf1a4",
+                "delicious": "\uf1a5",
+                "digg": "\uf1a6",
+                "pied-piper-pp": "\uf1a7",
+                "pied-piper-alt": "\uf1a8",
+                "drupal": "\uf1a9",
+                "joomla": "\uf1aa",
+                "language": "\uf1ab",
+                "fax": "\uf1ac",
+                "building": "\uf1ad",
+                "child": "\uf1ae",
+                "paw": "\uf1b0",
+                "spoon": "\uf1b1",
+                "cube": "\uf1b2",
+                "cubes": "\uf1b3",
+                "behance": "\uf1b4",
+                "behance-square": "\uf1b5",
+                "steam": "\uf1b6",
+                "steam-square": "\uf1b7",
+                "recycle": "\uf1b8",
+                "automobile": "\uf1b9",
+                "car": "\uf1b9",
+                "cab": "\uf1ba",
+                "taxi": "\uf1ba",
+                "tree": "\uf1bb",
+                "spotify": "\uf1bc",
+                "deviantart": "\uf1bd",
+                "soundcloud": "\uf1be",
+                "database": "\uf1c0",
+                "file-pdf-o": "\uf1c1",
+                "file-word-o": "\uf1c2",
+                "file-excel-o": "\uf1c3",
+                "file-powerpoint-o": "\uf1c4",
+                "file-photo-o": "\uf1c5",
+                "file-picture-o": "\uf1c5",
+                "file-image-o": "\uf1c5",
+                "file-zip-o": "\uf1c6",
+                "file-archive-o": "\uf1c6",
+                "file-sound-o": "\uf1c7",
+                "file-audio-o": "\uf1c7",
+                "file-movie-o": "\uf1c8",
+                "file-video-o": "\uf1c8",
+                "file-code-o": "\uf1c9",
+                "vine": "\uf1ca",
+                "codepen": "\uf1cb",
+                "jsfiddle": "\uf1cc",
+                "life-bouy": "\uf1cd",
+                "life-buoy": "\uf1cd",
+                "life-saver": "\uf1cd",
+                "support": "\uf1cd",
+                "life-ring": "\uf1cd",
+                "circle-o-notch": "\uf1ce",
+                "ra": "\uf1d0",
+                "resistance": "\uf1d0",
+                "rebel": "\uf1d0",
+                "ge": "\uf1d1",
+                "empire": "\uf1d1",
+                "git-square": "\uf1d2",
+                "git": "\uf1d3",
+                "y-combinator-square": "\uf1d4",
+                "yc-square": "\uf1d4",
+                "hacker-news": "\uf1d4",
+                "tencent-weibo": "\uf1d5",
+                "qq": "\uf1d6",
+                "wechat": "\uf1d7",
+                "weixin": "\uf1d7",
+                "send": "\uf1d8",
+                "paper-plane": "\uf1d8",
+                "send-o": "\uf1d9",
+                "paper-plane-o": "\uf1d9",
+                "history": "\uf1da",
+                "circle-thin": "\uf1db",
+                "header": "\uf1dc",
+                "paragraph": "\uf1dd",
+                "sliders": "\uf1de",
+                "share-alt": "\uf1e0",
+                "share-alt-square": "\uf1e1",
+                "bomb": "\uf1e2",
+                "soccer-ball-o": "\uf1e3",
+                "futbol-o": "\uf1e3",
+                "tty": "\uf1e4",
+                "binoculars": "\uf1e5",
+                "plug": "\uf1e6",
+                "slideshare": "\uf1e7",
+                "twitch": "\uf1e8",
+                "yelp": "\uf1e9",
+                "newspaper-o": "\uf1ea",
+                "wifi": "\uf1eb",
+                "calculator": "\uf1ec",
+                "paypal": "\uf1ed",
+                "google-wallet": "\uf1ee",
+                "cc-visa": "\uf1f0",
+                "cc-mastercard": "\uf1f1",
+                "cc-discover": "\uf1f2",
+                "cc-amex": "\uf1f3",
+                "cc-paypal": "\uf1f4",
+                "cc-stripe": "\uf1f5",
+                "bell-slash": "\uf1f6",
+                "bell-slash-o": "\uf1f7",
+                "trash": "\uf1f8",
+                "copyright": "\uf1f9",
+                "at": "\uf1fa",
+                "eyedropper": "\uf1fb",
+                "paint-brush": "\uf1fc",
+                "birthday-cake": "\uf1fd",
+                "area-chart": "\uf1fe",
+                "pie-chart": "\uf200",
+                "line-chart": "\uf201",
+                "lastfm": "\uf202",
+                "lastfm-square": "\uf203",
+                "toggle-off": "\uf204",
+                "toggle-on": "\uf205",
+                "bicycle": "\uf206",
+                "bus": "\uf207",
+                "ioxhost": "\uf208",
+                "angellist": "\uf209",
+                "cc": "\uf20a",
+                "shekel": "\uf20b",
+                "sheqel": "\uf20b",
+                "ils": "\uf20b",
+                "meanpath": "\uf20c",
+                "buysellads": "\uf20d",
+                "connectdevelop": "\uf20e",
+                "dashcube": "\uf210",
+                "forumbee": "\uf211",
+                "leanpub": "\uf212",
+                "sellsy": "\uf213",
+                "shirtsinbulk": "\uf214",
+                "simplybuilt": "\uf215",
+                "skyatlas": "\uf216",
+                "cart-plus": "\uf217",
+                "cart-arrow-down": "\uf218",
+                "diamond": "\uf219",
+                "ship": "\uf21a",
+                "user-secret": "\uf21b",
+                "motorcycle": "\uf21c",
+                "street-view": "\uf21d",
+                "heartbeat": "\uf21e",
+                "venus": "\uf221",
+                "mars": "\uf222",
+                "mercury": "\uf223",
+                "intersex": "\uf224",
+                "transgender": "\uf224",
+                "transgender-alt": "\uf225",
+                "venus-double": "\uf226",
+                "mars-double": "\uf227",
+                "venus-mars": "\uf228",
+                "mars-stroke": "\uf229",
+                "mars-stroke-v": "\uf22a",
+                "mars-stroke-h": "\uf22b",
+                "neuter": "\uf22c",
+                "genderless": "\uf22d",
+                "facebook-official": "\uf230",
+                "pinterest-p": "\uf231",
+                "whatsapp": "\uf232",
+                "server": "\uf233",
+                "user-plus": "\uf234",
+                "user-times": "\uf235",
+                "hotel": "\uf236",
+                "bed": "\uf236",
+                "viacoin": "\uf237",
+                "train": "\uf238",
+                "subway": "\uf239",
+                "medium": "\uf23a",
+                "yc": "\uf23b",
+                "y-combinator": "\uf23b",
+                "optin-monster": "\uf23c",
+                "opencart": "\uf23d",
+                "expeditedssl": "\uf23e",
+                "battery-4": "\uf240",
+                "battery": "\uf240",
+                "battery-full": "\uf240",
+                "battery-3": "\uf241",
+                "battery-three-quarters": "\uf241",
+                "battery-2": "\uf242",
+                "battery-half": "\uf242",
+                "battery-1": "\uf243",
+                "battery-quarter": "\uf243",
+                "battery-0": "\uf244",
+                "battery-empty": "\uf244",
+                "mouse-pointer": "\uf245",
+                "i-cursor": "\uf246",
+                "object-group": "\uf247",
+                "object-ungroup": "\uf248",
+                "sticky-note": "\uf249",
+                "sticky-note-o": "\uf24a",
+                "cc-jcb": "\uf24b",
+                "cc-diners-club": "\uf24c",
+                "clone": "\uf24d",
+                "balance-scale": "\uf24e",
+                "hourglass-o": "\uf250",
+                "hourglass-1": "\uf251",
+                "hourglass-start": "\uf251",
+                "hourglass-2": "\uf252",
+                "hourglass-half": "\uf252",
+                "hourglass-3": "\uf253",
+                "hourglass-end": "\uf253",
+                "hourglass": "\uf254",
+                "hand-grab-o": "\uf255",
+                "hand-rock-o": "\uf255",
+                "hand-stop-o": "\uf256",
+                "hand-paper-o": "\uf256",
+                "hand-scissors-o": "\uf257",
+                "hand-lizard-o": "\uf258",
+                "hand-spock-o": "\uf259",
+                "hand-pointer-o": "\uf25a",
+                "hand-peace-o": "\uf25b",
+                "trademark": "\uf25c",
+                "registered": "\uf25d",
+                "creative-commons": "\uf25e",
+                "gg": "\uf260",
+                "gg-circle": "\uf261",
+                "tripadvisor": "\uf262",
+                "odnoklassniki": "\uf263",
+                "odnoklassniki-square": "\uf264",
+                "get-pocket": "\uf265",
+                "wikipedia-w": "\uf266",
+                "safari": "\uf267",
+                "chrome": "\uf268",
+                "firefox": "\uf269",
+                "opera": "\uf26a",
+                "internet-explorer": "\uf26b",
+                "tv": "\uf26c",
+                "television": "\uf26c",
+                "contao": "\uf26d",
+                "500px": "\uf26e",
+                "amazon": "\uf270",
+                "calendar-plus-o": "\uf271",
+                "calendar-minus-o": "\uf272",
+                "calendar-times-o": "\uf273",
+                "calendar-check-o": "\uf274",
+                "industry": "\uf275",
+                "map-pin": "\uf276",
+                "map-signs": "\uf277",
+                "map-o": "\uf278",
+                "map": "\uf279",
+                "commenting": "\uf27a",
+                "commenting-o": "\uf27b",
+                "houzz": "\uf27c",
+                "vimeo": "\uf27d",
+                "black-tie": "\uf27e",
+                "fonticons": "\uf280",
+                "reddit-alien": "\uf281",
+                "edge": "\uf282",
+                "credit-card-alt": "\uf283",
+                "codiepie": "\uf284",
+                "modx": "\uf285",
+                "fort-awesome": "\uf286",
+                "usb": "\uf287",
+                "product-hunt": "\uf288",
+                "mixcloud": "\uf289",
+                "scribd": "\uf28a",
+                "pause-circle": "\uf28b",
+                "pause-circle-o": "\uf28c",
+                "stop-circle": "\uf28d",
+                "stop-circle-o": "\uf28e",
+                "shopping-bag": "\uf290",
+                "shopping-basket": "\uf291",
+                "hashtag": "\uf292",
+                "bluetooth": "\uf293",
+                "bluetooth-b": "\uf294",
+                "percent": "\uf295",
+                "gitlab": "\uf296",
+                "wpbeginner": "\uf297",
+                "wpforms": "\uf298",
+                "envira": "\uf299",
+                "universal-access": "\uf29a",
+                "wheelchair-alt": "\uf29b",
+                "question-circle-o": "\uf29c",
+                "blind": "\uf29d",
+                "audio-description": "\uf29e",
+                "volume-control-phone": "\uf2a0",
+                "braille": "\uf2a1",
+                "assistive-listening-systems": "\uf2a2",
+                "asl-interpreting": "\uf2a3",
+                "american-sign-language-interpreting": "\uf2a3",
+                "deafness": "\uf2a4",
+                "hard-of-hearing": "\uf2a4",
+                "deaf": "\uf2a4",
+                "glide": "\uf2a5",
+                "glide-g": "\uf2a6",
+                "signing": "\uf2a7",
+                "sign-language": "\uf2a7",
+                "low-vision": "\uf2a8",
+                "viadeo": "\uf2a9",
+                "viadeo-square": "\uf2aa",
+                "snapchat": "\uf2ab",
+                "snapchat-ghost": "\uf2ac",
+                "snapchat-square": "\uf2ad",
+                "pied-piper": "\uf2ae",
+                "first-order": "\uf2b0",
+                "yoast": "\uf2b1",
+                "themeisle": "\uf2b2",
+                "google-plus-circle": "\uf2b3",
+                "google-plus-official": "\uf2b3",
+                "fa": "\uf2b4",
+                "font-awesome": "\uf2b4",
+                "handshake-o": "\uf2b5",
+                "envelope-open": "\uf2b6",
+                "envelope-open-o": "\uf2b7",
+                "linode": "\uf2b8",
+                "address-book": "\uf2b9",
+                "address-book-o": "\uf2ba",
+                "vcard": "\uf2bb",
+                "address-card": "\uf2bb",
+                "vcard-o": "\uf2bc",
+                "address-card-o": "\uf2bc",
+                "user-circle": "\uf2bd",
+                "user-circle-o": "\uf2be",
+                "user-o": "\uf2c0",
+                "id-badge": "\uf2c1",
+                "drivers-license": "\uf2c2",
+                "id-card": "\uf2c2",
+                "drivers-license-o": "\uf2c3",
+                "id-card-o": "\uf2c3",
+                "quora": "\uf2c4",
+                "free-code-camp": "\uf2c5",
+                "telegram": "\uf2c6",
+                "thermometer-4": "\uf2c7",
+                "thermometer": "\uf2c7",
+                "thermometer-full": "\uf2c7",
+                "thermometer-3": "\uf2c8",
+                "thermometer-three-quarters": "\uf2c8",
+                "thermometer-2": "\uf2c9",
+                "thermometer-half": "\uf2c9",
+                "thermometer-1": "\uf2ca",
+                "thermometer-quarter": "\uf2ca",
+                "thermometer-0": "\uf2cb",
+                "thermometer-empty": "\uf2cb",
+                "shower": "\uf2cc",
+                "bathtub": "\uf2cd",
+                "s15": "\uf2cd",
+                "bath": "\uf2cd",
+                "podcast": "\uf2ce",
+                "window-maximize": "\uf2d0",
+                "window-minimize": "\uf2d1",
+                "window-restore": "\uf2d2",
+                "times-rectangle": "\uf2d3",
+                "window-close": "\uf2d3",
+                "times-rectangle-o": "\uf2d4",
+                "window-close-o": "\uf2d4",
+                "bandcamp": "\uf2d5",
+                "grav": "\uf2d6",
+                "etsy": "\uf2d7",
+                "imdb": "\uf2d8",
+                "ravelry": "\uf2d9",
+                "eercast": "\uf2da",
+                "microchip": "\uf2db",
+                "snowflake-o": "\uf2dc",
+                "superpowers": "\uf2dd",
+                "wpexplorer": "\uf2de",
+                "meetup": "\uf2e0",
+            };
         };
-        aa.deploy(FontAwesome4.prototype, {
+        Object.assign(FontAwesome4.prototype, {
             format (className) {
                 if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 return 'fa-'+className.trim();
+            },
+            getEscapedChar (cls) {
+                return this.data[cls] ?? undefined;
             },
             getNode (id, classes, args) {
                 /**
@@ -8102,13 +8520,13 @@
                 if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 className = className.trim();
 
-                return this.data.has(className);
+                return this.data.hasOwnProperty(className);
             },
             keys () {
 
-                return Object.freeze(this.data);
+                return Object.freeze(Object.keys(this.data));
             }
-        }, {force: true});
+        });
 
         function GoogleIconfont () {
             this.data = {
@@ -9046,7 +9464,7 @@
                 zoom_out_map: "e56b",
             };
         };
-        aa.deploy(GoogleIconfont.prototype, {
+        Object.assign(GoogleIconfont.prototype, {
             format (className) {
                 if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 return className.trim();
@@ -9087,7 +9505,7 @@
 
                 return Object.freeze(this.data.keys());
             }
-        }, {force: true});
+        });
 
         function NerdFont () {
             this.data = {
@@ -19857,7 +20275,7 @@
                 "weather-windy": "\e31e",
             };
         };
-        aa.deploy(NerdFont.prototype, {
+        Object.assign(NerdFont.prototype, {
             format (className) {
                 if (!aa.nonEmptyString(className)) { throw new TypeError("Argument must be a non-empty String."); }
                 return `nf-${className.trim()}`;
@@ -19900,7 +20318,7 @@
 
                 return Object.freeze(this.data.keys());
             }
-        }, {force: true});
+        });
 
         const func = function (which, ...args) {
             /**
@@ -19955,25 +20373,35 @@
                             label: font.constructor.name,
                             text: (() => {
                                 font.keys().forEach(key => {
+                                    const tooltip = $$("aa-tooltip", {
+                                        direction: "right",
+                                        text: "Copy",
+                                    });
+                                    const btn = $$("button.ico.with-tooltip", (() => {
+                                        const options = {style: "margin: 2px;", title: key};
+                                        return (Font === FontAwesome4 ?
+                                            $$("icon.fw."+key, options)
+                                            : (font.getIcon?.(key, options) ?? aa.icon("icon."+key, options))
+                                        );
+                                    })(), tooltip, {
+                                        on: {click: e => {
+
+                                            navigator.clipboard.writeText(key).then(
+                                                () => {
+                                                    btn.disabled = true;
+                                                    tooltip.text = `Copied: ${key}`;
+                                                    aa.wait(1000, () => {
+                                                        btn.disabled = false;
+                                                        tooltip.text = "Copy";
+                                                    });
+                                                },
+                                                () => {aa.gui.notif("You're not allowed to write into the clipboard.", {type: "critical"});},
+                                            );
+                                        }}
+                                    });
                                     grid.appendChild($$("div.row", {dataset: {key: key}},
                                         $$("div.cell", {style: "min-width: fit-content;"},
-                                            $$("button.ico", (() => {
-                                                const options = {style: "margin: 2px;", title: key};
-                                                return (Font === FontAwesome4 ?
-                                                    $$("icon.fw."+key, options)
-                                                    : (font.getIcon?.(key, options) ?? aa.icon("icon."+key, options))
-                                                );
-                                            })(), {
-                                                tooltip: $$("tooltip", {
-                                                    text: "Copy into clipboard",
-                                                }),
-                                                on: {click: e => {
-                                                    navigator.clipboard.writeText(key).then(
-                                                        () => {},
-                                                        () => {aa.gui.notif("You're not allowed to write into the clipboard.", {type: "critical"});},
-                                                    );
-                                                }}
-                                            })
+                                            btn
                                         ),
                                         $$("div.cell",
                                             $$("span", key),
@@ -20016,6 +20444,18 @@
                 });
                 return;
             }
+
+            // Get escaped character:
+            if (which === "get") {
+                const [name] = args;
+                let result = undefined;
+                Fonts.forEach(Font => {
+                    const font = new Font();
+                    result = font.getEscapedChar?.(name) ?? result;
+                });
+                return result;
+            }
+
             const extracts = aa.extractClassNameAndID(which);
             const {id, tagName} = extracts;
             let {classes} = extracts;
@@ -20376,7 +20816,8 @@
     aa.shortcut                 = Object.freeze(new (function () {
 
         // Attributes:
-        const re = /^(([a-z\+]+)\s)?\<(.+)\>$/i;
+        // const re = /^(([a-z\+]+)\s)?\<(.+)\>$/i;
+        const re = /^(((?:alt|cmd|ctrl|shift)(?:\+(?:alt|cmd|ctrl|shift))*)\s)?\<(.+)\>$/i;
         const specialKeys = ["ctrl", "alt", "shift", "cmd"];
         const chars = {
             ctrl: '^',
@@ -20440,7 +20881,11 @@
             evtName: aa.nonEmptyString,
             shortcut: str => (aa.nonEmptyString(str) && str.match(re)),
         });
-        const btnText = "add a shortcut";
+        // const btnText = "add a shortcut";
+        // const btnText = `<span class="fa fa-fw fa-keyboard-o"></span>`;
+        // const btnText = `<span class="fa fa-ellipsis-h"></span>`;
+        // const btnText = `<span class="nf nf-md-playlist_plus"></span>`;
+        const btnText = `<span class="nf nf-cod-ellipsis" style="margin-right: .3em;"></span>`;
 
         let isGuiOpened = false;
         let node = null;
@@ -20460,7 +20905,7 @@
             disabled: true,
             on: {
                 execute: shortcut => {
-                    gui.find(shortcut);
+                    gui.findShortcut(shortcut);
                 }
             }
         });
@@ -20475,12 +20920,9 @@
         // functions:
         const gui = {
             // Methods:
-            filter:     function (search) {
+            filterSearch (search) {
                 search = search.trim();
                 search = search.replace(/\s/gi, ".*");
-
-                const cssTR = "hidden";
-                const cssSearch = "wrong";
 
                 let count   = 0;
                 let regex   = null;
@@ -20505,12 +20947,12 @@
                     });
 
                     if (searchNode) {
-                        searchNode.classList.remove(cssSearch);
+                        searchNode.classList.remove("wrong");
                         searchNode.title = "";
                     }
                     
                     el("aaShortcuts-actionNotFound", tr => {
-                        tr.classList[!search || visibles.length > 0 ? "add" : "remove"]("hidden");
+                        tr.classList.toggle("hidden", !search || visibles.length > 0);
                     }, () => {
                         if (search && visibles.length === 0) {
                             if (node) {
@@ -20519,14 +20961,14 @@
                         }
                     });
                 } else if (searchNode) {
-                    searchNode.classList.add(cssSearch);
+                    searchNode.classList.add("wrong");
                     searchNode.title = "RegExp not valid.";
                 }
                 if (dialog) {
                     dialog.resize();
                 }
             },
-            find:       function (shortcut) {
+            findShortcut (shortcut) {
                 nodes.search.value = shortcut ? aa.shortcut.format(shortcut, ["simple"]) : '';
                 const visibles = nodes.rows.byShortcut.reduce((acc, row, hotkey) => {
                     if (shortcut === hotkey) acc.push(row);
@@ -20537,41 +20979,29 @@
                     return acc;
                 }, []);
 
-                if (!shortcut) {
-                    nodes.rows.byShortcut.forEach(row => {
-                        row.classList.remove("hidden");
-                    });
-                } else {
-
-                    [...hiddens, ...visibles].forEach(row => {
-                        row?.classList?.[visibles.includes(row) ? "remove" : "add"]("hidden");
-                    });
-                }
-                
-                el("aaShortcuts-actionNotFound", tr => {
-                    tr.classList[!search || visibles.length > 0 ? "add" : "remove"]("hidden");
-                }, () => {
-                    if (shortcut && visibles.length === 0) {
-                        if (node) {
-                            node.appendChild($$("tr#aaShortcuts-actionNotFound", $$("td.gris", "<i>No action matches the request.</i>")));
-                        }
+                nodes.rows.byShortcut.forEach((row, hotkey) => {
+                    row.classList.remove("hidden");
+                    row.classList.toggle("found", hotkey === shortcut);
+                    if (hotkey === shortcut) {
+                        row.querySelector("button")?.focus();
                     }
                 });
             },
-            refresh:    function (appName) {
+            refresh (appName) {
                 node.clear();
                 
-                dico.forEach((title) => {
+                dico.forEach(title => {
                     const action = byTitle[title].action;
-                    const parts = (action.description ? action.description : action.name).match(/^(.*\:)?([^\:]*)$/);
+                    const parts = (action.description ?? action.name).match(/^(.*\:)?([^\:]*)$/);
                     let text = '';
                     if (parts) {
-                        text = (parts[1] !== undefined ? "<b>"+parts[1]+"</b>" : '')+parts[2];
+                        const [, namespace, description] = parts;
+                        text = `${namespace !== undefined ? "<b>"+namespace+"</b>" : ''}${description}`;
                     }
                     const textCell = $$("td", text, {style: "width: 100%;"});
                     textCell.title = textCell.innerText;
 
-                    const tr = $$("tr.hidden",
+                    const tr = $$("tr",
                         (() => {
                             const td = $$("td#aaShortcutValue-"+action.name, {style: "min-width: 160px; text-align: right;"});
                             let empty = true;
@@ -20590,16 +21020,18 @@
 
                     shortcuts[action.name].forEach(shortcut => {
                         nodes.rows.byShortcut[shortcut] = tr;
-                        nodes.rows.byDescription[textCell.innerText] = tr;
                     });
-                    node.appendChild(tr);
+                    if (action.accessible && action.app === appName) {
+                        nodes.rows.byDescription[textCell.innerText] = tr;
+                    }
+                    node.append(tr);
                 });
                 if (actionSearchByShorcut.disabled) {
-                    gui.filter(searchNode.value);
+                    gui.filterSearch(searchNode.value);
                     searchNode.select();
                 }
             },
-            reload:     function (appName) {
+            reload (appName) {
                 
                 // Initialize:
                 dico = [];
@@ -20607,34 +21039,35 @@
                 byShortcuts = {};
                 shortcuts = {};
 
-                // Load:
-                aa.actionManager.getFrom({app: appName, accessible: true}).forEach((action) => {
-                    const title = (action.description ? action.description+'-'+action.name : action.name);
-                    if (!dico.has(title)) {
-                        dico.push(title);
-                    }
-                    byTitle[title] = {
-                        action: action,
-                        shortcuts: []
-                    };
-                    shortcuts[action.name] = [];
-                });
-                aa.events.app(appName).getEvents().forEach((events, evtName) => {
-                    events.forEach((event) => {
-                        if (event) {
-                            const action = event.action;
-                            if (action.accessible) {
-                                shortcuts[action.name] ??= [];
-                                shortcuts[action.name].pushUnique(evtName);
-                                byShortcuts[evtName] ??= [];
-                                byShortcuts[evtName].push(action);
-                            }
-                        }
+                init_titles: {
+                    aa.actionManager.getBy({app: appName, accessible: true}).forEach(action => {
+                        const title = (action.description ? action.description+'-'+action.name : action.name);
+                        dico.pushUnique(title);
+                        byTitle[title] = {
+                            action: action,
+                            shortcuts: []
+                        };
+                        shortcuts[action.name] = [];
                     });
-                });
+                }
+                
+                register_shortcuts: {
+                    // log(aa.events.app(appName).events.map(listeners => listeners.map(listener => listener.action?.shortcut ?? listener.action?.name)));
+                    aa.actionManager.getBy({app: appName, accessible: true})
+                    .forEach(action => {
+                        shortcuts[action.name] ??= [];
+                        shortcuts[action.name].pushUnique(...action.shortcuts);
+
+                        action.shortcuts.forEach(shortcut => {
+                            byShortcuts[shortcut] ??= [];
+                            byShortcuts[shortcut].pushUnique(action);
+                        });
+                    });
+                }
+
                 dico = dico.sortNatural();
             },
-            reset:      function () {
+            reset () {
                 node = null;
                 dialog = null;
                 restoreNode = null;
@@ -20644,7 +21077,7 @@
                 byShortcuts = {};
                 shortcuts = {};
             },
-            show:       function (appName, spec={}) {
+            show (appName, spec={}) {
                 aa.arg.test(spec, aa.verifyObject({
                     on: aa.isObjectOfFunctions
                 }), "'spec'");
@@ -20692,74 +21125,74 @@
             },
 
             // Getters:
-            getButton:  function (appName, s, action) {
-                return $$("button.link.key#aaAction-btn-"+action.name, {
-                    title: "Edit shortcut",
-                    text: (s ? aa.shortcut.format(s, ["css"]) : btnText),
+            getButton (appName, s, action) {
+                const btn = $$("button.link.key#aaAction-btn-"+action.name, $$("aa-tooltip", {
+                    direction: "left",
+                    text: s ? "Edit shortcut" : "Set a shortcut"
+                }), {
+                    text: (s ? aa.shortcut.format(s, ["css"]) : $$("span", btnText)),
                     on: {
-                        click: ((s, action) => {
-                            return () => {
-                                const spec = {
-                                    app: action.app,
-                                    on: {
-                                        submit: (shortcut) => {
-                                            if (shortcut !== undefined) {
+                        click: e => {
+                            const spec = {
+                                app: action.app,
+                                on: {
+                                    submit: shortcut => {
+                                        if (shortcut !== undefined) {
 
-                                                // Shortcut String changed:
-                                                if (shortcut !== s) {
-                                                    const doit = () => {
-                                                        if (s) {
-                                                            aa.events.app(appName).dissociate(s);
+                                            // Shortcut String changed:
+                                            if (shortcut !== s) {
+                                                const doit = () => {
+                                                    if (s) {
+                                                        try {
+                                                            aa.events.app(action.app).dissociate(s, action.name);
+                                                        } catch (err) {
+                                                            log({app: action.app, s, "action.name": action.name});
+                                                            throw err;
                                                         }
-                                                        if (shortcut !== null) {
-                                                            aa.events.app(appName).on(shortcut, action, ["preventDefault"]);
-                                                        }
-                                                        gui.reload(appName);
-                                                        gui.refresh(appName);
-                                                        aa.events.storage.update(appName, action, s, shortcut);
-                                                        action.fire("shortcutchange", shortcut);
-                                                    };
-                                                    if (shortcut) {
-                                                        const events = aa.events.app(action.app).getEvents(shortcut);
-                                                        if (events && events.length) {
-                                                            const previous = events.last.action;
-                                                            aa.gui.confirm({
-                                                                text: "Shortcut "+aa.shortcut.format(shortcut, ["css"])+" is already assigned to <b>"+previous.getDescription()+"</b>.<br><br>Are you sure you would like to assign it to <b>"+action.getDescription()+"</b>?",
-                                                                on: { submit: () => {
-                                                                    doit();
-                                                                } }
-                                                            });
-                                                        } else {
-                                                            doit();
-                                                        }
-                                                    } else {
-                                                        doit();
                                                     }
-                                                }
+                                                    if (shortcut !== null) {
+                                                        aa.events.app(action.app).on(shortcut, action, ["preventDefault"]);
+                                                    }
+                                                    aa.events.updateShortcut(action.app, action, s, shortcut);
+                                                    gui.reload(action.app);
+                                                    gui.refresh(action.app);
+                                                };
+                                                if (shortcut) {
+                                                    const events = aa.events.app(action.app).getEvents(shortcut);
+                                                    if (events && events.length) {
+                                                        const previous = events.last.action;
+                                                        aa.gui.confirm({
+                                                            text: "Shortcut "+aa.shortcut.format(shortcut, ["css"])+" is already assigned to <b>"+previous.getDescription()+"</b>.<br><br>Are you sure you would like to assign it to <b>"+action.getDescription()+"</b>?",
+                                                            on: {submit: doit}
+                                                        });
+                                                    } else doit();
+                                                } else doit();
                                             }
                                         }
                                     }
-                                };
-                                if (s) {
-                                    spec.defaultValue = s;
                                 }
-                                aa.gui.shortcut(spec);
                             };
-                        })(s, action)
+                            if (s) {
+                                spec.defaultValue = s;
+                            }
+                            aa.gui.shortcut(spec);
+                        }
                     }
                 });
+                return btn;
             },
-            getNode:    function (appName) {
+            getNode (appName) {
                 let hotkey = null;
+                let lastSearch = '';
                 const events = {
                     byAction: e => {
-                        gui.filter(e.target.value);
+                        gui.filterSearch(e.target.value);
                     },
                 };
                 restoreNode = $$("button.link", {
                     text: "Restore default",
                     on: {
-                        click: (e) => {
+                        click: e => {
                             aa.events.restoreShortcuts(appName);
                             gui.reload(appName);
                             gui.refresh();
@@ -20788,8 +21221,9 @@
                                         actionSearchByShorcut.disable();
                                         searchNode.disabled = false;
                                         searchNode.on("input", events.byAction);
-                                        gui.filter(searchNode.value);
-                                        searchNode.focus();
+                                        searchNode.value = lastSearch;
+                                        gui.filterSearch(searchNode.value);
+                                        searchNode.select();
                                     }
                                 }
                             },
@@ -20799,11 +21233,12 @@
                                 border: false,
                                 on: {
                                     check: e => {
+                                        lastSearch = searchNode.value;
+                                        searchNode.cancel("input", events.byAction);
+                                        searchNode.disabled = true;
+                                        searchNode.value = '';
                                         gui.refresh(appName);
                                         actionSearchByShorcut.enable();
-                                        searchNode.disabled = true;
-                                        searchNode.cancel("input", events.byAction);
-                                        searchNode.focus();
                                     }
                                 }
                             },
@@ -20813,7 +21248,7 @@
                         $$("div",
                             $$("label", searchNode)
                         ),
-                        $$("fieldset.scrollable", {style: "max-height: calc(100vh - 320px);"},
+                        $$("fieldset.scrollable",
                             node
                         ),
                     ),
@@ -20930,7 +21365,7 @@
             }
         };
         this.isValid    = function (str) {
-            return (aa.nonEmptyString(str) ? !!this.cmdOrCtrl(str).match(re) : false);
+            return (aa.nonEmptyString(str) && this.cmdOrCtrl(str).match(re) !== null);
         };
         this.rename     = function (str) {
             if (!aa.nonEmptyString(str)) { throw new TypeError("Argument must be a non-empty String."); }
@@ -21211,6 +21646,8 @@
                                 }
                             });
                         },
+                        getSelected (key) {
+                        },
                         keys () {
                             const that = _(this);
                             return (
@@ -21460,7 +21897,16 @@
                                     func.call(this, indexes);
                                 }
                             });
-                            return Object.freeze(methods.bind(this));
+                            const pos = methods.bind(this);
+                            Object.defineProperties(pos, {
+                                selected: {
+                                    get: () => {
+                                        const key = keyFromIndexes(indexes);
+                                        return that.dataByKey[key].selected;
+                                    },
+                                }
+                            });
+                            return Object.freeze(pos);
                         },
                         selectAll (spec={}) {
                             aa.arg.test(spec, aa.verifyObject({
@@ -21721,7 +22167,7 @@
         aa.throwErrorIf(!query.tag, "Can not bake. Argument's tag option must be provided.", TypeError);
 
         const privates = {
-            build:      function (query, spec) {
+            build (query, spec) {
                 const that = privates.getAccessor(this);
 
                 switch (query.tag.toLowerCase()) {
@@ -21751,7 +22197,7 @@
                     break;
                 }
             },
-            construct:  function (query, spec) {
+            construct (query, spec) {
                 aa.defineAccessors.call(this, {
                     publics: {
                         node:  null,
@@ -21774,7 +22220,7 @@
                 });
                 privates.build.call(this, query, spec);
             },
-            getAccessor: function (thisArg) {
+            getAccessor (thisArg) {
                 return aa.getAccessor.call(thisArg, {cut, get, set});
             }
         };
@@ -21782,16 +22228,16 @@
         function Node (query, spec) {
             privates.construct.apply(this, arguments);
         }
-        aa.deploy(Node.prototype, {
-            clear:      function () {
+        Object.assign(Node.prototype, {
+            clear () {
                 const that = privates.getAccessor(this);
                 that.contentNode.innerHTML = '';
             },
-            removeNode: function () {
+            removeNode () {
                 const that = privates.getAccessor(this);
                 that.node.removeNode();
             }
-        }, {force: true});
+        });
 
         return new Node(query, spec);
     };
@@ -23102,7 +23548,70 @@
         });
      */
     aa.html = (() => {
+        class HTMLError extends Error {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "HTMLError"
+                });
+            }
+        }
+        class HTMLTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "HTMLTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(HTMLTypeError);
+        // --------------------------------
         const pastilleTypes = ["information", "warning", "critical", "success", "purple", "magenta", "gold"];
+        const handle = {
+            dataset (elt, option) {
+                throwIfNot(option, aa.isObject, "'option'");
+
+                option.forEach((v, k) => {
+                    if (aa.nonEmptyString(v))
+                        elt.dataset[k] = v;
+                    else if (v === null)
+                        delete elt.dataset[v];
+                    else
+                        warn("Dataset argument should be an Object of null or non-empty Strings only.");
+                });
+                return elt;
+            },
+            on (elt, option) {
+                const listen = (...args) => {
+                    elt.on(...args);
+                };
+                if (aa.isArray(option)) {
+                    if (option.length > 1 && !aa.isArray(option[0])) {
+                        const [evtName] = option;
+                        listen(...option);
+                    } else {
+                        option.forEach(listener => {
+                            if (aa.isArray(listener) && listener.length > 1) {
+                                const [evtName] = listener;
+                                return listen(...listener);
+                            }
+                        });
+                    }
+                } else if (aa.isObject(option)) {
+                    option.forEach((callback, evt) => {
+                        if (typeof callback === 'function') {
+                            return listen(evt, callback);
+                        } else if(aa.isArray(callback)) {
+                            callback.forEach(func => {
+                                return listen(evt, func);
+                            });
+                        }
+                    });
+                }
+                return elt;
+            },
+        };
+
         return Object.freeze(function (nodeName) {
             let i,elt,res,rest,table,value,type,
                 id = null,
@@ -23425,7 +23934,26 @@
                                     let classes;
                                     if (aa.isString(key)) {
                                         key = key.trim();
-                                        if (htmlAttributes.has(key)) {
+
+                                        // Web Components:
+                                        if (nodeName.match(/\-/)) {
+                                            switch (key) {
+                                                case "on":
+                                                    elt = handle.on(elt, option);
+                                                    break;
+                                                
+                                                case "dataset":
+                                                    elt = handle.dataset(elt, option);
+                                                    break;
+                                                
+                                                default: {
+                                                    elt.setAttribute(key, option);
+                                                } break;
+                                            }
+                                        }
+
+                                        // not Web Components:
+                                        else if (htmlAttributes.has(key)) {
                                             switch (key) {
                                                 case "accept":
                                                     if (aa.isString(option)) {
@@ -23457,19 +23985,19 @@
                                                     break;
                                                 
                                                 case "content":
-                                                    aa.arg.test(option, value => aa.isNode(value) || value instanceof DocumentFragment || aa.isArrayOf(aa.isNode)(value), "'content'");
+                                                    throwIfNot(option, value => aa.isNode(value) || value instanceof DocumentFragment || aa.isArrayOf(aa.isNode)(value), "'content'");
 
                                                     if (!["pastille", "tooltip"].includes(type)) {
                                                         elt.content = option;
                                                     } else {
                                                         elt.innerHTML = '';
                                                         if (aa.isNode(option)) {
-                                                            elt.appendChild(option);
+                                                            elt.append(option);
                                                         } else if (option instanceof DocumentFragment) {
                                                             elt.append(option);
                                                         } else if (aa.isArray(option)) {
                                                             option.forEach(node => {
-                                                                elt.appendChild(node);
+                                                                elt.append(node);
                                                             });
                                                         }
                                                     }
@@ -23484,16 +24012,7 @@
                                                     break;
                                                 
                                                 case "dataset":
-                                                    if (aa.isObject(option)) {
-                                                        option.forEach((v, k) => {
-                                                            if (aa.nonEmptyString(v))
-                                                                elt.dataset[k] = v;
-                                                            else if (v === null)
-                                                                delete elt.dataset[v];
-                                                            else
-                                                                warn("Dataset argument should be an Object of non-empty Strings only.");
-                                                        });
-                                                    }
+                                                    elt = handle.dataset(elt, option);
                                                     break;
                                                 
                                                 case "direction":
@@ -23722,7 +24241,12 @@
                                                             elt.content = option;
                                                         }
                                                     } else {
-                                                        elt.innerHTML = option;
+                                                        // elt.innerHTML = option;
+                                                        if (aa.isNode(option) || option instanceof DocumentFragment) {
+                                                            elt.append(option);
+                                                        } else {
+                                                            elt.innerHTML += `${option}`;
+                                                        }
                                                     }
                                                     break;
                                                 
@@ -23759,32 +24283,7 @@
                                                     break;
                                                 
                                                 case "on":
-                                                    const listen = (...args) => {
-                                                        elt.on(...args);
-                                                    };
-                                                    if (aa.isArray(option)) {
-                                                        if (option.length > 1 && !aa.isArray(option[0])) {
-                                                            const [evtName] = option;
-                                                            listen(...option);
-                                                        } else {
-                                                            option.forEach(listener => {
-                                                                if (aa.isArray(listener) && listener.length > 1) {
-                                                                    const [evtName] = listener;
-                                                                    return listen(...listener);
-                                                                }
-                                                            });
-                                                        }
-                                                    } else if (aa.isObject(option)) {
-                                                        option.forEach((callback, evt) => {
-                                                            if (typeof callback === 'function') {
-                                                                return listen(evt, callback);
-                                                            } else if(aa.isArray(callback)) {
-                                                                callback.forEach(func => {
-                                                                    return listen(evt, func);
-                                                                });
-                                                            }
-                                                        });
-                                                    }
+                                                    elt = handle.on(elt, option);
                                                     break;
                                                 
                                                 case "options":
@@ -23841,7 +24340,24 @@
 
                                                 case "shortcut":
                                                     elt.shortcut = option;
+                                                    elt.setAttribute("shortcut", option);
                                                     break;
+
+                                                case "style": {
+                                                    throwIfNot(option, arg => aa.isString(arg) || aa.isObjectOfStrings(arg), "'option'");
+
+                                                    if (typeof option === "string") {
+                                                        elt.setAttribute("style", option.trim());
+                                                    } else if (aa.isObject(option)) {
+                                                        let style = '';
+                                                        Object.keys(option).forEach(prop => {
+                                                            if (style.length) style += ' ';
+                                                            style += `${prop.toKebabCase()}: ${option[prop].replace(/\;+$/, '')};`;
+                                                            // elt.style[prop.toCamelCase()] = option[prop].replace(/\;+$/, '');
+                                                        });
+                                                        elt.setAttribute("style", style);
+                                                    }
+                                                } break;
 
                                                 case "tooltip":
                                                     (() => {
@@ -23891,6 +24407,11 @@
                                                     }
                                                     break;
                                                 
+                                                case "width":
+                                                case "height":
+                                                {
+                                                    elt[key] = option;
+                                                } break;
                                                 default:
                                                     if (aa.isString(option)) {
                                                         return (elt.setAttribute(key, option.trim()));
@@ -23899,7 +24420,11 @@
                                                     }
                                                     break;
                                             }
-                                        } else { warn("Attribute '"+key+"' not implemented yet. (aa.html)"); }
+                                        } else {
+                                            // warn("Attribute '"+key+"' not implemented yet. (aa.html)"); 
+                                            option = aa.isObject(option) ? JSON.stringify(option) : option;
+                                            elt.setAttribute(key, option);
+                                        }
                                     }
                                     return false;
                                 });
@@ -24293,12 +24818,12 @@
             return aaClass;
         };
     })();
-    aa.deploy(Function.prototype, {
-        manufacture: function (blueprint /*, accessors */) {
+    Object.assign(Function.prototype, {
+        manufacture (blueprint /*, accessors */) {
             const accessors = aa.arg.optional(arguments, 1, {});
             aa.manufacture(this, blueprint, accessors);
         }
-    }, {force: true});
+    });
     aa.newID                    = (function () {
         let x = 0;
         return function () {
@@ -24342,7 +24867,7 @@
                 write: {
                 },
             },
-            construct: function () {
+            construct () {
                 const that = _(this);
                 that.scripts = [];
             },
@@ -24352,7 +24877,7 @@
                 publics: {
                 },
                 setters: {
-                    production:  function (isProd) {
+                    production (isProd) {
                         aa.arg.test(isProd, blueprint.verifiers.production, "'isProd'", aaSettingsTypeError);
                         const that = _(this);
 
@@ -24360,7 +24885,7 @@
                         that.production = isProd;
                         if (isDifferent) that.emit("productionchanged", isProd);
                     },
-                    script:      function (path) {
+                    script (path) {
                         aa.arg.test(path, blueprint.verifiers.script, "'path'", aaSettingsTypeError);
                         const that = _(this);
 
@@ -24370,7 +24895,7 @@
                             aa.addScriptToDOM(path);
                         }
                     },
-                    scripts:     function (scripts) {
+                    scripts (scripts) {
                         aa.arg.test(scripts, blueprint.verifiers.scripts, "'scripts'", aaSettingsTypeError);
                         const that = _(this);
 
@@ -24378,7 +24903,7 @@
                             this.setScript(path);
                         });
                     },
-                    theme:       function (theme) {
+                    theme (theme) {
                         aa.arg.test(theme, blueprint.verifiers.theme, "'theme'", aaSettingsTypeError);
                         const that = _(this);
 
@@ -24389,7 +24914,6 @@
                                 previous,
                                 theme,
                             }, theme, previous);
-                            // aa.events.fire('themechange', theme, previous);
                         }
                     }
                 },
@@ -25041,30 +25565,42 @@
                         loadingTimer = null;
                     }
                     
+                    // flag this function so we don't do the same thing twice
+                    loaded = true;
+                    
                     // do stuff :
                     aa.versioning.onbodyload();
                     if (aa.events) {
                         aa.events.execute("bodyload");
                     }
-                    
-                    // flag this function so we don't do the same thing twice
-                    loaded = true;
 
-                    // Link CSS with window focus:
-                    self.window.on({
-                        blur: e => {
-                            self.document.body.classList.add("out-of-focus");
-                        },
-                        focus: e => {
-                            self.document.body.classList.remove("out-of-focus");
-                        },
-                    });
+                    window_focus_CSS: {
+                        self.window.on({
+                            blur: e => {
+                                self.document.body.classList.add("out-of-focus");
+                            },
+                            focus: e => {
+                                self.document.body.classList.remove("out-of-focus");
+                            },
+                        });
+                    }
+
+                    update_theme: {
+                        const {settings} = aa;
+                        document.body?.classList.toggle("dark", settings.theme === "dark");
+                        document.body?.classList.toggle("theme-system", settings.theme === "system");
+                        settings.on({
+                            themechanged: (e, theme) => {
+                                document.body.classList.toggle("dark", theme === "dark");
+                                document.body.classList.toggle("theme-system", theme === "system");
+                            }
+                        })
+                    }
                 }
             };
             
             // for Mozilla:
             if (self.document.addEventListener) {
-                // self.document.addEventListener("DOMContentLoaded", bodyload, false); // call the onload handler
                 self.document.on("DOMContentLoaded", bodyload);
                 framework.isDOMContentLoaded = true;
                 return;

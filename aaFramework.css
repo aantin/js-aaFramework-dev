@@ -1,30 +1,10 @@
 /* é */
 :root{
     --duration: .2s;
+    --font-size: .9rem;
 
     --font-family: 'Fira', 'Roboto', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     --font-nerd: 'NerdMono Light', 'FontAwesome', 'Courier New', 'Courier', monospace;
-
-    --bg: #fff;
-    --color: #666;
-    --line-hover-bg: #f4f4f4;
-    --submit-bg-color: #49f;
-    --submit-color: #fff;
-    --reset-color: #aaa;
-    --reset-bg-color: #e8e8e8;
-    --button-disabled-color: #ddd;
-    --button-disabled-bg-color: #eee;
-    --button-red-bg-color: #f66;
-    --button-red-color: #fff;
-    --error-bg-color: #fcc;
-    --error-color: #c00;
-    --menu-shortcut-color: #acf;
-    --menu-disabled-bg: #fff;
-    --menu-disabled-color: #ccc;
-
-    --bg-color-lighter: #fff;
-    --bg-color: #f8f8f8;
-    --bg-color-darker: #eee;
 
     --color-blue: #49f;
     --color-blue-darker: #248;
@@ -57,6 +37,27 @@
     --color-light-grey: #eee;
     --color-light-grey: #f4f4f4;
     --color-light-blue: #f0f8ff;
+
+    --bg: #fff;
+    --color: #666;
+    --line-hover-bg: #f4f4f4;
+    --submit-bg-color: var(--color-blue);
+    --submit-color: #fff;
+    --reset-color: #aaa;
+    --reset-bg-color: #e8e8e8;
+    --button-disabled-color: #ddd;
+    --button-disabled-bg-color: #eee;
+    --button-red-bg-color: #f66;
+    --button-red-color: #fff;
+    --error-bg-color: #fcc;
+    --error-color: #c00;
+    --menu-shortcut-color: #acf;
+    --menu-disabled-bg: #fff;
+    --menu-disabled-color: #ccc;
+
+    --bg-color-lighter: #fff;
+    --bg-color: #f8f8f8;
+    --bg-color-darker: #eee;
 
     --form-button-bg: #ddd;
     --form-button-bg-hover: #ccc;
@@ -97,6 +98,10 @@
     /* --------------------------------
     Dark
     -------------------------------- */
+
+    --dark-bg: rgba(0,0,0,.75);
+    --dark-bg: #333;
+    --dark-blur: .4em;
 
     --dark-color: #ccc;
     --dark-color-darker: #888;
@@ -261,26 +266,19 @@ body.aa.freeze-progress {
     animation-delay: 0s;
 }
 .aa {
-    font-size: 14px;
+    font-size: var(--font-size);
     font-family: var(--font-family);
     line-height: 1.5;
 
-    -webkit-touch-callout: none;
 }
 .aa.selection-disabled,
 .aa .selection-disabled {
+    -webkit-touch-callout: none;
       -webkit-user-select: none;
        -khtml-user-select: none;
          -moz-user-select: none;
           -ms-user-select: none;
               user-select: none;
-}
-.aa pre {
-      -webkit-user-select: text;
-       -khtml-user-select: text;
-         -moz-user-select: text;
-          -ms-user-select: text;
-              user-select: text;
 }
 .aa a {
     color: var(--color-blue);
@@ -291,7 +289,8 @@ body.aa.freeze-progress {
 }
 .aa code,
 .aa code *{
-    font-family: Courier New;
+    font-family: var(--font-nerd);
+    font-size: .8rem;
 }
 .aa button,
 .aa input[type="button"],
@@ -309,17 +308,15 @@ body.aa.freeze-progress {
     font-size: 13px;
     font-family: var(--font-family);
     line-height: 1.5;
-
-    -webkit-touch-callout: text;
-      -webkit-user-select: text;
-       -khtml-user-select: text;
-         -moz-user-select: text;
-          -ms-user-select: text;
-              user-select: text;
 }
 .aa input[type="number"]{
     text-align: right;
-
+}
+.aa pre,
+.aa textarea,
+.aa input[type="password"],
+.aa input[type="number"],
+.aa input[type="text"] {
     -webkit-touch-callout: text;
       -webkit-user-select: text;
        -khtml-user-select: text;
@@ -430,16 +427,23 @@ body.aa.freeze-progress {
 }
 .aa .keyboardKey{
     display: inline-block;
-    margin: 0 0.1em;
+    margin: 0;
     padding: 0 0.4em;
-    min-width: 26px;
+    min-width: 1.6em;
+    line-height: 1.6em;
     background: #acf;
     color: var(--color-blue-darker);
     border-radius: 0.2em;
     box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
-.aa .keyboardKey:first-child{ margin-left: 0; }
-.aa .keyboardKey:last-child{ margin-right: 0; }
+button:focus .keyboardKey,
+#aaDialog-shortcuts-gui .message tr.found .keyboardKey {
+    background-color: var(--submit-bg-color);
+    color: var(--submit-color);
+}
+.aa .keyboardKey + .keyboardKey{
+    margin-left: .2em;
+}
 .aa.shortcut .keyboardKey{
     /* active */
     background: #acf;
@@ -520,7 +524,7 @@ div.aaTable.fullscreen div.td{
     display: table-cell;
     padding: 6px 8px 4px 8px;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: var(--font-size);
     min-width: 240px;
     border-radius: 2px;
     border: 1px solid var(--bg-color);
@@ -536,13 +540,6 @@ div.aaTable.fullscreen div.td{
     height: 120px;
     min-height: 46px;
     resize: vertical;
-
-    -webkit-touch-callout: text;
-      -webkit-user-select: text;
-       -khtml-user-select: text;
-         -moz-user-select: text;
-          -ms-user-select: text;
-              user-select: text;
 }
 .aa textarea::placeholder,
 .aa input::placeholder{
@@ -558,7 +555,7 @@ div.aaTable.fullscreen div.td{
     padding: 6px 8px;
     min-width: 124px;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: var(--font-size);
     font-weight: bold;
     background: var(--button-disabled-color);
     text-align: center;
@@ -612,16 +609,20 @@ div.aaTable.fullscreen div.td{
 .aa input[type=button].text,
 .aa button.link,
 .aa input[type=button].link{
+    position: relative;
     margin: 0px;
     padding: 0px;
     min-width: auto;
     background: transparent;
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     font-weight: normal;
-    /*font-size: 14px;*/
+    /*font-size: var(--font-size);*/
     border: 0px solid transparent;
     box-shadow: 0px 0px 0px transparent;
     text-decoration: none;
+}
+.aa button.link > .fa {
+    margin-right: .4em;
 }
 .aa button.text,
 .aa input[type=button].text{
@@ -903,7 +904,7 @@ div.aaTable.fullscreen div.td{
 .aaMenu input[type=button]{
     /*all: initial;*/
     font-family: var(--font-family);
-    font-size: 14px;
+    font-size: var(--font-size);
     background: transparent;
     border: 0px solid transparent;
 }
@@ -938,7 +939,7 @@ div.aaTable.fullscreen div.td{
 .aaMenu > ul > li > input[type=button]{
     padding: 0px;
     white-space: nowrap;
-    font-size: 14px;
+    font-size: var(--font-size);
 }
 .aaMenu > ul > li.flash{
     background: var(--submit-bg-color);
@@ -978,7 +979,7 @@ div.aaTable.fullscreen div.td{
     display: table-cell;
     float: right;
     font-family: 'Fira', Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: var(--font-size);
     color: var(--menu-shortcut-color);
     color: var(--submit-bg-color);
 }
@@ -1058,9 +1059,9 @@ div.aaTable.fullscreen div.td{
     color: #fff;
 }
 .aaMenu > ul > li ul li:hover > button > span.fa.icon{
-    color: var(--submit-color);
-    color: var(--color-blue-darker);
-    color: var(--menu-shortcut-color);
+    /*color: var(--submit-color);*/
+    /*color: var(--color-blue-darker);*/
+    /*color: var(--menu-shortcut-color);*/
 }
 .aaMenu > ul > li ul li:hover > ul{
     display: table;
@@ -1118,26 +1119,46 @@ body.aaContextMenuFreeze {
     background: rgba(128,128,128,0.1);
 }
 #aaContextMenu {
+    --color-grey: #aaa;
+    --menu-disabled-color: #aaa;
+    --submit-bg-color: #eee;
+    --submit-color: #444;
+
     position: fixed;
     top: 1px;
     left: 1px;
 }
+#aaContextMenu.dark {
+    --bg: var(--dark-bg);
+    --color-grey: #aaa;
+    --menu-disabled-color: #aaa;
+    --submit-bg-color: rgba(255,255,255,.1);
+    /*--submit-bg-color: var(--color-blue);*/
+    --submit-color: #fff;
+}
 #aaContextMenu ul{
+    display: none;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+
     z-index: 2;
     cursor: default;
-    display: none;
     position: absolute;
     top: -4px;
     left: 100%;
     margin: 0px;
     background: var(--bg);
-    min-width: 160px;
+    min-width: 10em;
     color: var(--color);
 
     padding: .4em;
     border-radius: .6em;
     box-shadow: 0px 1px 4px rgba(0,0,0,0.2);
     box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
+
+    -webkit-backdrop-filter: blur(var(--dark-blur));
+    backdrop-filter: blur(var(--dark-blur));
 }
 #aaContextMenu ul hr{
     margin: .4em 0;
@@ -1146,9 +1167,13 @@ body.aaContextMenuFreeze {
     border-top: 1px solid var(--form-input-border);
 }
 #aaContextMenu ul li{
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: stretch;
+    align-items: baseline;
+
     cursor: default;
     list-style: none;
-    display: block;
     position: relative;
     width: 100%;
     border-radius: .4em;
@@ -1163,39 +1188,31 @@ body.aaContextMenuFreeze {
     box-shadow: 0px 0px 0px transparent;
 }
 #aaContextMenu ul li button:active,
-#aaContextMenu ul li input[type="button"]:active{
+#aaContextMenu ul li input[type=button]:active{
     border: 0;
 }
-#aaContextMenu ul li button:focus > span.fa.icon,
-#aaContextMenu ul li:hover button > span.fa.icon {
-    color: var(--submit-color);
-    color: var(--color-blue-darker);
-    color: var(--menu-shortcut-color);
+#aaContextMenu ul li button span.fa.icon {
+    margin-right: .4em;
 }
-#aaContextMenu ul li button > span.fa.icon.critical {
+#aaContextMenu ul li button span.fa.icon.critical {
     color: var(--button-red-bg-color);
 }
-#aaContextMenu ul li:hover button > span.fa.icon.critical,
-#aaContextMenu ul li button:focus > span.fa.icon.critical {
-    color: #f8f;
-}
-#aaContextMenu ul li button > span.fa.icon.warning {
+#aaContextMenu ul li button span.fa.icon.warning {
     color: var(--warning-color);
 }
-#aaContextMenu ul li button > span.fa.icon.success {
+#aaContextMenu ul li button span.fa.icon.success {
     color: var(--success-color);
 }
-#aaContextMenu ul li button > span.fa.icon.confirm,
-#aaContextMenu ul li button > span.fa.icon.information {
+#aaContextMenu ul li button span.fa.icon.confirm,
+#aaContextMenu ul li button span.fa.icon.information {
     color: var(--confirm-color);
 }
-#aaContextMenu ul li button:focus > span.fa.icon:where(.confirm, .information),
-#aaContextMenu ul li:hover button > span.fa.icon:where(.confirm, .information) {
-    color: var(--submit-color);
-    color: var(--color-blue-darker);
+#aaContextMenu ul li button:focus span.fa.icon:where(.confirm, .information),
+#aaContextMenu ul li:hover button span.fa.icon:where(.confirm, .information) {
     color: var(--menu-shortcut-color);
+    color: var(--color-blue-darker);
 }
-#aaContextMenu ul li button > span.fa.icon.reset {
+#aaContextMenu ul li button span.fa.icon.reset {
     color: var(--reset-color);
 }
 #aaContextMenu ul li.shortcut::before {
@@ -1224,17 +1241,23 @@ body.aaContextMenuFreeze {
     color: #fff;
 }
 #aaContextMenu > ul {
-    display: table;
+    display: flex;
 }
 #aaContextMenu > ul li button,
 #aaContextMenu > ul li input[type=button] {
-    font-weight: normal;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2em;
+
     margin: 0;
     padding: 4px 8px;
     width: 100%;
     background: transparent;
     text-align: left;
     font-family: var(--font-family);
+    font-weight: normal;
     line-height: 1.5;
     white-space: nowrap;
     border-radius: .4em;
@@ -1242,21 +1265,22 @@ body.aaContextMenuFreeze {
     box-sizing: border-box;
     box-shadow: 0px 0px 0px transparent;
 
-    padding-right: 64px;
     min-width: 180px;
-    width: 100%;
     text-align: left;
+}
+#aaContextMenu > ul li :where(button, input[type=button]):not(:disabled) {
+    cursor: pointer;
+}
+#aaContextMenu > ul li :where(button, input[type=button]) span.shortcut {
+    color: var(--color-gold);
+}
+#aaContextMenu.dark > ul li :where(button, input[type=button]) span.shortcut {
+    color: rgba(68,153,255,.9);
+    color: var(--color-blue);
 }
 #aaContextMenu > ul li button:focus,
 #aaContextMenu > ul li input[type=button]:focus {
     background: var(--submit-bg-color);
-    color: var(--submit-color);
-}
-#aaContextMenu ul li:hover{
-    background: var(--submit-bg-color);
-}
-#aaContextMenu ul li:hover > button,
-#aaContextMenu ul li:hover > input[type=button]{
     color: var(--submit-color);
 }
 #aaContextMenu ul li.expand:hover > ul{
@@ -1306,8 +1330,8 @@ body.aaContextMenuFreeze {
 #aaContextMenu li.disabled.shortcut::before{
     color: var(--menu-disabled-color);
 }
-#aaContextMenu ul li.disabled button > span.fa.icon,
-#aaContextMenu ul li.disabled:hover button > span.fa.icon{
+#aaContextMenu ul li.disabled button span.fa.icon,
+#aaContextMenu ul li.disabled:hover button span.fa.icon{
     color: var(--menu-disabled-color);
 }
 
@@ -1340,13 +1364,16 @@ div.aaDialog {
     overflow: hidden;
     overflow-y: auto;
     background: var(--bg-color);
-    font-size: 14px;
+    font-size: var(--font-size);
     font-family: var(--font-family) , Helvetica Neue, Segoe UI, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     text-align: left;
     color: var(--color);
     border-radius: 2px;
     box-shadow: 0px 4px 16px rgba(0,0,0,0.4);
+
+    transition: background var(--duration),
+        color var(--duration);
 }
 div.aaDialog.fullscreen{
     position: fixed;
@@ -1533,7 +1560,6 @@ div.aaDialog div.aaDialogIcon {
 div.aaDialog form div.buttons{
     position: sticky;
     bottom: 0px;
-    background: #fff;
 }
 div.aaDialog form{
     position: relative;
@@ -1555,16 +1581,26 @@ div.aaDialog h2{
     font-weight: bold;
 }
 div.aaDialog h2.title{
+    --scroll-shadow: 0 .1em .4em rgba(0,0,0,.1);
+
     z-index: 1;
     position: sticky;
     top: 0;
-    background: var(--bg);
     padding: 16px 0 8px 0;
+    background-color: var(--bg);
+
+    transition: background-color var(--duration),
+        box-shadow var(--duration);
+}
+div.aaDialog.dark h2.title{
+    --scroll-shadow: 0 .1em .4em rgba(0,0,0,.8);
+}
+div.aaDialog.scroll h2.title{
+    box-shadow: var(--scroll-shadow);
 }
 div.aaDialog div.message{
     display: block;
-    padding: 32px 16px;
-    padding: 16px;
+    padding: .6em 2em;
     width: auto;
     line-height: 1.5;
 }
@@ -1676,7 +1712,7 @@ div.aaDialog .message fieldset legend label {
     top: 0px;
     padding: 2px 8px;
     padding: 0px;
-    font-size: 14px;
+    font-size: var(--font-size);
     color: var(--submit-bg-color);
 }
 div.aaDialog .message fieldset legend label:first-child {
@@ -1699,7 +1735,7 @@ div.aaDialog .message fieldset.onglets legend label input[type="radio"] + button
     padding: 2px 12px;
     background: transparent;
     color: #444;
-    font-size: 14px;
+    font-size: var(--font-size);
     border: 1px solid var(--button-disabled-bg-color);
     border-right-width: 0px;
     border-radius: 0;
@@ -1858,6 +1894,31 @@ div.aaDialog .message fieldset.scrollable button.ico:focus {
     color: var(--color-blue-darker);
 }
 
+div:where(
+    #aaDialog-shortcuts-gui,
+    #aaDialog-icons-gui,
+) .message fieldset.scrollable {
+    max-height: calc(100vh - 320px);
+}
+div#aaDialog-icons-gui fieldset.scrollable button.ico.with-tooltip {
+    cursor: pointer;
+    border-color: transparent;
+    min-width: 1em;
+    padding: .2em .4em;
+    box-shadow: 0 0 0 transparent;
+    border-radius: .6em;
+}
+div#aaDialog-icons-gui fieldset.scrollable button.ico.with-tooltip:where(:focus, :hover) {
+    color: #000;
+}
+div#aaDialog-icons-gui fieldset.scrollable button.ico.with-tooltip:disabled {
+    color: rgba(0,0,0,.4);
+}
+div#aaDialog-icons-gui fieldset.scrollable div.cell:has(button.ico.with-tooltip) + div.cell {
+    font-style: italic;
+    color: rgba(0,0,0,.4);
+}
+
 div.aaDialog .message .form-grid {
     display: grid;
     align-items: baseline;
@@ -1927,6 +1988,8 @@ div.aaDialog span.w3{
     border-radius: .4em;
     border: 1px solid var(--bg);
     box-shadow: inset 1px 1px 1px var(--form-input-shadow);
+
+    transition: background var(--duration);
 }
 .aa input[type="date"]::placeholder,
 .aa input[type="email"]::placeholder,
@@ -2199,13 +2262,14 @@ div.aaDialog label > span.half:first-child {
 }
 .aa label.cooked input[type=radio] + button > span,
 .aa label.cooked input[type=checkbox] + button > span{
+    --color-grey: rgba(0,0,0,.25);
     color: var(--color-grey);
 }
 .aa label.cooked:hover input[type=radio] + button > span,
 .aa label.cooked:hover input[type=checkbox] + button > span,
 .aa label.cooked input[type=radio] + button:focus > span,
 .aa label.cooked input[type=checkbox] + button:focus > span{
-    color: #aaa;
+    --color-grey: rgba(0,0,0,.5);
 }
 .aa label.cooked input[type=radio] + button > span.checked,
 .aa label.cooked input[type=checkbox] + button > span.checked{
@@ -2598,6 +2662,22 @@ Pastilles:
 }
 
 /* --------------------------------
+Tooltip Web Component:
+-------------------------------- */
+
+*:has(> aa-tooltip) {
+    position: relative;
+}
+*:hover > aa-tooltip {
+    display: block;
+}
+button:disabled:has(> aa-tooltip):hover > aa-tooltip {
+    --tooltip-bg: #888;
+    --tooltip-text: #ddd;
+    --tooltip-grey: #bbb;
+}
+
+/* --------------------------------
 Tooltip:
 -------------------------------- */
 
@@ -2631,6 +2711,8 @@ Tooltip:
     position: absolute;
     display: flex;
     flex-wrap: nowrap;
+    font-size: .9rem;
+
 }
 .aa .tooltip-container.right > div.tooltip-anchor > div.tooltip {
     left: 4px;
@@ -2699,7 +2781,7 @@ Tooltip:
     white-space: nowrap;
     background: var(--tooltip-bg);
     color: var(--tooltip-text);
-    border-radius: 2px;
+    border-radius: .3em;
 }
 .aa .tooltip-container > div.tooltip-anchor > div.tooltip > div.text:after {
     padding-left: 16px;
@@ -3006,7 +3088,7 @@ Dark version:
 
 .aa.dark,
 .aa .dark {
-    --bg: #333;
+    --bg: var(--dark-bg);
     --color: #ddd;
     --line-hover-bg: #282828;
 
@@ -3025,14 +3107,16 @@ Dark version:
 }
 .aa.dark.bg.shade,
 .aa.dark .bg.shade{
-    background-color: rgba(255,255,255,0.4);
+    background-color: rgba(255,255,255,0.2);
 }
 div.aaDialog.dark{
-    background: var(--bg);
+    background: var(--dark-bg);
     color: var(--dark-color);
+    -webkit-backdrop-filter: blur(var(--dark-blur));
+    backdrop-filter: blur(var(--dark-blur));
 }
 div.aaDialog.dark form div.buttons{
-    background-color: var(--dark-color-bg);
+    /*background-color: var(--bg);*/
 }
 div.aaDialog.dark h2{
     color: var(--header-color);
@@ -3049,14 +3133,14 @@ div.aaDialog.dark div.message hr{
 .aa.dark div.buttons{
     background: transparent;
 }
-.aa.dark button,
-.aa.dark button[type="reset"],
-.aa.dark input[type="reset"],
-.aa.dark input[type="button"],
-.aa.dark button.reset,
-.aa.dark button[type="reset"],
-.aa.dark input[type="reset"],
-.aa.dark input[type="button"].reset{
+.aa.dark button:not(.link, .transparent),
+.aa.dark button[type="reset"]:not(.link, .transparent),
+.aa.dark input[type="reset"]:not(.link, .transparent),
+.aa.dark input[type="button"]:not(.link, .transparent),
+.aa.dark button.reset:not(.link, .transparent),
+.aa.dark button[type="reset"]:not(.link, .transparent),
+.aa.dark input[type="reset"]:not(.link, .transparent),
+.aa.dark input[type="button"].reset:not(.link, .transparent){
     background: var(--dark-color-grey);
     color: var(--dark-button-disabled-color);
     border-color: var(--dark-color-grey);

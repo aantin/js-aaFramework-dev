@@ -1,0 +1,200 @@
+:host {
+    --arrow-margin: .3em;
+    --translate-x: 1em;
+    --text-padding: .2em .8em;
+    --line-height: 1.6em;
+
+    display: none;
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    right: auto;
+    font-size: .9rem;
+    font-weight: normal;
+}
+
+:host([data-direction="top"]),
+:host([data-direction="top-left"]),
+:host([data-direction="top-right"]),
+zz {
+    top: 0;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+}
+
+:host([data-direction="bottom-right"]) {
+}
+:host([data-direction="left"]),
+:host([data-direction="right"]) {
+    top: calc(50% - .2em);
+    bottom: auto;
+}
+:host([data-direction="left-top"]),
+:host([data-direction="left-bottom"]),
+:host([data-direction="left"]) {
+    left: 0;
+    right: auto;
+}
+:host([data-direction="right-top"]),
+:host([data-direction="right-bottom"]),
+:host([data-direction="right"]) {
+    left: auto;
+    right: 0;
+}
+:host([data-direction="left-top"]),
+:host([data-direction="right-top"]) {
+    top: 0;
+    bottom: auto;
+}
+:host([data-direction="left-bottom"]),
+:host([data-direction="right-bottom"]) {
+    top: auto;
+    bottom: 0;
+}
+.wrapper {
+    position: absolute;
+    z-index: 8;
+    height: 1em;
+}
+.wrapper.disabled {
+    display: none;
+}
+:host(:has(> .top)) .wrapper {
+    color: #000;
+}
+:host:where(:disabled, .disabled) .tooltip > :where(.arrow, .text) {
+    --tooltip-bg: #888;
+    --tooltip-text: #ddd;
+    --tooltip-grey: #bbb;
+    display: none;
+}
+.anchor {
+    position: relative;
+}
+.tooltip {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: center;
+
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    left: -.2em;
+    width: .4em;
+    height: .4em;
+    /*background: var(--color-magenta);*/
+    border-radius: .4em;
+}
+:host([data-direction="top-left"]) .tooltip,
+:host([data-direction="bottom-left"]) .tooltip {
+    align-items: flex-end;
+}
+:host([data-direction="top-right"]) .tooltip,
+:host([data-direction="bottom-right"]) .tooltip {
+    align-items: flex-start;
+}
+:host([data-direction="top-left"]) .tooltip,
+:host([data-direction="top-right"]) .tooltip,
+:host([data-direction="top"]) .tooltip {
+    flex-flow: column-reverse nowrap;
+    top: auto;
+    bottom: 0;
+}
+:host([data-direction="left-top"]) .tooltip,
+:host([data-direction="left-bottom"]) .tooltip,
+:host([data-direction="left"]) .tooltip {
+    flex-flow: row-reverse nowrap;
+    top: 50%;
+    bottom: auto;
+}
+:host([data-direction="right-top"]) .tooltip,
+:host([data-direction="right-bottom"]) .tooltip,
+:host([data-direction="right"]) .tooltip {
+    flex-flow: row nowrap;
+    top: 50%;
+    bottom: auto;
+}
+:host([data-direction="left-top"]) .tooltip,
+:host([data-direction="right-top"]) .tooltip {
+    top: calc(var(--line-height) / 2);
+}
+:host([data-direction="left-bottom"]) .tooltip,
+:host([data-direction="right-bottom"]) .tooltip {
+    top: auto;
+    bottom: calc(var(--line-height) / 2);
+}
+.tooltip > .arrow {
+    display: block;
+    margin-top: var(--arrow-margin);
+    border-top-width: 0;
+    border-left: .3em solid transparent;
+    border-right: .3em solid transparent;
+    border-bottom: .5em solid var(--tooltip-bg);
+}
+:host([data-direction="top-right"]) .text,
+:host([data-direction="bottom-right"]) .text {
+    translate: calc(-1 * var(--translate-x)); 0;
+}
+:host([data-direction="top-left"]) .text,
+:host([data-direction="bottom-left"]) .text {
+    translate: var(--translate-x) 0;
+}
+:host([data-direction="top-left"]) .arrow,
+:host([data-direction="top-right"]) .arrow,
+:host([data-direction="top"]) .arrow {
+    margin-top: 0;
+    margin-bottom: var(--arrow-margin);
+    border-left: .3em solid transparent;
+    border-right: .3em solid transparent;
+    border-top: .5em solid var(--tooltip-bg);
+    border-bottom-width: 0;
+}
+:host([data-direction="left-top"]) .arrow,
+:host([data-direction="left-bottom"]) .arrow,
+:host([data-direction="left"]) .arrow {
+    margin-top: 0;
+    margin-right: calc(2 * var(--arrow-margin));
+    border-top: .3em solid transparent;
+    border-bottom: .3em solid transparent;
+    border-left: .5em solid var(--tooltip-bg);
+    border-right-width: 0;
+}
+:host([data-direction="right-top"]) .arrow,
+:host([data-direction="right-bottom"]) .arrow,
+:host([data-direction="right"]) .arrow {
+    margin-top: 0;
+    margin-left: calc(2 * var(--arrow-margin));
+    border-top: .3em solid transparent;
+    border-bottom: .3em solid transparent;
+    border-right: .5em solid var(--tooltip-bg);
+    border-left-width: 0;
+}
+.tooltip > .text {
+    display: block;
+    padding: var(--text-padding);
+    white-space: nowrap;
+    background: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    line-height: var(--line-height);
+    border-radius: .3em;
+}
+.tooltip > .text::after {
+    content: attr(data-shortcut);
+    padding-left: 1.6em;
+    color: var(--tooltip-grey);
+}
+.tooltip > .text:not(.with-shortcut)::after {
+    content: '';
+    display: none;
+}
+
+.wrapper.bottom-right .tooltip {
+
+}
+
+.hidden {
+    display: none !important;
+}

@@ -245,6 +245,9 @@ body.aa.freeze-progress {
     outline: 0;
     font-family: var(--font-family);
 }
+html {
+    scrollbar-gutter: stable;
+}
 .center {
     text-align: center;
 }

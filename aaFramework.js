@@ -1539,7 +1539,7 @@
                     get(this, "data").join.apply(this, arguments)
                 );
             },
-            on:                 aa.prototypes.events.getListener(get, "listeners"),
+            on: aa.prototypes.events.getListener(get, "listeners"),
             push (...items) {
                 const that = _(this);
 
@@ -1662,7 +1662,7 @@
         };
 
         // Static:
-        aa.deploy(Collection, {
+        Object.assign(Collection, {
             fromArray (list /* spec */) {
                 aa.arg.test(list, aa.isArray, `'list'`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
@@ -1674,7 +1674,7 @@
 
                 return collection;
             }
-        }, {force: true});
+        });
 
         return Collection;
     })();

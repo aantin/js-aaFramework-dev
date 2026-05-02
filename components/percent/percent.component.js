@@ -138,12 +138,15 @@ const Percent = (() => {
                             cursor.style.width = str;
                             text.innerHTML = str;
                             thumb.style.left = str;
+                            previous.tooltip.style.left = str;
                         },
                         "tooltip-changed": (e, elem) => {
                             if (previous.tooltip !== elem) previous.tooltip?.remove();
                             if (elem) {
+                                const str = `${percentTo100(that.percent)}%`;
                                 range.append(elem);
-                                elem.style.left = `${percentTo100(that.percent)}%`;
+                                elem.style.left = str;
+                                thumb.style.left = str;
                             }
                             previous.tooltip = elem;
                         },

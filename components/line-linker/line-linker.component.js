@@ -102,6 +102,10 @@ const LineLinker = (() => {
                                 if (!that.icon) this.icon = "ban";
                                 if (!that.type) this.type = null;
                                 break;
+                            default:
+                                if (!that.icon) this.icon = null;
+                                if (!that.type) this.type = null;
+                                break;
                         }
                         that.name = name.trim();
                     },
@@ -185,7 +189,6 @@ const LineLinker = (() => {
                 width:          0,
             },
             privates: {
-                // listeners:  null,
                 nodes:      null,
                 shadow:     null,
                 stroke:     null,
@@ -195,7 +198,6 @@ const LineLinker = (() => {
             const that = _(this);
             that.initShadow(that);
             that.initNodes(that);
-            that.initListeners(that);
             that.initTargets(that);
 
             that.scrollables = [];
@@ -209,11 +211,6 @@ const LineLinker = (() => {
         methods: {
             privates: {
                 // zz
-                initListeners (that) {
-                    that.initListeners = null;
-
-                    // that.listeners ??= {};
-                },
                 initNodes (that) {
                     that.initNodes = null;
 
@@ -443,12 +440,13 @@ const LineLinker = (() => {
                                 e.stopPropagation();
 
                                 const path = e.composedPath();
-                                const target = findTarget(path);
                                 
+                                const target = findTarget(path);
                                 target?.notify("resolve", path);
+                                
                                 reject_every_other_targets: {
                                     targets
-                                    .filter((other, name) => name !== target.name)
+                                    .filter(other => other !== target)
                                     .forEach(other => {
                                         other?.notify("reject", path);
                                     });
@@ -457,7 +455,6 @@ const LineLinker = (() => {
                                     that.emit("reject", path);
                                 }
                                 that.emit("finish", path);
-
                                 hide();
                             }
                         },
@@ -473,8 +470,6 @@ const LineLinker = (() => {
                     that.scrollables.forEach(scrollable => {
                         scrollable.on(listeners.scrollable);
                     });
-                },
-                finish (that) {
                 },
             },
             publics: {
@@ -529,6 +524,17 @@ const LineLinker = (() => {
             // zz
             run (spec={}) {
                 /**
+                 * Cycle of events:
+                 * - linker: 'start'                // emitted at pointerdown
+                 * - targets.each: 'move'           // emitted at each pointermove tick
+                 * - linker: 'move'                 // emitted at each pointermove tick
+                 * - linker: 'cancel'               // emitted at <Esc> keyboard shortcut
+                 * - targets.matching: 'resolve'    // emitted only if a target.path returns true
+                 * - targets.every_other: 'reject'  
+                 * - linker: 'reject'               // emitted if the 'reject' named target has been resolved
+                 * - linker: 'finish'               // emmitted at resolved or rejected target(s), only when pointer is up
+                 * - linker: 'hide'                 // emitted at pointerup or <Esc> keyboard shortcut
+
                  * Usage:
                     LineLinker.run({
                         height:         number,
@@ -551,11 +557,11 @@ const LineLinker = (() => {
                         ],
                         on: {
                             cancel: e => {},
-                            hide: e => {},
-                            start: (e, path) => {},
-                            move: (e, path) => {},
                             finish: (e, path) => {},
+                            hide: e => {},
+                            move: (e, path) => {},      
                             reject: (e, path) => {},
+                            start: (e, path) => {},
                         }
                     });
                  */

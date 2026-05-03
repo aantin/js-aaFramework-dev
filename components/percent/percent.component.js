@@ -138,7 +138,9 @@ const Percent = (() => {
                             cursor.style.width = str;
                             text.innerHTML = str;
                             thumb.style.left = str;
-                            previous.tooltip.style.left = str;
+                            if (previous.tooltip) {
+                                previous.tooltip.style.left = str;
+                            }
                         },
                         "tooltip-changed": (e, elem) => {
                             if (previous.tooltip !== elem) previous.tooltip?.remove();

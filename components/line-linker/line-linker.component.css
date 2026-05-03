@@ -51,7 +51,7 @@ aside.message {
     translate: -1em .2em;
 }
 aside.message:not(.success, .warning, .information, .critical) {
-    color: var(--color-grey);
+    color: var(--color-grey-darker);
 }
 aside.message span.icon {
     display: inline-block;
@@ -62,32 +62,17 @@ aside.message span.icon {
 }
 aside.message span.icon::before {
     content: attr(data-icon);
-    /*content: "\f05e";*/
-    /* ban */
-}
-aside.message.information span.icon {
-    color: var(--color-blue);
+    color: var(--color-grey);
 }
 aside.message.information span.icon::before {
-    /*content: "\f129";*/
-    /* info */
-}
-aside.message.success span.icon {
-    color: var(--color-green);
+    color: var(--color-blue);
 }
 aside.message.success span.icon::before {
-    /*content: "\f00c";*/
-    /* check */
-}
-aside.message.warning span.icon {
-    color: var(--color-orange);
+    color: var(--color-green);
 }
 aside.message.warning span.icon::before {
-    /*content: "\f071";*/
-    /* warning */
-}
-aside.message.critical span.icon {
-    color: var(--color-red);
+    color: var(--color-orange);
 }
 aside.message.critical span.icon::before {
+    color: var(--color-red);
 }

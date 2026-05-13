@@ -39,9 +39,10 @@
     --color-light-blue: #f0f8ff;
 
     --bg: #fff;
-    --color: #666;
+    --color: #444;
     --line-hover-bg: #f4f4f4;
     --submit-bg-color: var(--color-blue);
+    --submit-bg: var(--submit-bg-color);
     --submit-color: #fff;
     --reset-color: #aaa;
     --reset-bg-color: #e8e8e8;
@@ -1697,7 +1698,7 @@ div.aaDialog .message fieldset legend {
     display: block;
     margin: 0px;
     padding: 0px;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: bold;
     border-collapse: collapse;
 }
@@ -1715,8 +1716,9 @@ div.aaDialog .message fieldset legend label {
     top: 0px;
     padding: 2px 8px;
     padding: 0px;
-    font-size: var(--font-size);
+    font-size: 1rem;
     color: var(--submit-bg-color);
+    color: var(--color);
 }
 div.aaDialog .message fieldset legend label:first-child {
     border-top-left-radius: 16px;
@@ -2821,12 +2823,11 @@ section.SelectionMatrix {
     --item-top-selected-hover: #c8a571;
     --item-left-selected-hover: #c1995e;
     --item-right-selected-hover: #b98e4e;
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(255,255,255,.8);
+    width: 100%;
+    height: 100%;
 
     display: flex;
     flex-flow: column nowrap;

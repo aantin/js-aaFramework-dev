@@ -17,17 +17,26 @@ svg {
 svg line {
     stroke: rgba(0,0,0,.1);
 }
-svg.information line {
+svg:where(.information, .color-blue) line {
     stroke: var(--color-blue);
 }
-svg.warning line {
+svg:where(.warning, .color-orange) line {
     stroke: var(--color-orange);
 }
-svg.success line {
+svg:where(.success, .color-green) line {
     stroke: var(--color-green);
 }
-svg.critical line {
+svg:where(.critical, .color-red) line {
     stroke: var(--color-red);
+}
+svg:where(.color-gold) line {
+    stroke: var(--color-gold);
+}
+svg:where(.color-magenta) line {
+    stroke: var(--color-magenta);
+}
+svg:where(.color-purple) line {
+    stroke: var(--color-purple);
 }
 aside.message {
     position: fixed;
@@ -64,15 +73,24 @@ aside.message span.icon::before {
     content: attr(data-icon);
     color: var(--color-grey);
 }
-aside.message.information span.icon::before {
+aside.message:where(.information, .color-blue) span.icon::before {
     color: var(--color-blue);
 }
-aside.message.success span.icon::before {
+aside.message:where(.success, .color-green) span.icon::before {
     color: var(--color-green);
 }
-aside.message.warning span.icon::before {
+aside.message:where(.warning, .color-orange) span.icon::before {
     color: var(--color-orange);
 }
-aside.message.critical span.icon::before {
+aside.message:where(.critical, .color-red) span.icon::before {
     color: var(--color-red);
+}
+aside.message.color-purple span.icon::before {
+    color: var(--color-purple);
+}
+aside.message.color-gold span.icon::before {
+    color: var(--color-gold);
+}
+aside.message.color-magenta span.icon::before {
+    color: var(--color-magenta);
 }

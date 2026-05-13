@@ -48,6 +48,15 @@ const LineLinker = (() => {
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
         function LineLinkerTarget () { get(LineLinkerTarget, "construct").apply(this, arguments); }
         const privates = {
+            colors: [
+                "blue",
+                "gold",
+                "grey",
+                "magenta",
+                "orange",
+                "purple",
+                "red",
+            ],
             types: [
                 "information",
                 "critical",
@@ -63,6 +72,7 @@ const LineLinker = (() => {
                     path:       null,
                     message:    null,
                     type:       null,
+                    color:      null,
                 },
             },
             construct (spec={}) {
@@ -118,12 +128,25 @@ const LineLinker = (() => {
                         }
                         that.path = path.bind(this);
                     },
+                    type (type) {
+                        const that = _(this);
+                        that.type = type;
+                        switch (type) {
+                            case "warning":     this.color = "orange"; break;
+                            case "information": this.color = "blue"; break;
+                            case "critical":    this.color = "red"; break;
+                            case "success":     this.color = "green"; break;
+                        }
+                    },
                 },
             },
             statics: {
                 // zz
+                types: Object.freeze([...privates.types]),
+                colors: Object.freeze([...privates.colors]),
             },
             verifiers: {
+                color:      aa.isNullOr(aa.inArray(privates.colors)),
                 icon:       aa.isNullOrNonEmptyString,
                 name:       aa.nonEmptyString,
                 path:       aa.isFunction,
@@ -176,7 +199,6 @@ const LineLinker = (() => {
             ],
         },
         getPropType: prop => Object.keys(privates.propTypes).find(key => privates.propTypes[key].includes(prop)),
-        types: ["information", "critical", "warning", "success"],
     };
     const blueprint = {
         accessors: {
@@ -260,7 +282,7 @@ const LineLinker = (() => {
                     const {nodes, source, stroke, targets} = that;
                     const {icon, line, textContainer, svg} = nodes;
                     
-                    let currentType, posX=0, posY=0;
+                    let currentColor, currentType, posX=0, posY=0;
                     let {top, left} = Object.getFixedPositionOf(source);
                     const style = window.getComputedStyle(source);
                     let {width, height, zIndex} = style;
@@ -382,7 +404,7 @@ const LineLinker = (() => {
                             svg.classList.remove(currentType);
                             textContainer.classList.remove(currentType);
                         }
-                        if (!privates.types.includes(type)) {
+                        if (!LineLinkerTarget.types.includes(type)) {
                             return (currentType = null);
                         }
 
@@ -391,6 +413,21 @@ const LineLinker = (() => {
                             textContainer.classList.add(type);
                         }
                         currentType = type;
+                    };
+                    const updateColor = color => {
+                        if (currentColor) {
+                            svg.classList.remove(`color-${currentColor}`);
+                            textContainer.classList.remove(`color-${currentColor}`);
+                        }
+                        if (!LineLinkerTarget.colors.includes(color)) {
+                            return (currentColor = null);
+                        }
+
+                        if (color) {
+                            svg.classList.add(`color-${color}`);
+                            textContainer.classList.add(`color-${color}`);
+                        }
+                        currentColor = color;
                     };
                     const hide = () => {
                         aa.events.removeApp("linking");
@@ -430,6 +467,7 @@ const LineLinker = (() => {
                                     updateMessage(target);
                                     updateIcon(target);
                                     updateType(target?.type ?? null);
+                                    updateColor(target?.color ?? null);
                                     target?.notify("move", path);
                                 }
 
@@ -546,6 +584,8 @@ const LineLinker = (() => {
                             {
                                 name:       string, // mandatory
                                 icon:       string,
+                                type:       enum:types,
+                                color:      enum:colors,
                                 message:    string,
                                 path:       path => boolean,
                                 on: {

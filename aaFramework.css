@@ -1211,11 +1211,6 @@ body.aaContextMenuFreeze {
 #aaContextMenu ul li button span.fa.icon.information {
     color: var(--confirm-color);
 }
-#aaContextMenu ul li button:focus span.fa.icon:where(.confirm, .information),
-#aaContextMenu ul li:hover button span.fa.icon:where(.confirm, .information) {
-    color: var(--menu-shortcut-color);
-    color: var(--color-blue-darker);
-}
 #aaContextMenu ul li button span.fa.icon.reset {
     color: var(--reset-color);
 }
@@ -1276,7 +1271,7 @@ body.aaContextMenuFreeze {
     cursor: pointer;
 }
 #aaContextMenu > ul li :where(button, input[type=button]) span.shortcut {
-    color: var(--color-gold);
+    color: var(--color-grey);
 }
 #aaContextMenu.dark > ul li :where(button, input[type=button]) span.shortcut {
     color: rgba(68,153,255,.9);

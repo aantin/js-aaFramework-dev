@@ -21,6 +21,7 @@
         [
             // CSS:
             ENV.MODULE_NAME+".css",
+            "aaNeumo.css",
             "vendors/css/font-awesome-4.7.0/css/font-awesome.min.css",
             "vendors/css/google-iconfont/material-icons.css",
             "vendors/fonts/nerd-font/webfont.min.css",
@@ -1246,15 +1247,24 @@
                 });
             }
         }
-        class aaCollectionTypeError extends TypeError {
-            constructor (message, filename, lineNumber) {
-                super(message, filename, lineNumber);
+        class CollectionError extends Error {
+            constructor (...args) {
+                super(...args);
                 Object.defineProperty(this, "name", {
-                    value: "aaCollectionTypeError",
-                    configurable: false,
+                    get: () => "CollectionError"
                 });
             }
         }
+        class CollectionTypeError extends TypeError {
+            constructor (...args) {
+                super(...args);
+                Object.defineProperty(this, "name", {
+                    get: () => "CollectionTypeError"
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(CollectionTypeError);
+        // ----------------
         const {cut, get, set} = aa.mapFactory();
         function _ (that) { return aa.getAccessor.call(that, {cut, get, set}); }
 
@@ -1372,7 +1382,7 @@
         // Publics:
         function methodFactory (methodName) {
             const func = function (callback /*, thisArg */) {
-                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.");
+                if (typeof callback !== "function") throw new CollectionTypeError("The first argument must be a Function.");
                 const thisArg = arguments[1] ?? void 0;
                 const that = _(this);
 
@@ -1384,9 +1394,9 @@
             return func;
         };
         function fromArrayPrototype (methodName) {
-            const func = function () {
+            const func = function (...args) {
                 const that = _(this);
-                return that.data[methodName](arguments);
+                return that.data[methodName](...args);
             };
             Object.defineProperty(func, 'name', {
                 get: () => methodName
@@ -1398,7 +1408,7 @@
         Object.assign(Collection.prototype, {
             every:          methodFactory('every'),
             filter (callback /*, thisArg */) {
-                if (typeof callback !== "function") throw new aaCollectionTypeError("The first argument must be a Function.")
+                if (typeof callback !== "function") throw new CollectionTypeError("The first argument must be a Function.")
                 const thisArg = arguments[1] ?? void 0;
 
                 const that = _(this);
@@ -1419,9 +1429,9 @@
             findLastIndex:  methodFactory('findLastIndex'),
             forEach:        methodFactory('forEach'),
             forEachAsync (callback, resolve=null, options={}) {
-                aa.arg.test(callback, aa.isFunction, "'callback'");
-                aa.arg.test(resolve, aa.isNullOr(aa.isFunction), "'resolve'");
-                aa.arg.test(options, aa.verifyObject({
+                throwIfNot(callback, aa.isFunction, "'callback'");
+                throwIfNot(resolve, aa.isNullOr(aa.isFunction), "'resolve'");
+                throwIfNot(options, aa.verifyObject({
                     skipEmpty:      aa.isBool,
                     parallel:       aa.isBool,
                 }), "'options'");
@@ -1446,7 +1456,7 @@
             },
             includes:       methodFactory('includes'),
             loopThrough (callback /*, spec */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
+                throwIfNot(callback, aa.isFunction, `callback`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
                 
                 const that = _(this);
@@ -1459,7 +1469,7 @@
             map:            methodFactory('map'),
             ...fromArrayPrototype('pop'),
             reduce (callback, accumulator /*, thisArg */) {
-                aa.arg.test(callback, aa.isFunction, `callback`, aaCollectionError);
+                throwIfNot(callback, aa.isFunction, `callback`, aaCollectionError);
                 const thisArg = aa.arg.optional(arguments, 2, undefined);
 
                 const that = _(this);
@@ -1469,6 +1479,7 @@
             },
             some:           methodFactory('some'),
             ...fromArrayPrototype('shift'),
+            ...fromArrayPrototype('slice'),
             ...fromArrayPrototype('splice'),
             ...fromArrayPrototype('unshift'),
 
@@ -1499,7 +1510,7 @@
                 return (that.data.indexOf(value) > -1);
             },
             hydrate (spec) {
-                aa.arg.test(spec, aa.verifyObject(privates.verifiers), `'spec'`, aaCollectionError);
+                throwIfNot(spec, aa.verifyObject(privates.verifiers), `'spec'`, aaCollectionError);
                 aa.prototypes.hydrate.call(this, spec);
             },
             indexOf (/* item, from */) {
@@ -1517,8 +1528,8 @@
                  * @param <int> position
                  * @param <any> ...items: The items to add to the collection from 'position' parameter.
                  */
-                aa.arg.test(position, aa.isInt, "'position'", aaCollectionError);
-                aa.arg.test(items, aa.isArrayLikeOf(item => this.authenticate?.(item)), "'items'", aaCollectionError);
+                throwIfNot(position, aa.isInt, "'position'", aaCollectionError);
+                throwIfNot(items, aa.isArrayLikeOf(item => this.authenticate?.(item)), "'items'", aaCollectionError);
                 const that = _(this);
                 
                 if (position < 0) {
@@ -1538,6 +1549,54 @@
                 return (
                     get(this, "data").join.apply(this, arguments)
                 );
+            },
+            moveBy (delta, start, end) {
+                /**
+                 * @param <int> delta:  The delta by which the range will be moved
+                 * @param <int> start:  The starting index of the range to move
+                 * @param <int> end:    The index of the end (not included) of the range to move
+                 */
+                throwIfNot(delta, aa.isInt, "'delta'");
+                throwIfNot(start, aa.isInt, "'start'");
+                throwIfNot(end, aa.isNullOr(aa.isInt), "'end'");
+                end ??= start + 1;
+
+                const that = _(this);
+                const {data} = that;
+                const {length} = data;
+
+                if (start < 0) start = length + start;
+                if (end < 0) end = length + end;
+
+                const dest = start + delta;
+                if (dest < 0) throw new CollectionError("Can not move to negative index");
+                if (end + delta > length - 1) throw new CollectionError("Can not move outside size of array");
+
+                const min = Math.min(start, dest);
+                const max = Math.max(end + delta, dest);
+
+                const range = that.data.splice(start, end - start);
+                that.data.splice(dest, 0, ...range);
+
+                that.emit("reordered", [min, max]);
+            },
+            moveTo (dest, start, end=null) {
+                /**
+                 * @param <int> dest:   The destination index where the range elements will be inserted
+                 * @param <int> start:  The starting index of the range to move
+                 * @param <int> end:    The index of the end (not included) of the range to move
+                 */
+                throwIfNot(dest, aa.isPositiveInt, "'dest'");
+                throwIfNot(start, aa.isInt, "'start'");
+                throwIfNot(end, aa.isNullOr(aa.isInt), "'end'");
+                end ??= start + 1;
+
+                const that = _(this);
+
+                if (end < 0) end = that.data.length + end;
+
+                const range = that.data.splice(start, end - start);
+                that.data.splice(dest, 0, ...range);
             },
             on: aa.prototypes.events.getListener(get, "listeners"),
             push (...items) {
@@ -1633,7 +1692,7 @@
 
             // Setters:
             setAuthenticate (verifier) {
-                aa.arg.test(verifier, aa.isFunction, aaCollectionError);
+                throwIfNot(verifier, aa.isFunction, aaCollectionError);
                 const that = _(this);
                 that.authenticate = value => {
                     const isVerified = verifier(value);
@@ -1642,7 +1701,7 @@
                 };
             },
             setOn (listeners) {
-                aa.arg.test(listeners, privates.verifiers.on, `'listeners'`, aaCollectionError);
+                throwIfNot(listeners, privates.verifiers.on, `'listeners'`, aaCollectionError);
 
                 listeners.forEach((callback, eventName) => {
                     this.on(eventName, callback);
@@ -1665,7 +1724,7 @@
         // Static:
         Object.assign(Collection, {
             fromArray (list /* spec */) {
-                aa.arg.test(list, aa.isArray, `'list'`, aaCollectionError);
+                throwIfNot(list, aa.isArray, `'list'`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
 
                 const collection = new aa.Collection(spec);
@@ -2628,7 +2687,7 @@
                 items.forEach(action => {
                     if (action.isValid()) {
                         if (actions.hasOwnProperty(action.name)) {
-                            aa.evnts.detachAction(actions[action.name]);
+                            aa.events.detachAction(actions[action.name]);
                         }
                         actions[action.name] = action;
                         return;
@@ -3529,6 +3588,17 @@
                 });
             }
         }
+        class aaFileTypeError extends TypeError {
+            constructor (message, filename, lineNumber) {
+                super(message, filename, lineNumber);
+                Object.defineProperty(this, "name", {
+                    value: "aaFileTypeError",
+                    configurable: false,
+                });
+            }
+        }
+        const throwIfNot = aa.arg.testerBy(aaFileTypeError);
+        // --------------------------------
 
         const verifier = {
             content:        p => (aa.isObject(p) || aa.isString(p)),
@@ -3576,43 +3646,30 @@
          *
          * @return
          */
-        this.open       = function (/* resolve, reject, options */) {
-            if (!arguments || arguments.length < 1 || arguments.length > 3) {
-                throw new Error("Function needs between 1 and 3 arguments.");
-            }
-            let i;
-            let options = undefined;
-            const functions = [];
-            for (i=0; i<arguments.length; i++) {
-                let arg = arguments[i];
-                if (aa.isFunction(arg)) {
-                    if (functions.length < 2) {
-                        functions.push(arg);
-                    } else {
-                        throw new aaFileError("Reject callback argument has already been given.");
-                    }
-                } else if(aa.isObject(arg)) {
-                    if (options === undefined) {
-                        options = arg;
-                    } else {
-                        throw new aaFileError("Options argument has already been given.");
-                    }
-                }
-            }
-            if (functions.length === 0) {
-                throw new aaFileError("At least one function is needed as 'Resolve' callback.");
+        this.open = function (...args) {
+            if (args.length < 1 || args.length > 3) {
+                throw new Error("<aa.file.open> needs between 1 and 3 arguments.");
             }
 
-            let resolve = functions[0];
-            let reject = (
-                functions && functions.length > 1
-                ? functions[1]
-                : function (r) {
-                    console.warn("Rejected aa.file.open:", r);
-                }
-            );
-            options = options ?? {};
-            aa.arg.test(options, aa.verifyObject({
+            const options = args.find(aa.isObject) ?? {};
+            const [resolve, reject=function reject (...args) {
+                console.warn("Rejected aa.file.open:", r);
+            }] = args.filter(aa.isFunction);
+
+            throwIfNot(resolve, aa.isFunction, "'resolve'");
+        };
+        this.open = function (...args) {
+            if (args.length < 1 || args.length > 3) {
+                throw new Error("<aa.file.open> needs between 1 and 3 arguments.");
+            }
+
+            const options = args.find(aa.isObject) ?? {};
+            const [resolve, reject=function reject (...args) {
+                console.warn("Rejected aa.file.open:", r);
+            }] = args.filter(aa.isFunction);
+
+            throwIfNot(resolve, aa.isFunction, "'resolve'");
+            throwIfNot(options, aa.verifyObject({
                 accept:     arg => aa.nonEmptyString(arg) || aa.isArrayLikeOf(aa.nonEmptyString),
                 base64:     aa.isBool,
                 json:       aa.isBool,
@@ -3635,63 +3692,66 @@
                     return more;
                 })()
             });
-            input.on("input", (function (options) {
-                return function (event) {
+            input.on({
+                input: event => {
                     if (event.target !== undefined && event.target.files !== undefined && event.target.files.length) {
                         // let i, file, reader;
                         const collection = [];
-                        event.target.files.forEach((file) => {
+                        event.target.files.forEach(file => {
                             collection.push(file);
                         });
                         const progress = aa.gui.Progress.getBy({
                             title: "Files loading..."
                         });
                         // progress.show();
-                        collection.forEach((file) => {
+                        collection.forEach(file => {
                             if (file) {
+                                log("path:", file.path);
                                 progress.add(file.name);
                                 const reader = new FileReader();
                                 if (!reader) {
                                     reject(reader);
                                 }
-                                reader.on('load', (e) => {
-                                    let content = e.target.result;
-                                    progress.complete(file.name);
-                                    if (content) {
-                                        if (options.base64) {
-                                            if(content.match(/^data\:text\/plain\;base64\,/)){
-                                                content = content
-                                                    .replace(/^data\:text\/plain\;base64\,/, '')
-                                                    .replace('\n', '')
-                                                    .base64Decode()
-                                                ;
+                                reader.on({
+                                    load: e => {
+                                        let content = e.target.result;
+                                        progress.complete(file.name);
+                                        if (content) {
+                                            if (options.base64) {
+                                                if(content.match(/^data\:text\/plain\;base64\,/)){
+                                                    content = content
+                                                        .replace(/^data\:text\/plain\;base64\,/, '')
+                                                        .replace('\n', '')
+                                                        .base64Decode()
+                                                    ;
+                                                }
                                             }
+                                            if (options.json) {
+                                                try {
+                                                    content = JSON.parse(content);
+                                                }
+                                                catch (err) {
+                                                    reject(reader);
+                                                    aa.gui.dialog("warning", {text: "Invalid JSON file."});
+                                                    throw new Error("Invalid JSON file.");
+                                                }
+                                            }
+                                            resolve({
+                                                content: content,
+                                                lastModified: file.lastModified,
+                                                name: file.name,
+                                                path: file.path,
+                                                size: file.size,
+                                                type: file.type
+                                            });
                                         }
-                                        if (options.json) {
-                                            try{
-                                                content = JSON.parse(content);
-                                            }
-                                            catch(e) {
-                                                reject(reader);
-                                                aa.gui.dialog("warning", {text: "Invalid JSON file."});
-                                                throw new Error("Invalid JSON file.");
-                                            }
+                                        else {
+                                            reject(reader);
                                         }
-                                        resolve({
-                                            content: content,
-                                            lastModified: file.lastModified,
-                                            name: file.name,
-                                            path: file.path,
-                                            size: file.size,
-                                            type: file.type
-                                        });
-                                    }
-                                    else {
-                                        reject(reader);
-                                    }
-                                });
-                                reader.on('progress', (e) => {
-                                    progress.move(file.name, e.loaded/e.total);
+                                    },
+                                    progress: e => {
+                                        progress.move(file.name, e.loaded/e.total);
+                                    },
                                 });
                                 reader.readAsText(file);
                             }
@@ -3754,8 +3814,8 @@
                         doOnce();
                         return;
                     }
-                };
-            })(options));
+                },
+            });
             input.click();
         };
         /**

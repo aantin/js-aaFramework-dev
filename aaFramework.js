@@ -43,7 +43,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.32.0",
+        version: "3.32.1",
         dependencies: {
             aaJS: "^3.1"
         }
@@ -1454,7 +1454,7 @@
                 };
                 if (that.data.length > 0) iteration();
             },
-            includes:       methodFactory('includes'),
+            ...fromArrayPrototype('includes'),
             loopThrough (callback /*, spec */) {
                 throwIfNot(callback, aa.isFunction, `callback`, aaCollectionError);
                 const spec = aa.arg.optional(arguments, 1, {});
@@ -3653,7 +3653,7 @@
 
             const options = args.find(aa.isObject) ?? {};
             const [resolve, reject=function reject (...args) {
-                console.warn("Rejected aa.file.open:", r);
+                console.warn("Rejected aa.file.open:", ...args);
             }] = args.filter(aa.isFunction);
 
             throwIfNot(resolve, aa.isFunction, "'resolve'");
@@ -3665,7 +3665,7 @@
 
             const options = args.find(aa.isObject) ?? {};
             const [resolve, reject=function reject (...args) {
-                console.warn("Rejected aa.file.open:", r);
+                console.warn("Rejected aa.file.open:", ...args);
             }] = args.filter(aa.isFunction);
 
             throwIfNot(resolve, aa.isFunction, "'resolve'");
@@ -5510,6 +5510,7 @@
                 construct.apply(this, arguments);
             };
             Object.assign(Dialog.prototype, {
+                // zz
 
                 // Methods:
                 checkValidation () {
@@ -6118,6 +6119,7 @@
                 }
             });
             Object.assign(Dialog.prototype, {
+                // zz
                 setDefault:       Dialog.prototype.setDefaultValue,
                 setValue:         Dialog.prototype.setDefaultValue,
             });
@@ -6573,6 +6575,7 @@
                 return post;
             };
             const View = {
+                // zz
                 addIconTo (node) {
                     const that = _(this);
                     switch (this.type) {
@@ -6890,10 +6893,12 @@
                         const listeners = {
                             body: {
                                 pointerdown: e => {
-                                    outside = isOutside(e);
+                                    if (dialogs.last?.id === this.id) {
+                                        outside = isOutside(e);
+                                    }
                                 },
                                 pointerup: e => {
-                                    if (outside && isOutside(e)) {
+                                    if (aa.events.appNames.last.endsWith(this.id) && dialogs.last?.id === this.id && outside && isOutside(e)) {
                                         fire.call(this, "cancel", this);
                                         this.hide();
                                     }
@@ -6915,7 +6920,10 @@
                                 modal.cancel(listeners.modal);
                             },
                         }}));
-                        const isOutside = e => !e.composedPath().some(node => node === modal);
+                        const isOutside = e => {
+                            const paths = e.composedPath();
+                            return !paths.includes(modal)
+                        };
                     }
 
                     return modal;
@@ -24433,7 +24441,7 @@
                                                         name:       aa.nonEmptyString,
                                                         on:         aa.isObject,
                                                         pastilles:  aa.isArrayOf(arg => aa.isPositiveInt(arg) || (aa.isElement(arg) && arg.classList.contains("pastille-container"))),
-                                                        text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || aa.instanceof(DocumentFragment)),
+                                                        text:       p => (aa.nonEmptyString(p) || aa.isElement(p) || p instanceof DocumentFragment),
                                                         title:      aa.nonEmptyString,
                                                         value:      aa.nonEmptyString,
                                                     })), "'option'");
@@ -24515,10 +24523,10 @@
                                                                 evtName = evtName.toLowerCase();
                                                                 switch (evtName) {
                                                                     case "check":
-                                                                        radio.on("change", () => {
+                                                                        radio.on("change", e => {
                                                                             if (radio.checked) {
                                                                                 setTimeout(() => {
-                                                                                    callback();
+                                                                                    callback(e);
                                                                                 }, 50);
                                                                             }
                                                                         });

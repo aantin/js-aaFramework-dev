@@ -1358,7 +1358,7 @@ div.aaDialog {
     --bg-color: #fff;
     position: relative;
     display: inline-block;
-    width: 480px;
+    width: min(480px, calc(100vw - 32px));
     max-height: calc(100vh - 32px);
     overflow: hidden;
     overflow-y: auto;
@@ -2217,7 +2217,11 @@ div.aaDialog label > span.half:first-child {
     text-align: right;
 }
 .aa label.cooked{
-    display: inline-block;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: baseline;
+
     width: fit-content;
 }
 .aa label.cooked.disabled{

@@ -43,7 +43,7 @@
     // Public:
     aa.versioning.test({
         name: ENV.MODULE_NAME,
-        version: "3.32.1",
+        version: "3.32.2",
         dependencies: {
             aaJS: "^3.1"
         }

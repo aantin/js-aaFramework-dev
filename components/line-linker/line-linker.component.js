@@ -51,6 +51,7 @@ const LineLinker = (() => {
             colors: [
                 "blue",
                 "gold",
+                "green",
                 "grey",
                 "magenta",
                 "orange",
@@ -562,7 +563,7 @@ const LineLinker = (() => {
             // zz
             run (spec={}) {
                 /**
-                 * Cycle of events:
+                 * Events cycle:
                  * - linker: 'start'                // emitted at pointerdown
                  * - targets.each: 'move'           // emitted at each pointermove tick
                  * - linker: 'move'                 // emitted at each pointermove tick
@@ -574,6 +575,7 @@ const LineLinker = (() => {
                  * - linker: 'hide'                 // emitted at pointerup or <Esc> keyboard shortcut
 
                  * Usage:
+                    // zz
                     LineLinker.run({
                         height:         number,
                         scrollables:    [element],
